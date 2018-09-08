@@ -1,0 +1,23 @@
+package: github.com/mosaicnetworks/evm-lite
+import:
+- package: github.com/mosaicnetworks/babble
+  version: =0.3.0
+- package: github.com/sirupsen/logrus
+- package: github.com/ethereum/go-ethereum
+  version: =1.7.0
+  subpackages:
+  - accounts
+  - accounts/keystore
+  - common
+  - common/math
+  - core
+  - core/state
+  - core/types
+  - core/vm
+  - crypto
+  - ethdb
+  - params
+  - rlp
+- package: github.com/gorilla/mux
+- package: 	"github.com/spf13/cobra"
+- package:	"github.com/spf13/viper"
