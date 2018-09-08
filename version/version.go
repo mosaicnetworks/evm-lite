@@ -1,4 +1,4 @@
-package evmbabble
+package version
 
 const Maj = "0"
 const Min = "1"

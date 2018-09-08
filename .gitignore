@@ -1,2 +1,13 @@
+.vscode
+
 glide.lock
 vendor
+
+debug.test
+build
+
+vendor
+
+demo/nodejs/node_modules
+
+state/test_data/eth/chaindata

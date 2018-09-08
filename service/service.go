@@ -55,6 +55,11 @@ func (m *Service) Run() {
 	m.serveAPI()
 }
 
+//XXX
+func (m *Service) GetSubmitCh() chan []byte {
+	return m.submitCh
+}
+
 func (m *Service) makeKeyStore() error {
 
 	scryptN := keystore.StandardScryptN
