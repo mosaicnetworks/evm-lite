@@ -11,12 +11,12 @@ import (
 var (
 	//Base
 	defaultLogLevel = "debug"
-	defaultDataDir  = defaultHomeDir()
+	DefaultDataDir  = defaultHomeDir()
 
 	//Eth
 	defaultEthAPIAddr   = ":8080"
 	defaultCache        = 128
-	defaultEthDir       = fmt.Sprintf("%s/eth", defaultDataDir)
+	defaultEthDir       = fmt.Sprintf("%s/eth", DefaultDataDir)
 	defaultKeystoreFile = fmt.Sprintf("%s/keystore", defaultEthDir)
 	defaultGenesisFile  = fmt.Sprintf("%s/genesis.json", defaultEthDir)
 	defaultPwdFile      = fmt.Sprintf("%s/pwd.txt", defaultEthDir)
@@ -58,7 +58,7 @@ type BaseConfig struct {
 //DefaultBaseConfig returns the default top-level configuration for EVM-Babble
 func DefaultBaseConfig() BaseConfig {
 	return BaseConfig{
-		DataDir:  defaultDataDir,
+		DataDir:  DefaultDataDir,
 		LogLevel: defaultLogLevel,
 	}
 }

@@ -44,7 +44,7 @@ func (s *Solo) Init(state *state.State, service *service.Service) error {
 
 //Run pipes the Service's submitCh to the States's ProcessBlock function. It
 //wraps individual transactions into Babble Blocks
-func (s *Solo) Run() {
+func (s *Solo) Run() error {
 	submitCh := s.service.GetSubmitCh()
 	for {
 		select {

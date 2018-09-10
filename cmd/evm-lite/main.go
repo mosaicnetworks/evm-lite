@@ -10,6 +10,7 @@ func main() {
 
 	rootCmd.AddCommand(
 		cmd.NewSoloCmd(),
+		cmd.NewBabbleCmd(),
 		cmd.VersionCmd)
 
 	if err := rootCmd.Execute(); err != nil {
