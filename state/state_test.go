@@ -18,7 +18,6 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/sirupsen/logrus"
 
-	"github.com/mosaicnetworks/babble/hashgraph"
 	bcommon "github.com/mosaicnetworks/evm-lite/common"
 )
 
@@ -196,10 +195,12 @@ func (test *Test) deployContract(from accounts.Account, contract *Contract, t *t
 		t.Fatal(err)
 	}
 
-	block := hashgraph.NewBlock(0, 1, []byte{}, [][]byte{data})
-
-	//try to process the block
-	_, err = test.state.ProcessBlock(block)
+	//try to commit the transaction
+	err = test.state.ApplyTransaction(data, 0, common.Hash{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = test.state.Commit()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -254,10 +255,12 @@ func TestTransfer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	block := hashgraph.NewBlock(0, 1, []byte{}, [][]byte{data})
-
 	//try to process the block
-	_, err = test.state.ProcessBlock(block)
+	err = test.state.ApplyTransaction(data, 0, common.Hash{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = test.state.Commit()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -386,10 +389,12 @@ func callDummyContractTestAsync(test *Test, from accounts.Account, contract *Con
 		t.Fatal(err)
 	}
 
-	block := hashgraph.NewBlock(0, 1, []byte{}, [][]byte{data})
-
 	//try to process the block
-	_, err = test.state.ProcessBlock(block)
+	err = test.state.ApplyTransaction(data, 0, common.Hash{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = test.state.Commit()
 	if err != nil {
 		t.Fatal(err)
 	}

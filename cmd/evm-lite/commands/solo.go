@@ -8,11 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewRunCmd returns the command that allows the CLI to start a node.
-func NewRunCmd() *cobra.Command {
+// NewSoloCmd returns the command that starts EVM-Lite with Solo consensus
+func NewSoloCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "run",
-		Short: "Run the evm-lite node",
+		Use:   "solo",
+		Short: "Run the evm-lite node with Solo consensus (no consensus)",
 		RunE:  run,
 	}
 	return cmd

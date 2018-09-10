@@ -16,7 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/mosaicnetworks/babble/hashgraph"
 	"github.com/sirupsen/logrus"
 
 	bcommon "github.com/mosaicnetworks/evm-lite/common"
@@ -113,27 +112,8 @@ func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	return res, err
 }
 
-func (s *State) ProcessBlock(block hashgraph.Block) (common.Hash, error) {
-	s.logger.Debug("Process Block")
-	s.commitMutex.Lock()
-	defer s.commitMutex.Unlock()
-
-	blockHashBytes, _ := block.Hash()
-	blockHash := common.BytesToHash(blockHashBytes)
-
-	for txIndex, txBytes := range block.Transactions() {
-		if err := s.applyTransaction(txBytes, txIndex, blockHash); err != nil {
-			return common.Hash{}, err
-		}
-	}
-
-	return s.commit()
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-//applyTransaction applies a transaction to the WAS
-func (s *State) applyTransaction(txBytes []byte, txIndex int, blockHash common.Hash) error {
+//ApplyTransaction applies a transaction to the WAS
+func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.Hash) error {
 
 	var t ethTypes.Transaction
 	if err := rlp.Decode(bytes.NewReader(txBytes), &t); err != nil {
@@ -201,7 +181,7 @@ func (s *State) applyTransaction(txBytes []byte, txIndex int, blockHash common.H
 	return nil
 }
 
-func (s *State) commit() (common.Hash, error) {
+func (s *State) Commit() (common.Hash, error) {
 	//commit all state changes to the database
 	root, err := s.was.Commit()
 	if err != nil {
@@ -230,8 +210,6 @@ func (s *State) resetWAS() {
 	}
 	s.logger.Debug("Reset Write Ahead State")
 }
-
-//------------------------------------------------------------------------------
 
 func (s *State) InitState() error {
 
@@ -277,7 +255,7 @@ func (s *State) CreateAccounts(accounts bcommon.AccountMap) error {
 		s.logger.WithField("address", addr).Debug("Adding account")
 	}
 
-	_, err := s.commit()
+	_, err := s.Commit()
 
 	return err
 }

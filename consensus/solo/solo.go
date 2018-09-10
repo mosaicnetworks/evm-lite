@@ -1,7 +1,9 @@
 package solo
 
 import (
-	"github.com/mosaicnetworks/babble/hashgraph"
+	"fmt"
+
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/mosaicnetworks/evm-lite/service"
 	"github.com/mosaicnetworks/evm-lite/state"
 	"github.com/sirupsen/logrus"
@@ -12,10 +14,10 @@ Solo implements the Consensus interface.
 It relays messages directly from the State to the Service.
 */
 type Solo struct {
-	blockIndex int
-	state      *state.State
-	service    *service.Service
-	logger     *logrus.Entry
+	txIndex int
+	state   *state.State
+	service *service.Service
+	logger  *logrus.Entry
 }
 
 //NewSolo returns a Solo object with nil State and Service
@@ -40,27 +42,30 @@ func (s *Solo) Init(state *state.State, service *service.Service) error {
 	return nil
 }
 
-//Run pipes the Services's submitCh to the States's ProcessBlock function. It
+//Run pipes the Service's submitCh to the States's ProcessBlock function. It
 //wraps individual transactions into Babble Blocks
 func (s *Solo) Run() {
 	submitCh := s.service.GetSubmitCh()
 	for {
 		select {
 		case t := <-submitCh:
-			s.logger.WithField("block", s.blockIndex).Debug("Adding Transaction")
+			s.logger.WithField("tx", s.txIndex).Debug("Adding Transaction")
 
-			block := hashgraph.NewBlock(s.blockIndex, 0, []byte{}, [][]byte{t})
-
-			s.logger.WithField("block", s.blockIndex).Debug("Processing Block")
-
-			hash, err := s.state.ProcessBlock(block)
+			err := s.state.ApplyTransaction(t,
+				s.txIndex,
+				common.StringToHash(fmt.Sprintf("block %d", s.txIndex)))
 			if err != nil {
-				s.logger.WithField("block", s.blockIndex).WithError(err).Error()
+				s.logger.WithField("tx", s.txIndex).WithError(err).Errorf("ApplyTransaction")
 			}
 
-			s.logger.WithField("block", s.blockIndex).Debugf("Result State Hash: %s", hash)
+			hash, err := s.state.Commit()
+			if err != nil {
+				s.logger.WithField("tx", s.txIndex).WithError(err).Errorf("Commit")
+			}
 
-			s.blockIndex++
+			s.logger.WithField("tx", s.txIndex).Debugf("Result State Hash: %v", hash)
+
+			s.txIndex++
 		}
 	}
 }

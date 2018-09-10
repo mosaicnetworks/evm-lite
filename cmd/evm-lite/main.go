@@ -9,7 +9,7 @@ func main() {
 	rootCmd := cmd.RootCmd
 
 	rootCmd.AddCommand(
-		cmd.NewRunCmd(),
+		cmd.NewSoloCmd(),
 		cmd.VersionCmd)
 
 	if err := rootCmd.Execute(); err != nil {
