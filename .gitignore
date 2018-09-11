@@ -10,4 +10,7 @@ vendor
 
 demo/nodejs/node_modules
 
+deploy/docker/evm-lite
+*tfstate
+
 state/test_data/eth/chaindata
