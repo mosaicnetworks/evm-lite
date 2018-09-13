@@ -1,19 +1,19 @@
+consensus = solo
 nodes = 4
 
-up: conf start
+up: images conf start
 
 images :
-	cd docker && make
+	$(MAKE) -C docker
 
-conf: 
-	rm -rf conf
-	./scripts/build-eth-conf.sh $(nodes)
+conf :
+	$(MAKE) -C $(consensus) conf "nodes=$(nodes)"
 
-start:
-	./scripts/run-testnet.sh $(nodes)
+start : 
+	$(MAKE) -C terraform apply consensus=$(consensus) nodes=$(nodes)
 
-stop: 
-	./scripts/stop-testnet.sh
+stop:
+	$(MAKE) -C terraform destroy
 
 .PHONY: up images conf start stop
 	

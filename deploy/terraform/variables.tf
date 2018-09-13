@@ -1,3 +1,7 @@
-variable "servers" {
-  default = 1
+variable "nodes" {
+  default = 4
+}
+
+variable "command" {
+  default = "solo"
 }

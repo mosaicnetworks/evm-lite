@@ -3,29 +3,29 @@ provider "docker" {
   host = "unix:///var/run/docker.sock"
 }
 
-# Create an evm-lite container
+# Create an evm-lite containers
 resource "docker_container" "evm-lite" {
-  count = "${var.servers}"
+  count = "${var.nodes}"
   
   name = "node${count.index}"
-  
+  hostname= "node${count.index}"
+
   image = "mosaicnetworks/evm-lite:0.1.0"
 
   networks = ["${docker_network.private_network.name}"]
-  publish_all_ports = true
 
-  provisioner "file" {
-      source = "../conf/node${count.index}/"
-      destination = "/.evm-lite"
-      connection {
-        type     = "ssh"
-        agent = false
-        host =  "${self.ip_address}"
-        private_key = "${file("${path.cwd}/../docker/keys/client")}"
-      }
+  volumes {
+    host_path = "${path.cwd}/../${var.command}/conf/node${count.index}"
+    container_path = "/.evm-lite"
+    read_only = true
   }
 
-  command = ["solo"]
+  # entrypoint =  ["tail", "-f", "/dev/null"]
+  command = ["${var.command}"]
+
+  provisioner "local-exec" {
+    command = "echo node${count.index} ${self.ip_address}  >> ips.dat"
+  }
 }
 
 # Create a new docker network
@@ -39,4 +39,6 @@ resource "docker_network" "private_network" {
   }
 }
 
-
+output "public_addresses" {
+    value = ["${docker_container.evm-lite.*.ip_address}"]
+}

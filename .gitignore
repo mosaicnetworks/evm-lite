@@ -3,14 +3,13 @@
 glide.lock
 vendor
 
-debug.test
-build
-
-vendor
-
-demo/nodejs/node_modules
+cmd/evm-lite/main
+*debug.test*
 
 deploy/docker/evm-lite
+deploy/solo/conf
+deploy/babble/conf
+deploy/terraform/ips.dat
 *tfstate
 
 state/test_data/eth/chaindata

@@ -2,6 +2,7 @@ package engine
 
 import (
 	"github.com/mosaicnetworks/evm-lite/consensus"
+	"github.com/mosaicnetworks/evm-lite/engine/config"
 	"github.com/mosaicnetworks/evm-lite/service"
 	"github.com/mosaicnetworks/evm-lite/state"
 	"github.com/sirupsen/logrus"
@@ -15,7 +16,7 @@ type Engine struct {
 }
 
 //NewEngine instantiates a new Engine with coupled State, Service, and Consensus
-func NewEngine(config Config,
+func NewEngine(config config.Config,
 	consensus consensus.Consensus,
 	logger *logrus.Logger) (*Engine, error) {
 	submitCh := make(chan []byte)

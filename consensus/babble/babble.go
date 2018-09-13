@@ -11,6 +11,7 @@ import (
 	"github.com/mosaicnetworks/babble/net"
 	"github.com/mosaicnetworks/babble/node"
 	bserv "github.com/mosaicnetworks/babble/service"
+	"github.com/mosaicnetworks/evm-lite/engine/config"
 	"github.com/mosaicnetworks/evm-lite/service"
 	"github.com/mosaicnetworks/evm-lite/state"
 	"github.com/sirupsen/logrus"
@@ -21,7 +22,7 @@ InmemBabble implementes the Consensus Interface.
 It uses an inmemory Babble node.
 */
 type InmemBabble struct {
-	config        Config
+	config        config.BabbleConfig
 	ethService    *service.Service
 	ethState      *state.State
 	babbleNode    *node.Node
@@ -30,7 +31,7 @@ type InmemBabble struct {
 }
 
 //NewInmemBabble instantiates a new InmemBabble consensus system
-func NewInmemBabble(config Config, logger *logrus.Logger) *InmemBabble {
+func NewInmemBabble(config config.BabbleConfig, logger *logrus.Logger) *InmemBabble {
 	return &InmemBabble{
 		config: config,
 		logger: logger.WithField("module", "babble"),

@@ -3,27 +3,28 @@ package commands
 import (
 	"path/filepath"
 
-	"github.com/mosaicnetworks/evm-lite/engine"
+	_config "github.com/mosaicnetworks/evm-lite/engine/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	config = engine.DefaultConfig()
+	config = _config.DefaultConfig()
 	logger = logrus.New()
 )
 
 //RootCmd is the root command for evm-babble
 var RootCmd = &cobra.Command{
-	Use:   "evm-lite",
-	Short: "LightWeight EVM app for different consensus sytems",
+	Use:              "evm-lite",
+	Short:            "LightWeight EVM app for different consensus sytems",
+	TraverseChildren: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
 		if cmd.Name() == VersionCmd.Name() {
 			return nil
 		}
 
-		if err := bindFlagsLoadViper(cmd, args); err != nil {
+		if err := bindFlagsLoadViper(cmd); err != nil {
 			return err
 		}
 
@@ -55,13 +56,14 @@ func init() {
 	RootCmd.PersistentFlags().String("eth.db", config.Eth.DbFile, "Eth database file")
 	RootCmd.PersistentFlags().String("eth.api_addr", config.Eth.EthAPIAddr, "Address of HTTP API service")
 	RootCmd.PersistentFlags().Int("eth.cache", config.Eth.Cache, "Megabytes of memory allocated to internal caching (min 16MB / database forced)")
+
 }
 
 //------------------------------------------------------------------------------
 
 //Retrieve the default environment configuration.
-func parseConfig() (*engine.Config, error) {
-	conf := engine.DefaultConfig()
+func parseConfig() (*_config.Config, error) {
+	conf := _config.DefaultConfig()
 	err := viper.Unmarshal(conf)
 	if err != nil {
 		return nil, err
@@ -70,7 +72,7 @@ func parseConfig() (*engine.Config, error) {
 }
 
 //Bind all flags and read the config into viper
-func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
+func bindFlagsLoadViper(cmd *cobra.Command) error {
 	// cmd.Flags() includes flags from this command and all persistent flags from the parent
 	if err := viper.BindPFlags(cmd.Flags()); err != nil {
 		return err
@@ -88,6 +90,7 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 		// ignore not found error, return other errors
 		return err
 	}
+
 	return nil
 }
 
