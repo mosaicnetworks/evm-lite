@@ -1,6 +1,9 @@
 # EVM-LITE
-A simple wrapper for the Ethereum Virtual Machine and State Trie that plugs into 
-different consensus systems.
+## Ethereum with interchangeable consensus.
+
+We took the [Go-Ethereum](https://github.com/ethereum/go-ethereum) 
+implementation (Geth) and stripped out the EVM and Trie components to create a 
+modular version that can work with different consensus systems. 
 
 ## ARCHITECTURE
 
@@ -13,7 +16,8 @@ different consensus systems.
 +----------+    |  | -Keystore   |         | -Trie       |  |
                 |  |             |         | -Database   |  |
                 |  +-------------+         +-------------+  |
-                |         |                       |         |
+                |         |                       ^         |     
+                |         v                       |         |
                 |  +-------------------------------------+  |
                 |  | Engine                              |  |
                 |  |                                     |  | 
@@ -27,19 +31,23 @@ different consensus systems.
 
 ```
 
-Consensus Implementations:
+## Consensus Implementations:
 
 - **SOLO**: No Consensus. Transactions are relayed directly from Service to 
             State
 - **BABBLE**: Inmemory Babble node.
 
+more to come...
+
 ## USAGE
 
-Each consensus has its own subcommand `evm-lite [consensus]`
+Each consensus has its own subcommand `evml [consensus]`
 
 ```
+Ethereum with interchangeable consensus
+
 Usage:
-  evm-lite [command]
+  evml [command]
 
 Available Commands:
   babble      Run the evm-lite node with Babble consensus
@@ -55,18 +63,50 @@ Flags:
       --eth.genesis string    Location of genesis file (default "/home/martin/.evm-lite/eth/genesis.json")
       --eth.keystore string   Location of Ethereum account keys (default "/home/martin/.evm-lite/eth/keystore")
       --eth.pwd string        Password file to unlock accounts (default "/home/martin/.evm-lite/eth/pwd.txt")
-  -h, --help                  help for evm-lite
+  -h, --help                  help for evml
       --log_level string      debug, info, warn, error, fatal, panic (default "debug")
 
-Use "evm-lite [command] --help" for more information about a command.
+Use "evml [command] --help" for more information about a command.
 
 ```
+
+Instead of using CLI flags, options can also be specified in a `config.toml` 
+file in the `datadir`. 
+
+ex (config.toml):
+``` toml
+[eth]
+db = "/eth.db"
+[babble]
+node_addr="127.0.0.1:1337"
+```
+
+## DEPLOY
+
+We provide a set of scripts to automate the deployment of testnets. This 
+requires [terraform](https://www.terraform.io/) and 
+[docker](https://www.docker.com/).
+
+ex: 
+``` bash
+cd deploy
+#configure and start a testnet of 4 evm-lite nodes with Babble consensus
+make consensus=babble nodes=4
+#configure and start a single evm-lite instance with Solo consensus 
+make consensu=solo nodes=1 
+#bring everything down
+make stop 
+```
+
+Support for AWS coming soon...
+
 
 ## DEV
 
 To add a new consensus system:
 
 - implement the consensus interface (consensus/consensus.go)
-- create the corresponding CLI subcommand in cmd/commands/
+- add a property to the the global configuration object (config/config.go)
+- create the corresponding CLI subcommand in cmd/evml/commands/
 - register that command to the root command
 
