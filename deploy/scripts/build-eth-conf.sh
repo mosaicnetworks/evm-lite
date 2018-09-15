@@ -11,37 +11,44 @@
 # flag). The output of this script, executed with default parameters, will look 
 # something like this:
 #
-#   conf
-#   ├── config.toml
-#   ├── genesis.json
-#   ├── node0
-#   │   ├── config.toml
-#   │   └── eth
-#   │       ├── genesis.json
-#   │       ├── keystore
-#   │       │   └── UTC--2018-09-15T10-32-13.572377320Z--14d0b6ede43e996b89905899c77918e2eabad992
-#   │       └── pwd.txt
-#   ├── node1
-#   │   ├── config.toml
-#   │   └── eth
-#   │       ├── genesis.json
-#   │       ├── keystore
-#   │       │   └── UTC--2018-09-15T10-32-15.684974010Z--bc6fdf999a9d857a9d4ca690efcf889c6ed11d77
-#   │       └── pwd.txt
-#   ├── node2
-#   │   ├── config.toml
-#   │   └── eth
-#   │       ├── genesis.json
-#   │       ├── keystore
-#   │       │   └── UTC--2018-09-15T10-32-17.693146314Z--9b2e13f23730621c10549817c0bda63c4ade822a
-#   │       └── pwd.txt
-#   └── node3
-#       ├── config.toml
-#       └── eth
-#           ├── genesis.json
-#           ├── keystore
-#           │   └── UTC--2018-09-15T10-32-19.693701497Z--6c81fa82dfa54e6cf8073bfe746a0826dc982050
-#           └── pwd.txt
+#	conf/
+#	├── config.toml
+#	├── genesis.json
+#	├── keystore
+#	│   ├── UTC--2018-09-15T13-58-07.652863115Z--664f52f5866d0bea946fcb5cec67f18b93b574c0
+#	│   ├── UTC--2018-09-15T13-58-09.640035569Z--c1a67fac13e90b93f28fce79a34eea63a9cfebfc
+#	│   ├── UTC--2018-09-15T13-58-11.693951535Z--5917d40005da07924796a396d2e522da49490afd
+#	│   └── UTC--2018-09-15T13-58-13.749396512Z--98a6b9400d294bb5a787583affd72b28faf2273f
+#	├── node0
+#	│   ├── config.toml
+#	│   └── eth
+#	│       ├── genesis.json
+#	│       ├── keystore
+#	│       │   └── UTC--2018-09-15T13-58-07.652863115Z--664f52f5866d0bea946fcb5cec67f18b93b574c0
+#	│       └── pwd.txt
+#	├── node1
+#	│   ├── config.toml
+#	│   └── eth
+#	│       ├── genesis.json
+#	│       ├── keystore
+#	│       │   └── UTC--2018-09-15T13-58-09.640035569Z--c1a67fac13e90b93f28fce79a34eea63a9cfebfc
+#	│       └── pwd.txt
+#	├── node2
+#	│   ├── config.toml
+#	│   └── eth
+#	│       ├── genesis.json
+#	│       ├── keystore
+#	│       │   └── UTC--2018-09-15T13-58-11.693951535Z--5917d40005da07924796a396d2e522da49490afd
+#	│       └── pwd.txt
+#	└── node3
+#	    ├── config.toml
+#	    └── eth
+#	        ├── genesis.json
+#	        ├── keystore
+#	        │   └── UTC--2018-09-15T13-58-13.749396512Z--98a6b9400d294bb5a787583affd72b28faf2273f
+#	        └── pwd.txt
+
+
 
 set -e
 
@@ -87,6 +94,9 @@ CFILE=$DEST/config.toml
 echo "[eth]" > $CFILE 
 echo "db = \"/eth.db\"" >> $CFILE
 
+gKeystore=$DEST/keystore
+mkdir -p $gKeystore
+
 # Copy files into each node's folder and cleanup
 for i in $(seq 0 $l) 
 do
@@ -94,6 +104,7 @@ do
 	cp $DEST/config.toml $dest/config.toml
 	cp $DEST/genesis.json $dest/eth
 	cp $PASS $dest/eth
+	cp -r $dest/eth/keystore/* $gKeystore
     rm $dest/eth/addr
 done
 
