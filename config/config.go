@@ -66,9 +66,9 @@ func defaultHomeDir() string {
 	home := homeDir()
 	if home != "" {
 		if runtime.GOOS == "darwin" {
-			return filepath.Join(home, "Library", "BABBLE")
+			return filepath.Join(home, "Library", "EVMLITE")
 		} else if runtime.GOOS == "windows" {
-			return filepath.Join(home, "AppData", "Roaming", "EVMBABBE")
+			return filepath.Join(home, "AppData", "Roaming", "EVMLITE")
 		} else {
 			return filepath.Join(home, ".evm-lite")
 		}

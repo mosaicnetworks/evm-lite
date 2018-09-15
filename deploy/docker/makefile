@@ -5,7 +5,7 @@ all: evm-lite-image
 evm-lite-image:
 	go build \
 		--ldflags '-extldflags "-static"' \
-		-o evm-lite ../../cmd/evm-lite/
+		-o evml ../../cmd/evml/
 	docker build -t mosaicnetworks/evm-lite:$(EVM_LITE_VERSION) \
 		-t mosaicnetworks/evm-lite:latest \
 		.
