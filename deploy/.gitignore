@@ -1,0 +1,6 @@
+docker/evm-lite
+scripts/conf
+solo/conf
+babble/conf
+terraform/ips.dat
+*tfstate

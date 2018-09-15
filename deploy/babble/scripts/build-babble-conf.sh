@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # This script creates the configuration for a Babble testnet with a variable  
-# number of nodes. It will generate crytographic key pairs and assemble a peers.json
-# file in the format used by Babble. The files are copied into individual folders 
-# for each node so that these folders can be used as the datadir that Babble reads 
-# configuration from. 
+# number of nodes. It will generate crytographic key pairs and assemble a 
+# peers.json file in the format used by Babble. The files are copied into 
+# individual folders for each node, so that these folders can be used as the 
+# datadir that Babble reads configuration from. 
 
 set -e
 

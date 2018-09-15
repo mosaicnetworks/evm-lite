@@ -1,8 +1,8 @@
 package engine
 
 import (
+	"github.com/mosaicnetworks/evm-lite/config"
 	"github.com/mosaicnetworks/evm-lite/consensus"
-	"github.com/mosaicnetworks/evm-lite/engine/config"
 	"github.com/mosaicnetworks/evm-lite/service"
 	"github.com/mosaicnetworks/evm-lite/state"
 	"github.com/sirupsen/logrus"
