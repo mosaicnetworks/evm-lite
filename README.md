@@ -35,7 +35,10 @@ modular version that can work with different consensus systems.
 
 - **SOLO**: No Consensus. Transactions are relayed directly from Service to 
             State
+
 - **BABBLE**: Inmemory Babble node.
+
+- **RAFT**: Hashicorp implementation of Raft.
 
 more to come...
 
@@ -80,6 +83,27 @@ db = "/eth.db"
 node_addr="127.0.0.1:1337"
 ```
 
+## DEV
+
+DEPENDENCIES
+
+We use glide to manage dependencies: 
+
+```bash
+[...]/evm-lite$ curl https://glide.sh/get | sh
+[...]/evm-lite$ glide install
+```
+This will download all dependencies and put them in the **vendor** folder; it 
+could take a few minutes.
+
+To add a new consensus system:
+
+- implement the consensus interface (consensus/consensus.go)
+- add a property to the the global configuration object (config/config.go)
+- create the corresponding CLI subcommand in cmd/evml/commands/
+- register that command to the root command
+
+
 ## DEPLOY
 
 We provide a set of scripts to automate the deployment of testnets. This 
@@ -92,7 +116,9 @@ cd deploy
 #configure and start a testnet of 4 evm-lite nodes with Babble consensus
 make consensus=babble nodes=4
 #configure and start a single evm-lite instance with Solo consensus 
-make consensu=solo nodes=1 
+make consensus=solo nodes=1 
+#configure and start a testnet of 3 evm-lite nodes with Raft consensus
+make consensus=raft nodes=3
 #bring everything down
 make stop 
 ```
@@ -100,12 +126,4 @@ make stop
 Support for AWS coming soon...
 
 
-## DEV
-
-To add a new consensus system:
-
-- implement the consensus interface (consensus/consensus.go)
-- add a property to the the global configuration object (config/config.go)
-- create the corresponding CLI subcommand in cmd/evml/commands/
-- register that command to the root command
 

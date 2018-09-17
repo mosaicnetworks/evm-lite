@@ -17,10 +17,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-/*
-InmemBabble implementes the Consensus Interface.
-It uses an inmemory Babble node.
-*/
+//InmemBabble implementes the Consensus interface.
+//It uses an inmemory Babble node.
 type InmemBabble struct {
 	config        config.BabbleConfig
 	ethService    *service.Service

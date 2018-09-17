@@ -2,5 +2,6 @@ docker/evml
 scripts/conf
 solo/conf
 babble/conf
+raft/conf
 terraform/ips.dat
-*tfstate
+*tfstate*

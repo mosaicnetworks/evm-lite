@@ -24,6 +24,9 @@ type Config struct {
 
 	//Options for Babble consensus
 	Babble *BabbleConfig `mapstructure:"babble"`
+
+	//Options for Raft consensus
+	Raft *RaftConfig `mapstructure:"raft"`
 }
 
 //DefaultConfig returns the default configuration for an EVM-Lite node
@@ -32,6 +35,7 @@ func DefaultConfig() *Config {
 		BaseConfig: DefaultBaseConfig(),
 		Eth:        DefaultEthConfig(),
 		Babble:     DefaultBabbleConfig(),
+		Raft:       DefaultRaftConfig(),
 	}
 }
 
