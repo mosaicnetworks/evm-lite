@@ -1,3 +1,4 @@
+env = local
 consensus = solo
 nodes = 4
 pass = $(CURDIR)/scripts/pwd.txt

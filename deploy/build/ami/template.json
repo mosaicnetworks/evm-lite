@@ -1,0 +1,32 @@
+{
+    "variables": {
+      "aws_access_key": "",
+      "aws_secret_key": "",
+      "evml_version" : "v0.1.0",
+      "evml_path": "ami/evml"
+    },
+    "builders": [
+      {
+        "type": "amazon-ebs",
+        "access_key" : "{{user `aws_access_key`}}",
+        "secret_key" : "{{user `aws_secret_key`}}" ,
+        "region": "eu-west-2",
+        "source_ami": "ami-c7ab5fa0",
+        "instance_type": "t2.micro",
+        "ami_name": "evm-lite_{{user `evml_version`}}",
+        "ssh_username": "ubuntu"
+      }
+    ],
+    "provisioners": [
+      {
+        "type": "file",
+        "source": "{{user `evml_path`}}",
+        "destination": "/tmp/evml"
+      },
+      {
+        "type": "shell",
+        "execute_command": "echo 'packer' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'",
+        "inline": ["cp /tmp/evml /usr/local/bin"]
+      }
+    ]
+  }

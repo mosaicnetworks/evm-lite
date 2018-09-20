@@ -3,8 +3,8 @@ package commands
 import (
 	"fmt"
 
-	"github.com/mosaicnetworks/evm-lite/consensus/solo"
-	"github.com/mosaicnetworks/evm-lite/engine"
+	"github.com/mosaicnetworks/evm-lite/src/consensus/solo"
+	"github.com/mosaicnetworks/evm-lite/src/engine"
 	"github.com/spf13/cobra"
 )
 

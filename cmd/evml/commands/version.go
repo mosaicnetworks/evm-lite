@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/mosaicnetworks/evm-lite/version"
+	"github.com/mosaicnetworks/evm-lite/src/version"
 	"github.com/spf13/cobra"
 )
 

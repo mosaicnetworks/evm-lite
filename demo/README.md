@@ -1,6 +1,6 @@
 # DEMO
 
-Here we provide a few scripts to demonstrate how to interract with a testnet of
+Here we provide a few scripts to demonstrate how to interact with a testnet of
 4 evm-lite nodes using Babble consensus.
 
 To start the testnet, execute the deploy commands from the `deploy/` directory:

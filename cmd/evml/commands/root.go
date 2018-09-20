@@ -3,7 +3,7 @@ package commands
 import (
 	"path/filepath"
 
-	_config "github.com/mosaicnetworks/evm-lite/config"
+	_config "github.com/mosaicnetworks/evm-lite/src/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

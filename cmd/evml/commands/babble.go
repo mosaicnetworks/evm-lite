@@ -3,8 +3,8 @@ package commands
 import (
 	"fmt"
 
-	"github.com/mosaicnetworks/evm-lite/consensus/babble"
-	"github.com/mosaicnetworks/evm-lite/engine"
+	"github.com/mosaicnetworks/evm-lite/src/consensus/babble"
+	"github.com/mosaicnetworks/evm-lite/src/engine"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
