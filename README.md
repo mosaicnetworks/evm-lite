@@ -1,9 +1,9 @@
 # EVM-LITE
-## Ethereum with interchangeable consensus.
+## Ethereum with changeable consensus.
 
 We took the [Go-Ethereum](https://github.com/ethereum/go-ethereum) 
 implementation (Geth) and stripped out the EVM and Trie components to create a 
-modular version that can work with different consensus systems. 
+modular version with interchangeable consensus. 
 
 ## ARCHITECTURE
 
