@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -36,6 +37,21 @@ func DefaultConfig() *Config {
 		Eth:        DefaultEthConfig(),
 		Babble:     DefaultBabbleConfig(),
 		Raft:       DefaultRaftConfig(),
+	}
+}
+
+//SetDataDir updates the root data directory as well as the various lower config
+//directories for eth and consensus
+func (c *Config) SetDataDir(datadir string) {
+	c.BaseConfig.DataDir = datadir
+	if c.Eth != nil {
+		c.Eth.SetDataDir(fmt.Sprintf("%s/eth", datadir))
+	}
+	if c.Babble != nil {
+		c.Babble.SetDataDir(fmt.Sprintf("%s/babble", datadir))
+	}
+	if c.Raft != nil {
+		c.Raft.SetDataDir(fmt.Sprintf("%s/raft", datadir))
 	}
 }
 

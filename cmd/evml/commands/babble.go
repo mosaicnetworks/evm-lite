@@ -35,6 +35,8 @@ func NewBabbleCmd() *cobra.Command {
 		Short: "Run the evm-lite node with Babble consensus",
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 
+			config.SetDataDir(config.BaseConfig.DataDir)
+
 			logger.WithFields(logrus.Fields{
 				"Babble": config.Babble,
 			}).Debug("Config")

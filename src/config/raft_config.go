@@ -109,3 +109,14 @@ func DefaultRaftConfig() *RaftConfig {
 		NodeAddr:           defaultNodeAddr,
 	}
 }
+
+//SetDataDir updates the raft configuration directories if they were set to
+//default values
+func (c *RaftConfig) SetDataDir(datadir string) {
+	if c.RaftDir == defaultRaftDir {
+		c.RaftDir = datadir
+	}
+	if c.SnapshotDir == defaultSnapshotDir {
+		c.SnapshotDir = fmt.Sprintf("%s/snapshots", c.RaftDir)
+	}
+}

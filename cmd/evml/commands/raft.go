@@ -28,6 +28,8 @@ func NewRaftCmd() *cobra.Command {
 		Short: "Run the evm-lite node with Raft consensus",
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 
+			config.SetDataDir(config.BaseConfig.DataDir)
+
 			logger.WithFields(logrus.Fields{
 				"Raft": config.Raft,
 			}).Debug("Config")

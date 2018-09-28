@@ -36,6 +36,8 @@ var RootCmd = &cobra.Command{
 		logger = logrus.New()
 		logger.Level = logLevel(config.BaseConfig.LogLevel)
 
+		config.SetDataDir(config.BaseConfig.DataDir)
+
 		logger.WithFields(logrus.Fields{
 			"Base": config.BaseConfig,
 			"Eth":  config.Eth}).Debug("Config")

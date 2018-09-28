@@ -46,3 +46,20 @@ func DefaultEthConfig() *EthConfig {
 		Cache:      defaultCache,
 	}
 }
+
+//SetDataDir updates the eth configuration directories if they were set to
+//default values.
+func (c *EthConfig) SetDataDir(datadir string) {
+	if c.Genesis == defaultGenesisFile {
+		c.Genesis = fmt.Sprintf("%s/genesis.json", datadir)
+	}
+	if c.Keystore == defaultKeystoreFile {
+		c.Keystore = fmt.Sprintf("%s/keystore", datadir)
+	}
+	if c.PwdFile == defaultPwdFile {
+		c.PwdFile = fmt.Sprintf("%s/pwd.txt", datadir)
+	}
+	if c.DbFile == defaultDbFile {
+		c.DbFile = fmt.Sprintf("%s/chaindata", datadir)
+	}
+}

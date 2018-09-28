@@ -10,7 +10,7 @@ modular version that can work with different consensus systems.
 ```
                 +-------------------------------------------+
 +----------+    |  +-------------+         +-------------+  |       
-|          |    |  | Service     |         | State App   |  |
+|          |    |  | Service     |         | State       |  |
 |  Client  <-----> |             | <------ |             |  |
 |          |    |  | -API        |         | -EVM        |  |
 +----------+    |  | -Keystore   |         | -Trie       |  |
@@ -123,7 +123,7 @@ make consensus=raft nodes=3
 make stop 
 ```
 
-Support for AWS coming soon...
+Support for AWS also available (cf. deploy/)
 
 
 

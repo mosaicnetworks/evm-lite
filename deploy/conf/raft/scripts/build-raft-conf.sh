@@ -7,8 +7,10 @@
 set -e
 
 N=${1:-4}
-DEST=${2:-"conf"}
-PORT=${4:-1337}
+IPBASE=${2:-node}
+IPADD=${3:-0}
+DEST=${4:-"conf"}
+PORT=${5:-1337}
 
 l=$((N-1))
 
@@ -24,7 +26,7 @@ do
 	fi
 	
 	printf "\t{\n" >> $PFILE
-	printf "\t\t\"address\":\"node$i:$PORT\",\n" >> $PFILE
+	printf "\t\t\"address\":\"$IPBASE$(($IPADD + $i)):$PORT\",\n" >> $PFILE
 	printf "\t\t\"id\":\"node$i\"\n" >> $PFILE
 	printf "\t}%s\n"  $com >> $PFILE
 

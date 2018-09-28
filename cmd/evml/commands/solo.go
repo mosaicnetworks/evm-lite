@@ -5,6 +5,7 @@ import (
 
 	"github.com/mosaicnetworks/evm-lite/src/consensus/solo"
 	"github.com/mosaicnetworks/evm-lite/src/engine"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +14,17 @@ func NewSoloCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "solo",
 		Short: "Run the evm-lite node with Solo consensus (no consensus)",
-		RunE:  runSolo,
+		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+
+			config.SetDataDir(config.BaseConfig.DataDir)
+
+			logger.WithFields(logrus.Fields{
+				"Eth": config.Eth,
+			}).Debug("Config")
+
+			return nil
+		},
+		RunE: runSolo,
 	}
 	return cmd
 }

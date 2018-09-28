@@ -3,6 +3,11 @@ variable "nodes" {
   default = 4
 }
 
+//docker user. Needs rw permission in conf/
+variable "user" {
+  default = "1000"
+}
+
 //evml command (solo, babble, raft)
 variable "command" {
   default = "solo"

@@ -1,21 +1,27 @@
-env = local
-consensus = solo
-nodes = 4
-pass = $(CURDIR)/scripts/pwd.txt
+env = local # local or aws
+version = 0.1.0 # evm-lite Docker Image
+user = 1000 # user that run evml inside the docker containers. (try 501 in MacOS)
+consensus = solo # solo, babble, or raft
+nodes = 1
+ipbase = node # use 10.0.2. for aws 
+ipadd = 0 # use 10 for aws
 
-up: images conf start
+up: conf start
 
-images :
-	$(MAKE) -C docker
+build-docker-image:
+	$(MAKE) -C build docker
 
-conf :
-	$(MAKE) -C $(consensus) conf nodes=$(nodes) pass=$(pass)
+build-ami:
+	$(MAKE) -C build ami
 
-start : 
-	$(MAKE) -C terraform apply consensus=$(consensus) nodes=$(nodes)
+conf:
+	$(MAKE) -C conf/$(consensus) conf nodes=$(nodes) ipbase=$(ipbase) ipadd=$(ipadd)
+
+start: 
+	$(MAKE) -C terraform/$(env) apply nodes=$(nodes) consensus=$(consensus) version=$(version) user=$(user)
 
 stop:
-	$(MAKE) -C terraform destroy
+	$(MAKE) -C terraform/$(env) destroy
 
-.PHONY: up images conf start stop
+.PHONY: up build-docker build-ami conf start stop
 	

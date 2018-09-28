@@ -85,3 +85,14 @@ func DefaultBabbleConfig() *BabbleConfig {
 		StorePath:     defaultStorePath,
 	}
 }
+
+//SetDataDir updates the babble configuration directories if they were set to
+//to default values.
+func (c *BabbleConfig) SetDataDir(datadir string) {
+	if c.BabbleDir == defaultBabbleDir {
+		c.BabbleDir = fmt.Sprintf("%s", datadir)
+	}
+	if c.StorePath == defaultStorePath {
+		c.StorePath = fmt.Sprintf("%s/badger_db", c.BabbleDir)
+	}
+}

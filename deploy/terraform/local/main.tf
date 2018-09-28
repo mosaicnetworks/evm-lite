@@ -26,13 +26,21 @@ resource "docker_container" "evm-lite" {
 
   networks = ["${docker_network.private_network.name}"]
 
+  
+  # The conf file is mounted as a volume. evm-lite, executed by the user 
+  # specified below, will read and write to this volume. So the user, needs 
+  # permissions on the host machine (host_path at least). Here, you want to 
+  # provide the same user that created the /conf folder. 
+  # Most probably: set user=1000 on linux, and user=501 (502)? on macos.
+  user = "${var.user}"
+  env = ["HOME=/home/${var.user}"]
   volumes {
     host_path      = "${var.conf}/node${count.index}"
-    container_path = "/.evm-lite"
+    container_path = "/home/${var.user}/.evm-lite"
     read_only      = false
   }
 
-  # entrypoint = ["tail", "-f", "/dev/null"]
+  #entrypoint = ["tail", "-f", "/dev/null"]
   command = ["${var.command}"]
 
   provisioner "local-exec" {
