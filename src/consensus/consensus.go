@@ -9,4 +9,5 @@ import (
 type Consensus interface {
 	Init(*state.State, *service.Service) error
 	Run() error
+	Info() (map[string]string, error)
 }

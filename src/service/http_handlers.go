@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"encoding/json"
+	"html/template"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/mosaicnetworks/evm-lite/src/service/templates"
 	"github.com/mosaicnetworks/evm-lite/src/state"
 )
 
@@ -327,6 +329,61 @@ func transactionReceiptHandler(w http.ResponseWriter, r *http.Request, m *Servic
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+}
+
+/*
+GET /info
+returns: JSON (depends on underlying consensus system)
+
+Info returns information about the consensus system. Each consensus system that
+plugs into evm-lite must implement an Info function.
+*/
+func infoHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET info")
+
+	stats, err := m.getInfo()
+	if err != nil {
+		m.logger.WithError(err).Error("Getting Info")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(stats)
+	if err != nil {
+		m.logger.WithError(err).Error("Marshaling JSON response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+/*
+GET /html/info
+returns: HTML version of info
+
+Info returns information about the consensus system. Each consensus system that
+plugs into evm-lite must implement an Info function.
+*/
+func htmlInfoHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET html/info")
+
+	stats, err := m.getInfo()
+	if err != nil {
+		m.logger.WithError(err).Error("Getting Info")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	t := template.New("index")        //name of the template is index
+	t, err = t.Parse(templates.Index) // parsing of template string
+	if err != nil {
+		m.logger.WithError(err).Error("Parsing template")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	t.Execute(w, stats)
 }
 
 //------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 FROM alpine
 ADD evml /usr/local/bin
-EXPOSE 8080 8000
+EXPOSE 8080
 ENTRYPOINT ["evml"]
 CMD []

@@ -14,6 +14,11 @@ variable "key_name" {}
 
 variable "key_path" {}
 
+//evm-lite AMI ID
+variable "ami" {
+  default = "ami-018ad531f586f2a77"
+}
+
 //Number of nodes to deploy
 variable "nodes" {
   default = 4

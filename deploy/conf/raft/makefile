@@ -1,13 +1,13 @@
-nodes = 3
-dest =  $(CURDIR)/conf
-pass = $(CURDIR)/../eth/pwd.txt
-ipbase = node
-ipadd = 0
+NODES = 3
+DEST =  $(CURDIR)/conf
+PASS = $(CURDIR)/../eth/pwd.txt
+IPBASE = node
+IPADD = 0
 
 conf:
 	rm -rf conf
-	./../eth/scripts/build-eth-conf.sh $(nodes) $(dest) $(pass)
-	./scripts/build-raft-conf.sh $(nodes) $(ipbase) $(ipadd)
-	./scripts/edit-toml.sh $(nodes) $(ipbase) $(ipadd)
+	./../eth/scripts/build-eth-conf.sh $(NODES) $(DEST) $(PASS)
+	./scripts/build-raft-conf.sh $(NODES) $(IPBASE) $(IPADD)
+	./scripts/edit-toml.sh $(NODES) $(IPBASE) $(IPADD)
 
 .PHONY: conf

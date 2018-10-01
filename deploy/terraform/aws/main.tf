@@ -44,22 +44,8 @@ resource "aws_security_group" "monetsec" {
   }
 
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
     from_port   = 8080
     to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 8000
-    to_port     = 8000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -68,7 +54,7 @@ resource "aws_security_group" "monetsec" {
     from_port   = 1337
     to_port     = 1337
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.2.0/24"]
   }
 
   ingress {
@@ -91,7 +77,7 @@ resource "aws_instance" "node" {
   count = "${var.nodes}"
 
   //EVM-LITE v0.1.0 (cf. packer/ to create the AMI)
-  ami           = "ami-02f6b2e14876d5c10"
+  ami           = "${var.ami}"
   instance_type = "t2.micro"
 
   subnet_id              = "${aws_subnet.monet.id}"

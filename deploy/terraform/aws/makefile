@@ -1,14 +1,14 @@
-nodes = 1
-consensus = solo
-conf = $(CURDIR)/../../conf/$(consensus)/conf
+NODES = 1
+CONSENSUS = solo
+CONF = $(CURDIR)/../../conf/$(CONSENSUS)/conf
 
 apply:
 	rm -f ips.dat && \
 	terraform apply -auto-approve \
 	    -var-file=secret.tfvars \
-		-var command=$(consensus) \
-		-var nodes=$(nodes) \
-		-var conf=$(conf)
+		-var command=$(CONSENSUS) \
+		-var nodes=$(NODES) \
+		-var conf=$(CONF)
 destroy:
 	terraform destroy -auto-approve -var-file=secret.tfvars
 

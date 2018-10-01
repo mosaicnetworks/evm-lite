@@ -125,3 +125,10 @@ func (r *Raft) Run() error {
 		}
 	}
 }
+
+//Info returns Raft stats
+func (r *Raft) Info() (map[string]string, error) {
+	info := r.raftNode.Stats()
+	info["type"] = "raft"
+	return info, nil
+}

@@ -10,7 +10,6 @@ import (
 	"github.com/mosaicnetworks/babble/hashgraph"
 	"github.com/mosaicnetworks/babble/net"
 	"github.com/mosaicnetworks/babble/node"
-	bserv "github.com/mosaicnetworks/babble/service"
 	"github.com/mosaicnetworks/evm-lite/src/config"
 	"github.com/mosaicnetworks/evm-lite/src/service"
 	"github.com/mosaicnetworks/evm-lite/src/state"
@@ -20,12 +19,11 @@ import (
 //InmemBabble implementes the Consensus interface.
 //It uses an inmemory Babble node.
 type InmemBabble struct {
-	config        config.BabbleConfig
-	ethService    *service.Service
-	ethState      *state.State
-	babbleNode    *node.Node
-	babbleService *bserv.Service
-	logger        *logrus.Entry
+	config     config.BabbleConfig
+	ethService *service.Service
+	ethState   *state.State
+	babbleNode *node.Node
+	logger     *logrus.Entry
 }
 
 //NewInmemBabble instantiates a new InmemBabble consensus system
@@ -136,22 +134,22 @@ func (b *InmemBabble) Init(state *state.State, service *service.Service) error {
 		return fmt.Errorf("Initializing node: %s", err)
 	}
 
-	babbleService := bserv.NewService(b.config.BabbleAPIAddr, node, conf.Logger)
-
 	//--------------------------------------------------------------------------
 	b.babbleNode = node
-	b.babbleService = babbleService
 	//--------------------------------------------------------------------------
 
 	return nil
 }
 
-//Run starts the Babble node and service
+//Run starts the Babble node
 func (b *InmemBabble) Run() error {
-	//Babble API service
-	go b.babbleService.Serve()
-
 	b.babbleNode.Run(true)
-
 	return nil
+}
+
+//Info returns Babble stats
+func (b *InmemBabble) Info() (map[string]string, error) {
+	info := b.babbleNode.GetStats()
+	info["type"] = "babble"
+	return info, nil
 }

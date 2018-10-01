@@ -18,6 +18,8 @@ import (
 
 var defaultGas = big.NewInt(90000)
 
+type infoCallback func() (map[string]string, error)
+
 type Service struct {
 	sync.Mutex
 	state       *state.State
@@ -28,6 +30,9 @@ type Service struct {
 	keyStore    *keystore.KeyStore
 	pwdFile     string
 	logger      *logrus.Logger
+
+	//XXX
+	getInfo infoCallback
 }
 
 func NewService(genesisFile, keystoreDir, apiAddr, pwdFile string,
@@ -58,6 +63,11 @@ func (m *Service) Run() {
 //XXX
 func (m *Service) GetSubmitCh() chan []byte {
 	return m.submitCh
+}
+
+//XXX
+func (m *Service) SetInfoCallback(f infoCallback) {
+	m.getInfo = f
 }
 
 func (m *Service) makeKeyStore() error {
@@ -127,6 +137,8 @@ func (m *Service) serveAPI() {
 	r.HandleFunc("/tx", m.makeHandler(transactionHandler)).Methods("POST")
 	r.HandleFunc("/rawtx", m.makeHandler(rawTransactionHandler)).Methods("POST")
 	r.HandleFunc("/tx/{tx_hash}", m.makeHandler(transactionReceiptHandler)).Methods("GET")
+	r.HandleFunc("/info", m.makeHandler(infoHandler)).Methods("GET")
+	r.HandleFunc("/html/info", m.makeHandler(htmlInfoHandler)).Methods("GET")
 	http.Handle("/", &CORSServer{r})
 	http.ListenAndServe(m.apiAddr, nil)
 }

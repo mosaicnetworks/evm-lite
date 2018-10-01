@@ -40,6 +40,8 @@ func NewEngine(config config.Config,
 		return nil, err
 	}
 
+	service.SetInfoCallback(consensus.Info)
+
 	engine := &Engine{
 		state:     state,
 		service:   service,

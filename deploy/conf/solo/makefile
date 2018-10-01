@@ -1,10 +1,10 @@
-nodes = 4
-dest =  $(CURDIR)/conf
-pass = $(CURDIR)/../eth/pwd.txt
+NODES = 4
+DEST =  $(CURDIR)/conf
+PASS = $(CURDIR)/../eth/pwd.txt
 
 conf: 
 	rm -rf conf
-	./../eth/scripts/build-eth-conf.sh $(nodes) $(dest) $(pass)
+	./../eth/scripts/build-eth-conf.sh $(NODES) $(DEST) $(PASS)
 
 .PHONY: conf
 	
