@@ -2,11 +2,13 @@ package config
 
 import (
 	"fmt"
+	"time"
+
+	_babble "github.com/mosaicnetworks/babble/src/babble"
+	"github.com/sirupsen/logrus"
 )
 
 var (
-	defaultProxyAddr     = ":1339"
-	defaultClientAddr    = ":1338"
 	defaultNodeAddr      = "127.0.0.1:1337"
 	defaultBabbleAPIAddr = ":8000"
 	defaultHeartbeat     = 500
@@ -14,28 +16,12 @@ var (
 	defaultCacheSize     = 50000
 	defaultSyncLimit     = 1000
 	defaultMaxPool       = 2
-	defaultStoreType     = "badger"
 	defaultBabbleDir     = fmt.Sprintf("%s/babble", DefaultDataDir)
 	defaultPeersFile     = fmt.Sprintf("%s/peers.json", defaultBabbleDir)
-	defaultStorePath     = fmt.Sprintf("%s/badger_db", defaultBabbleDir)
 )
 
 //BabbleConfig contains the configuration of a Babble node
 type BabbleConfig struct {
-
-	/*********************************************
-	SOCKET
-	*********************************************/
-
-	//Address of Babble proxy
-	ProxyAddr string `mapstructure:"proxy_addr"`
-
-	//Address of Babble client proxy
-	ClientAddr string `mapstructure:"client_addr"`
-
-	/*********************************************
-	Inmem
-	*********************************************/
 
 	//Directory containing priv_key.pem and peers.json files
 	BabbleDir string `mapstructure:"dir"`
@@ -62,17 +48,12 @@ type BabbleConfig struct {
 	MaxPool int `mapstructure:"max_pool"`
 
 	//Database type; badger or inmeum
-	StoreType string `mapstructure:"store_type"`
-
-	//If StoreType = badger, location of database file
-	StorePath string `mapstructure:"store_path"`
+	Store bool `mapstructure:"store"`
 }
 
 //DefaultBabbleConfig returns the default configuration for a Babble node
 func DefaultBabbleConfig() *BabbleConfig {
 	return &BabbleConfig{
-		ProxyAddr:     defaultProxyAddr,
-		ClientAddr:    defaultClientAddr,
 		BabbleDir:     defaultBabbleDir,
 		NodeAddr:      defaultNodeAddr,
 		BabbleAPIAddr: defaultBabbleAPIAddr,
@@ -81,8 +62,6 @@ func DefaultBabbleConfig() *BabbleConfig {
 		CacheSize:     defaultCacheSize,
 		SyncLimit:     defaultSyncLimit,
 		MaxPool:       defaultMaxPool,
-		StoreType:     defaultStoreType,
-		StorePath:     defaultStorePath,
 	}
 }
 
@@ -92,7 +71,21 @@ func (c *BabbleConfig) SetDataDir(datadir string) {
 	if c.BabbleDir == defaultBabbleDir {
 		c.BabbleDir = fmt.Sprintf("%s", datadir)
 	}
-	if c.StorePath == defaultStorePath {
-		c.StorePath = fmt.Sprintf("%s/badger_db", c.BabbleDir)
-	}
+}
+
+//ToRealBabbleConfig converts an evm-lite/src/config.BabbleConfig to a
+//babble/src/babble.BabbleConfig as used by Babble
+func (c *BabbleConfig) ToRealBabbleConfig(logger *logrus.Logger) *_babble.BabbleConfig {
+	babbleConfig := _babble.NewDefaultConfig()
+	babbleConfig.DataDir = c.BabbleDir
+	babbleConfig.BindAddr = c.NodeAddr
+	babbleConfig.MaxPool = c.MaxPool
+	babbleConfig.Store = c.Store
+	babbleConfig.Logger = logger
+	babbleConfig.NodeConfig.HeartbeatTimeout = time.Duration(c.Heartbeat) * time.Millisecond
+	babbleConfig.NodeConfig.TCPTimeout = time.Duration(c.TCPTimeout) * time.Millisecond
+	babbleConfig.NodeConfig.CacheSize = c.CacheSize
+	babbleConfig.NodeConfig.SyncLimit = c.SyncLimit
+	babbleConfig.NodeConfig.Logger = logger
+	return babbleConfig
 }

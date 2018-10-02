@@ -2,7 +2,7 @@ package babble
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/mosaicnetworks/babble/hashgraph"
+	"github.com/mosaicnetworks/babble/src/hashgraph"
 	"github.com/mosaicnetworks/evm-lite/src/service"
 	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
@@ -20,13 +20,13 @@ type InmemProxy struct {
 func NewInmemProxy(state *state.State,
 	service *service.Service,
 	submitCh chan []byte,
-	logger *logrus.Entry) *InmemProxy {
+	logger *logrus.Logger) *InmemProxy {
 
 	return &InmemProxy{
 		service:  service,
 		state:    state,
 		submitCh: submitCh,
-		logger:   logger,
+		logger:   logger.WithField("module", "babble/proxy"),
 	}
 }
 

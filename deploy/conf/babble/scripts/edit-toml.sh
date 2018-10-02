@@ -13,7 +13,7 @@ l=$((N-1))
 
 PFILE=$DEST/config.toml
 echo "[babble]" >> $PFILE 
-echo "store_type = \"inmem\"" >> $PFILE
+echo "store = false" >> $PFILE
 echo "heartbeat = 50" >> $PFILE
 echo "tcp_timeout = 200" >> $PFILE
     

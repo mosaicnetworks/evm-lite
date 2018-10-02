@@ -12,9 +12,6 @@ import (
 
 //AddBabbleFlags adds flags to the Babble command
 func AddBabbleFlags(cmd *cobra.Command) {
-
-	cmd.Flags().String("babble.proxy_addr", config.Babble.ProxyAddr, "IP:PORT of Babble proxy")
-	cmd.Flags().String("babble.client_addr", config.Babble.ClientAddr, "IP:PORT to bind client proxy")
 	cmd.Flags().String("babble.dir", config.Babble.BabbleDir, "Directory contaning priv_key.pem and peers.json files")
 	cmd.Flags().String("babble.node_addr", config.Babble.NodeAddr, "IP:PORT of Babble node")
 	cmd.Flags().String("babble.api_addr", config.Babble.BabbleAPIAddr, "IP:PORT of Babble HTTP API service")
@@ -23,8 +20,7 @@ func AddBabbleFlags(cmd *cobra.Command) {
 	cmd.Flags().Int("babble.cache_size", config.Babble.CacheSize, "Number of items in LRU caches")
 	cmd.Flags().Int("babble.sync_limit", config.Babble.SyncLimit, "Max number of Events per sync")
 	cmd.Flags().Int("babble.max_pool", config.Babble.MaxPool, "Max number of pool connections")
-	cmd.Flags().String("babble.store_type", config.Babble.StoreType, "badger,inmem")
-	cmd.Flags().String("babble.store_path", config.Babble.StorePath, "File containing the store database")
+	cmd.Flags().Bool("babble.store", config.Babble.Store, "use persistent store")
 	viper.BindPFlags(cmd.Flags())
 }
 
@@ -53,7 +49,7 @@ func NewBabbleCmd() *cobra.Command {
 
 func runBabble(cmd *cobra.Command, args []string) error {
 
-	babble := babble.NewInmemBabble(*config.Babble, logger)
+	babble := babble.NewInmemBabble(config.Babble, logger)
 	engine, err := engine.NewEngine(*config, babble, logger)
 	if err != nil {
 		return fmt.Errorf("Error building Engine: %s", err)

@@ -1,7 +1,7 @@
 package: github.com/mosaicnetworks/evm-lite
 import:
-- package: github.com/mosaicnetworks/babble
-  version: =0.3.0
+# - package: github.com/mosaicnetworks/babble
+#   version: =0.3.0
 - package: github.com/sirupsen/logrus
 - package: github.com/ethereum/go-ethereum
   version: =1.7.0
