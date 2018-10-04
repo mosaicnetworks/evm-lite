@@ -44,7 +44,7 @@ resource "docker_container" "evm-lite" {
   command = ["${var.command}"]
 
   provisioner "local-exec" {
-    command = "echo node${count.index} ${self.ip_address}>> ips.dat"
+    command = "echo node${count.index} ${self.ip_address} >> ips.dat"
   }
 }
 

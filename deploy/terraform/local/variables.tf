@@ -23,7 +23,7 @@ variable "version" {
   These volumes will be mounted in /.evm-lite where evml is configured to look 
   by default. For each node, there are files related to eth (accounts, genesis 
   file, keys, etc), the consensus system (ex Babble peers.json, key), 
-  and a config.toml file containing configuration for eth and the consensus 
+  and a evml.toml file containing configuration for eth and the consensus 
   system.
 
   ex: conf/
@@ -31,7 +31,7 @@ variable "version" {
     │   ├── babble
     │   │   ├── peers.json
     │   │   └── priv_key.pem
-    │   ├── config.toml
+    │   ├── evml.toml
     │   └── eth
     │       ├── genesis.json
     │       ├── keystore
@@ -41,7 +41,7 @@ variable "version" {
     │   ├── babble
     │   │   ├── peers.json
     │   │   └── priv_key.pem
-    │   ├── config.toml
+    │   ├── evml.toml
     │   └── eth
     │       ├── genesis.json
     │       ├── keystore

@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// VersionCmd displays the version of the evm-babble program being used
+// VersionCmd displays the version of evml being used
 var VersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show version info",

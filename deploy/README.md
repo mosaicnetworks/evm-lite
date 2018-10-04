@@ -85,7 +85,7 @@ creating the configuration for two babble nodes yields the following files:
 
 ```bash
 conf/babble/conf/
-├── config.toml
+├── evml.toml
 ├── genesis.json
 ├── keystore
 │   ├── UTC--2018-09-28T15-17-47.839800703Z--370728a25a925a4db0f59ddcd82a0874225bc43b
@@ -94,7 +94,7 @@ conf/babble/conf/
 │   ├── babble
 │   │   ├── peers.json
 │   │   └── priv_key.pem
-│   ├── config.toml
+│   ├── evml.toml
 │   └── eth
 │       ├── genesis.json
 │       ├── keystore
@@ -104,7 +104,7 @@ conf/babble/conf/
 │   ├── babble
 │   │   ├── peers.json
 │   │   └── priv_key.pem
-│   ├── config.toml
+│   ├── evml.toml
 │   └── eth
 │       ├── genesis.json
 │       ├── keystore
@@ -116,7 +116,7 @@ conf/babble/conf/
 It created an Ethereum key for each node using the derault password file, and a
 config.json file. The genesis file is used by evm-lite to initialize the state 
 with some funded accounts. It also created a Babble key and peers.json file
-defining the Babble network. The config.toml file contains parameters for babble
+defining the Babble network. The evml.toml file contains parameters for babble
 and evm-lite.
 
 XXX TODO _ Explain that the conf file is Read/Write. Mounted as volume in 

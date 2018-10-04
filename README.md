@@ -73,9 +73,9 @@ Use "evml [command] --help" for more information about a command.
 
 ```
 
-Options can also be specified in a `config.toml` file in the `datadir`. 
+Options can also be specified in a `evml.toml` file in the `datadir`. 
 
-ex (config.toml):
+ex (evml.toml):
 ``` toml
 [eth]
 db = "/eth.db"

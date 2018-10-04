@@ -4,7 +4,7 @@
 # It generates a new Ethereum key, controlled by the same password, for each 
 # node, and aggretates the corresponding public keys in a genesis.json file, 
 # which is used by evm-lite to initialize the accounts in the State. 
-# Additionally, it creates the base for the config.toml file used by evm-lite to 
+# Additionally, it creates the base for the evml.toml file used by evm-lite to 
 # read configuration, on top of command-line flags. The configuration files are 
 # placed in different folders (named node0...nodeN) which can be copied or 
 # mounted directly in the root directory for evm-lite (controlled by 'datadir' 
@@ -12,7 +12,7 @@
 # something like this:
 #
 #	conf/
-#	├── config.toml
+#	├── evml.toml
 #	├── genesis.json
 #	├── keystore
 #	│   ├── UTC--2018-09-15T13-58-07.652863115Z--664f52f5866d0bea946fcb5cec67f18b93b574c0
@@ -20,28 +20,28 @@
 #	│   ├── UTC--2018-09-15T13-58-11.693951535Z--5917d40005da07924796a396d2e522da49490afd
 #	│   └── UTC--2018-09-15T13-58-13.749396512Z--98a6b9400d294bb5a787583affd72b28faf2273f
 #	├── node0
-#	│   ├── config.toml
+#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
 #	│       │   └── UTC--2018-09-15T13-58-07.652863115Z--664f52f5866d0bea946fcb5cec67f18b93b574c0
 #	│       └── pwd.txt
 #	├── node1
-#	│   ├── config.toml
+#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
 #	│       │   └── UTC--2018-09-15T13-58-09.640035569Z--c1a67fac13e90b93f28fce79a34eea63a9cfebfc
 #	│       └── pwd.txt
 #	├── node2
-#	│   ├── config.toml
+#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
 #	│       │   └── UTC--2018-09-15T13-58-11.693951535Z--5917d40005da07924796a396d2e522da49490afd
 #	│       └── pwd.txt
 #	└── node3
-#	    ├── config.toml
+#	    ├── evml.toml
 #	    └── eth
 #	        ├── genesis.json
 #	        ├── keystore

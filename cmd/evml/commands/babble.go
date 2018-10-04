@@ -12,14 +12,14 @@ import (
 
 //AddBabbleFlags adds flags to the Babble command
 func AddBabbleFlags(cmd *cobra.Command) {
-	cmd.Flags().String("babble.dir", config.Babble.BabbleDir, "Directory contaning priv_key.pem and peers.json files")
-	cmd.Flags().String("babble.node_addr", config.Babble.NodeAddr, "IP:PORT of Babble node")
-	cmd.Flags().String("babble.api_addr", config.Babble.BabbleAPIAddr, "IP:PORT of Babble HTTP API service")
-	cmd.Flags().Int("babble.heartbeat", config.Babble.Heartbeat, "Heartbeat time milliseconds (time between gossips)")
-	cmd.Flags().Int("babble.tcp_timeout", config.Babble.TCPTimeout, "TCP timeout milliseconds")
-	cmd.Flags().Int("babble.cache_size", config.Babble.CacheSize, "Number of items in LRU caches")
-	cmd.Flags().Int("babble.sync_limit", config.Babble.SyncLimit, "Max number of Events per sync")
-	cmd.Flags().Int("babble.max_pool", config.Babble.MaxPool, "Max number of pool connections")
+	cmd.Flags().String("babble.datadir", config.Babble.DataDir, "Directory contaning priv_key.pem and peers.json files")
+	cmd.Flags().String("babble.listen", config.Babble.BindAddr, "IP:PORT of Babble node")
+	cmd.Flags().String("babble.service-listen", config.Babble.ServiceAddr, "IP:PORT of Babble HTTP API service")
+	cmd.Flags().Duration("babble.heartbeat", config.Babble.Heartbeat, "Heartbeat time milliseconds (time between gossips)")
+	cmd.Flags().Duration("babble.timeout", config.Babble.TCPTimeout, "TCP timeout milliseconds")
+	cmd.Flags().Int("babble.cache-size", config.Babble.CacheSize, "Number of items in LRU caches")
+	cmd.Flags().Int("babble.sync-limit", config.Babble.SyncLimit, "Max number of Events per sync")
+	cmd.Flags().Int("babble.max-pool", config.Babble.MaxPool, "Max number of pool connections")
 	cmd.Flags().Bool("babble.store", config.Babble.Store, "use persistent store")
 	viper.BindPFlags(cmd.Flags())
 }
