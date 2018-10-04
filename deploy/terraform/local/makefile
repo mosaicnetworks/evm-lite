@@ -1,7 +1,7 @@
 USER = 1000
 NODES = 1
 CONSENSUS = solo
-VERSION = 0.1.0
+VERSION = latest
 CONF = $(CURDIR)/../../conf/$(CONSENSUS)/conf
 
 apply:

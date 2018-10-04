@@ -15,7 +15,7 @@ variable "command" {
 
 //evml Docker Image version tag
 variable "version" {
-  default = "0.1.0"
+  default = "latest"
 }
 
 /*

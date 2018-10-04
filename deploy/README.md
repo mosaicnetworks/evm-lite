@@ -158,7 +158,7 @@ The configuration folders are mounted as volumes in the docker containers, and
 require read/write access from the process running in the container. Hence, when
 running the docker containers (cf examples below), specify a user that has 
 read/write access to the configuration folders. In most cases, this will be the 
-current user (1000 on Linux, 502 on MACOS). 
+current user (1000 on Linux, 501 on MACOS). 
 
 Examples:
 
@@ -169,7 +169,7 @@ cd deploy
 # configure and start a testnet of 4 evm-lite nodes with Babble consensus
 make CONSENSUS=babble NODES=4
 # same for MACOS users
-make USER=502 CONSENSUS=babble NODES=4 
+make USER=501 CONSENSUS=babble NODES=4 
 #configure and start a single evm-lite instance with Solo consensus 
 make CONSENSUS=solo NODES=1 
 #configure and start a testnet of 3 evm-lite nodes with Raft consensus

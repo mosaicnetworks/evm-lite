@@ -10,4 +10,4 @@ FEATURES:
 - consensus/raft: consensus implementation using hashicorp/raft
 - engine: agent that coordinates State, Service and Consensus.
 - cmd: CLI
-- deploy: scripts to deploy local docker network
+- deploy: scripts to create testnets locally or in AWS.

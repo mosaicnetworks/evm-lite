@@ -13,7 +13,7 @@ l=$((N-1))
 
 PFILE=$DEST/evml.toml
 echo "[babble]" >> $PFILE 
-echo "store = false" >> $PFILE
+echo "store = true" >> $PFILE
 echo "heartbeat = \"50ms\"" >> $PFILE
 echo "timeout = \"200ms\"" >> $PFILE
     

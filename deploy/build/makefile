@@ -14,7 +14,7 @@ docker:
 ami:
 	go build -o ami/evml ./../../cmd/evml/ && \
 	packer build --var-file=ami/secret.json \
-				 --var 'evml_version=$(EVM_LITE_VERSION)_$(GIT_COMMIT)' \
+				 --var 'evml_version=$(EVM_LITE_VERSION)-$(GIT_COMMIT)' \
 				  ami/template.json 
 
 .PHONY: all docker ami
