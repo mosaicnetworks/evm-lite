@@ -16,7 +16,7 @@ variable "key_path" {}
 
 //evm-lite AMI ID
 variable "ami" {
-  default = "ami-018ad531f586f2a77"
+  default = "ami-00640834f6a64ad31"
 }
 
 //Number of nodes to deploy

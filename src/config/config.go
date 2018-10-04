@@ -66,7 +66,7 @@ type BaseConfig struct {
 	DataDir string `mapstructure:"datadir"`
 
 	//Debug, info, warn, error, fatal, panic
-	LogLevel string `mapstructure:"log_level"`
+	LogLevel string `mapstructure:"log"`
 }
 
 //DefaultBaseConfig returns the default top-level configuration for EVM-Babble

@@ -79,15 +79,15 @@ type RaftConfig struct {
 	// The unique ID for this server across all time. When running with
 	// ProtocolVersion < 3, you must set this to be the same as the network
 	// address of your transport.
-	LocalID _raft.ServerID `mapstructure:"server_id"`
+	LocalID _raft.ServerID `mapstructure:"server-id"`
 
 	/*------------------------------------------------------------------------*/
 
 	//XXX TODO improve this
 
 	RaftDir     string `mapstructure:"dir"`
-	SnapshotDir string `mapstructure:"snapshot_dir"`
-	NodeAddr    string `mapstructure:"node_addr"`
+	SnapshotDir string `mapstructure:"snapshot-dir"`
+	NodeAddr    string `mapstructure:"node-addr"`
 }
 
 //DefaultRaftConfig returns the default configuration for a Raft node

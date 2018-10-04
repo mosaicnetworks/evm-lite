@@ -17,6 +17,6 @@ for i in $(seq 0 $l)
 do
 	dest=$DEST/node$i
 	cp $DEST/config.toml $dest/config.toml
-	echo "node_addr = \"$IPBASE$(($IPADD + $i)):1337\"" >> $dest/config.toml
-	echo "server_id = \"node$i\"" >> $dest/config.toml
+	echo "node-addr = \"$IPBASE$(($IPADD + $i)):1337\"" >> $dest/config.toml
+	echo "server-id = \"node$i\"" >> $dest/config.toml
 done

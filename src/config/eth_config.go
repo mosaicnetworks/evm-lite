@@ -29,7 +29,7 @@ type EthConfig struct {
 	DbFile string `mapstructure:"db"`
 
 	//Address of HTTP API Service
-	EthAPIAddr string `mapstructure:"api_addr"`
+	EthAPIAddr string `mapstructure:"listen"`
 
 	//Megabytes of memory allocated to internal caching (min 16MB / database forced)
 	Cache int `mapstructure:"cache"`

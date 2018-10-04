@@ -46,15 +46,15 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	//Base
-	RootCmd.PersistentFlags().String("datadir", config.BaseConfig.DataDir, "Top-level directory for configuration and data")
-	RootCmd.PersistentFlags().String("log_level", config.BaseConfig.LogLevel, "debug, info, warn, error, fatal, panic")
+	RootCmd.PersistentFlags().StringP("datadir", "d", config.BaseConfig.DataDir, "Top-level directory for configuration and data")
+	RootCmd.PersistentFlags().String("log", config.BaseConfig.LogLevel, "debug, info, warn, error, fatal, panic")
 
 	//Eth
 	RootCmd.PersistentFlags().String("eth.genesis", config.Eth.Genesis, "Location of genesis file")
 	RootCmd.PersistentFlags().String("eth.keystore", config.Eth.Keystore, "Location of Ethereum account keys")
 	RootCmd.PersistentFlags().String("eth.pwd", config.Eth.PwdFile, "Password file to unlock accounts")
 	RootCmd.PersistentFlags().String("eth.db", config.Eth.DbFile, "Eth database file")
-	RootCmd.PersistentFlags().String("eth.api_addr", config.Eth.EthAPIAddr, "Address of HTTP API service")
+	RootCmd.PersistentFlags().String("eth.listen", config.Eth.EthAPIAddr, "Address of HTTP API service")
 	RootCmd.PersistentFlags().Int("eth.cache", config.Eth.Cache, "Megabytes of memory allocated to internal caching (min 16MB / database forced)")
 
 }

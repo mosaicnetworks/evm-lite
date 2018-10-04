@@ -1,22 +1,23 @@
 # DEPLOY
 
-**THIS IS NOT FOR PRODUCTION DEPLOYMENTS, JUST TESTING**
+**THIS IS NOT INTENDED FOR PRODUCTION DEPLOYMENTS, JUST TESTING**
 
 We provide a set of scripts to automate the deployment of evm-lite networks 
-locally (using docker) or in the cloud (using AWS). Parameters also control the 
+locally (using docker) or in the cloud (using AWS). Parameters control the 
 number of nodes, and which consensus system to use (solo, babble, raft, etc.).
 
 Whether locally or in the cloud, the workflow is as follows:
+
 1. **Build**: Create virtual machine image (docker or ami)
 2. **Config**: Generate configuration files for each node and for the network as 
                a whole
 3. **Deploy**: Create and start node instances
 
-**__ The scripts have only been tested on ubuntu __**
+**The scripts have only been tested on Ubuntu**
 
 ## BUILD
 
-### Docker
+### Docker Image
 
 ```bash
 $ make build-docker-image
@@ -60,21 +61,23 @@ Provide the AWS access key in the `build/ami/secret.json` file:
 ## CONFIG
 
 ```bash
-$ make conf consensus=[solo] nodes=[1] ipbase=[node] ipadd=[0]
+$ make conf CONSENSUS=[solo] NODES=[1] IPBASE=[node] IPADD=[0]
 ```
 
 Create the configuration files for the network.
 
 Parameters:
 
-- consensus: solo, babble, or raft
+- CONSENSUS: solo, babble, or raft
 
-- nodes: number of nodes in the network
+- NODES: number of nodes in the network
 
-- ipbase/ipadd: used to determine the address of nodes.
+- IPBASE/IPADD: used to determine the address of nodes.
     
-ex: if ipbase=10.0.2. and ipadd=10, nodes will have addresses of the form 
-    10.0.2.10,...,10.0.2.14,..., but by default, they will be node0,...node4,...  
+ex: If IPBASE=10.0.2. IPADD=10, and NODES=4, the resulting addresses will be:
+    10.0.2.10, 10.0.2.11, 10.0.2.12, and 10.0.2.13.
+    If IPBASE and IPADD are not specified, the resulting addresses will default
+    to: node0, node1, node2, and node3.
 
 The configuration is written to the `conf/[consensus]/conf` folder. For each 
 node, there will usually be two configuration sub-directories: one for the 
@@ -113,14 +116,11 @@ conf/babble/conf/
 └── peers.json
 ```
 
-It created an Ethereum key for each node using the derault password file, and a
+It creats an Ethereum key for each node using the derault password file, and a
 config.json file. The genesis file is used by evm-lite to initialize the state 
 with some funded accounts. It also created a Babble key and peers.json file
 defining the Babble network. The evml.toml file contains parameters for babble
 and evm-lite.
-
-XXX TODO _ Explain that the conf file is Read/Write. Mounted as volume in 
-docker containers. Need access rights.
 
 ## DEPLOY
 
@@ -142,7 +142,7 @@ all ports to each other, and no ports to the outside world. Special ports (for
 the evm-lite HTTP service for example) may be opened from the Dockerfile (cf 
 depoly/build/docker) or Terraform main.tf.
 
-Containes are assigned names and hostnames of the form `node0...node4...nodeN`, 
+Containers are assigned names and hostnames of the form `node0...node4...nodeN`, 
 and can use those hostnames directly to communicate with one-another within the 
 `monet` subnet. To access a container from the host, use the `172.77.5.X` 
 address. 
@@ -151,6 +151,32 @@ The Docker containers, built from the Dockerfile in deploy/build/docker, come
 pre-packaged with `evml`. Configuration files are mounted through a volume 
 attached to the default `~/.evm-lite` directory, which is the default location 
 for `evml`.  
+
+MACOS USERS
+
+The configuration folders are mounted as volumes in the docker containers, and 
+require read/write access from the process running in the container. Hence, when
+running the docker containers (cf examples below), specify a user that has 
+read/write access to the configuration folders. In most cases, this will be the 
+current user (1000 on Linux, 502 on MACOS). 
+
+Examples:
+
+First, build the evm-lite docker image (cf BUILD).
+ 
+``` bash
+cd deploy
+# configure and start a testnet of 4 evm-lite nodes with Babble consensus
+make CONSENSUS=babble NODES=4
+# same for MACOS users
+make USER=502 CONSENSUS=babble NODES=4 
+#configure and start a single evm-lite instance with Solo consensus 
+make CONSENSUS=solo NODES=1 
+#configure and start a testnet of 3 evm-lite nodes with Raft consensus
+make CONSENSUS=raft NODES=3
+#bring everything down
+make stop 
+```
 
 ### Cloud
 
@@ -165,7 +191,7 @@ There are two types of credentials to provide to Terraform:
 - The AWS API Access Key to connect to AWS and provision resources
 - An SSH key to communicate with the provisioned instances
 
-These credetials must be created from the AWS console before using these 
+These credentials must be created from the AWS console before using these 
 scripts. Once created and retrieved from AWS, the credetials must be provided in 
 the `/aws/secret.tfvars` file:
 
@@ -181,6 +207,17 @@ key_path = "..."
 
 The scripts will create an AWS subnet in the `10.0.2.0/24` range and assign it a 
 security group defining which ports should remain open or closed for machines
-connected to this network. Then it will create a certain number of instances,
-built using the evm-lite AMI (cf. deploy/build), and connect them withing this
-subnetwork.
+connected to this network. Then it will create a number of instances, built 
+using the evm-lite AMI (cf. BUILD), and connect them withing this subnetwork.
+
+Examples:
+
+First, build the evm-lite AMI (cf BUILD) and record its ID in the `ami` 
+terraform variable (aws/variables.tf).
+
+```bash
+# configure and start a testnet of 4 nodes in AWS
+make ENV=aws CONSENSUS=babble NODES=4 IPBASE=10.0.2. IPADD=10
+# bring everything down
+make stop ENV=aws 
+```

@@ -14,9 +14,9 @@ import (
 func AddRaftFlags(cmd *cobra.Command) {
 
 	cmd.Flags().String("raft.dir", config.Raft.RaftDir, "Base directory for Raft data")
-	cmd.Flags().String("raft.snapshot_dir", config.Raft.SnapshotDir, "Snapshot directory")
-	cmd.Flags().String("raft.node_addr", config.Raft.NodeAddr, "IP:PORT of Raft node")
-	cmd.Flags().String("raft.server_id", string(config.Raft.LocalID), "Unique ID of this server")
+	cmd.Flags().String("raft.snapshot-dir", config.Raft.SnapshotDir, "Snapshot directory")
+	cmd.Flags().String("raft.node-addr", config.Raft.NodeAddr, "IP:PORT of Raft node")
+	cmd.Flags().String("raft.server-id", string(config.Raft.LocalID), "Unique ID of this server")
 
 	viper.BindPFlags(cmd.Flags())
 }
