@@ -40,7 +40,7 @@ resource "docker_container" "evm-lite" {
     read_only      = false
   }
 
-  # entrypoint = ["tail", "-f", "/dev/null"]
+  #entrypoint = ["tail", "-f", "/dev/null"]
   command = ["${var.command}"]
 
   provisioner "local-exec" {

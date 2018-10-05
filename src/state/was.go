@@ -36,8 +36,8 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 		was.logger.WithError(err).Error("Committing state")
 		return common.Hash{}, err
 	}
-	if err := was.writeHead(); err != nil {
-		was.logger.WithError(err).Error("Writing head")
+	if err := was.writeRoot(); err != nil {
+		was.logger.WithError(err).Error("Writing root")
 		return common.Hash{}, err
 	}
 	if err := was.writeTransactions(); err != nil {
@@ -51,12 +51,9 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 	return hashArray, nil
 }
 
-func (was *WriteAheadState) writeHead() error {
-	head := &ethTypes.Transaction{}
-	if len(was.transactions) > 0 {
-		head = was.transactions[len(was.transactions)-1]
-	}
-	return was.db.Put(headTxKey, head.Hash().Bytes())
+func (was *WriteAheadState) writeRoot() error {
+	root := was.ethState.IntermediateRoot(true)
+	return was.db.Put(rootKey, root.Bytes())
 }
 
 func (was *WriteAheadState) writeTransactions() error {

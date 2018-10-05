@@ -27,7 +27,7 @@ var (
 	txMetaSuffix   = []byte{0x01}
 	receiptsPrefix = []byte("receipts-")
 	MIPMapLevels   = []uint64{1000000, 500000, 100000, 50000, 1000}
-	headTxKey      = []byte("LastTx")
+	rootKey        = []byte("root")
 )
 
 type State struct {
@@ -71,14 +71,53 @@ func NewState(logger *logrus.Logger, dbFile string, dbCache int) (*State, error)
 	return s, nil
 }
 
-// getFdLimit retrieves the number of file descriptors allowed to be opened by this
-// process.
-func getFdLimit() (int, error) {
-	var limit syscall.Rlimit
-	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &limit); err != nil {
-		return 0, err
+//------------------------------------------------------------------------------
+
+func (s *State) InitState() error {
+
+	rootHash := common.Hash{}
+
+	//get root hash
+	data, _ := s.db.Get(rootKey)
+	if len(data) != 0 {
+		rootHash = common.BytesToHash(data)
+		s.logger.WithField("root", rootHash.Hex()).Debug("Existing State Root")
 	}
-	return int(limit.Cur), nil
+
+	//use root to initialise the state
+	var err error
+	s.statedb, err = ethState.New(rootHash, ethState.NewDatabase(s.db))
+	return err
+}
+
+func (s *State) Commit() (common.Hash, error) {
+	//commit all state changes to the database
+	root, err := s.was.Commit()
+	if err != nil {
+		s.logger.WithError(err).Error("Committing WAS")
+		return root, err
+	}
+
+	// reset the write ahead state for the next block
+	// with the latest eth state
+	s.statedb = s.was.ethState
+	s.logger.WithField("root", root.Hex()).Debug("Committed")
+	s.resetWAS()
+
+	return root, nil
+}
+
+func (s *State) resetWAS() {
+	state := s.statedb.Copy()
+	s.was = &WriteAheadState{
+		db:           s.db,
+		ethState:     state,
+		txIndex:      0,
+		totalUsedGas: big.NewInt(0),
+		gp:           new(core.GasPool).AddGas(gasLimit),
+		logger:       s.logger,
+	}
+	s.logger.Debug("Reset Write Ahead State")
 }
 
 //------------------------------------------------------------------------------
@@ -181,66 +220,6 @@ func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.H
 	return nil
 }
 
-func (s *State) Commit() (common.Hash, error) {
-	//commit all state changes to the database
-	root, err := s.was.Commit()
-	if err != nil {
-		s.logger.WithError(err).Error("Committing WAS")
-		return root, err
-	}
-
-	// reset the write ahead state for the next block
-	// with the latest eth state
-	s.statedb = s.was.ethState
-	s.logger.WithField("root", root.Hex()).Debug("Committed")
-	s.resetWAS()
-
-	return root, nil
-}
-
-func (s *State) resetWAS() {
-	state := s.statedb.Copy()
-	s.was = &WriteAheadState{
-		db:           s.db,
-		ethState:     state,
-		txIndex:      0,
-		totalUsedGas: big.NewInt(0),
-		gp:           new(core.GasPool).AddGas(gasLimit),
-		logger:       s.logger,
-	}
-	s.logger.Debug("Reset Write Ahead State")
-}
-
-func (s *State) InitState() error {
-
-	rootHash := common.Hash{}
-
-	//get head transaction hash
-	headTxHash := common.Hash{}
-	data, _ := s.db.Get(headTxKey)
-	if len(data) != 0 {
-		headTxHash = common.BytesToHash(data)
-		s.logger.WithField("head_tx", headTxHash.Hex()).Debug("Loading state from existing head")
-		//get head tx receipt
-		headTxReceipt, err := s.GetReceipt(headTxHash)
-		if err != nil {
-			s.logger.WithError(err).Error("Head transaction receipt missing")
-			return err
-		}
-
-		//extract root from receipt
-		if len(headTxReceipt.PostState) != 0 {
-			rootHash = common.BytesToHash(headTxReceipt.PostState)
-			s.logger.WithField("root", rootHash.Hex()).Debug("Head transaction root")
-		}
-	}
-
-	//use root to initialise the state
-	var err error
-	s.statedb, err = ethState.New(rootHash, ethState.NewDatabase(s.db))
-	return err
-}
-
 func (s *State) CreateAccounts(accounts bcommon.AccountMap) error {
 	s.commitMutex.Lock()
 	defer s.commitMutex.Unlock()
@@ -285,7 +264,7 @@ func (s *State) GetTransaction(hash common.Hash) (*ethTypes.Transaction, error) 
 }
 
 func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
-	data, err := s.db.Get(append(receiptsPrefix, txHash[:]...))
+	data, err := s.db.Get(append(receiptsPrefix, txHash.Bytes()...))
 	if err != nil {
 		s.logger.WithError(err).Error("GetReceipt")
 		return nil, err
@@ -297,4 +276,16 @@ func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
 	}
 
 	return (*ethTypes.Receipt)(&receipt), nil
+}
+
+//------------------------------------------------------------------------------
+
+// getFdLimit retrieves the number of file descriptors allowed to be opened by this
+// process.
+func getFdLimit() (int, error) {
+	var limit syscall.Rlimit
+	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &limit); err != nil {
+		return 0, err
+	}
+	return int(limit.Cur), nil
 }
