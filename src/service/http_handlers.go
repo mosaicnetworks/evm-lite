@@ -179,6 +179,12 @@ func transactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
+	if err := m.state.CheckTx(tx); err != nil {
+		m.logger.WithError(err).Error("Checking Transaction")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	data, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		m.logger.WithError(err).Error("Encoding Transaction")
@@ -419,7 +425,7 @@ func prepareTransaction(args SendTxArgs, state *state.State, ks *keystore.KeySto
 
 	if args.Nonce == nil {
 		args.Nonce = new(uint64)
-		*args.Nonce = state.GetNonce(args.From)
+		*args.Nonce = state.GetPoolNonce(args.From)
 	}
 
 	var tx *ethTypes.Transaction

@@ -3,7 +3,6 @@ package state
 import (
 	"bytes"
 	"math/big"
-	"sync"
 	"syscall"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -12,7 +11,6 @@ import (
 	ethState "github.com/ethereum/go-ethereum/core/state"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -31,10 +29,10 @@ var (
 )
 
 type State struct {
-	db          ethdb.Database
-	commitMutex sync.Mutex
-	statedb     *ethState.StateDB
-	was         *WriteAheadState
+	db       ethdb.Database
+	ethState *ethState.StateDB
+	was      *WriteAheadState
+	txPool   *TxPool
 
 	signer      ethTypes.Signer
 	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
@@ -55,24 +53,26 @@ func NewState(logger *logrus.Logger, dbFile string, dbCache int) (*State, error)
 		return nil, err
 	}
 
-	s := new(State)
-	s.logger = logger
-	s.db = db
-	s.signer = ethTypes.NewEIP155Signer(chainID)
-	s.chainConfig = params.ChainConfig{ChainId: chainID}
-	s.vmConfig = vm.Config{Tracer: vm.NewStructLogger(nil)}
+	s := &State{
+		db:          db,
+		signer:      ethTypes.NewEIP155Signer(chainID),
+		chainConfig: params.ChainConfig{ChainId: chainID},
+		vmConfig:    vm.Config{Tracer: vm.NewStructLogger(nil)},
+		logger:      logger,
+	}
 
 	if err := s.InitState(); err != nil {
 		return nil, err
 	}
-
-	s.resetWAS()
 
 	return s, nil
 }
 
 //------------------------------------------------------------------------------
 
+//InitState initializes the statedb object. It checks if there was already a
+//root hash in the underlying database, in which case it initializes the statedb
+//from that root.
 func (s *State) InitState() error {
 
 	rootHash := common.Hash{}
@@ -86,10 +86,24 @@ func (s *State) InitState() error {
 
 	//use root to initialise the state
 	var err error
-	s.statedb, err = ethState.New(rootHash, ethState.NewDatabase(s.db))
+
+	s.ethState, err = ethState.New(rootHash, ethState.NewDatabase(s.db))
+	if err != nil {
+		return err
+	}
+
+	s.was, err = NewWriteAheadState(s.db, rootHash, s.signer, s.chainConfig, s.vmConfig, gasLimit, s.logger)
+	if err != nil {
+		return err
+	}
+
+	s.txPool = NewTxPool(s.ethState.Copy(), s.signer, s.chainConfig, s.vmConfig, gasLimit, s.logger)
+
 	return err
 }
 
+//Commit persists all pending state changes (in the WAS) to the DB, and resets
+//the WAS and TxPool
 func (s *State) Commit() (common.Hash, error) {
 	//commit all state changes to the database
 	root, err := s.was.Commit()
@@ -98,51 +112,51 @@ func (s *State) Commit() (common.Hash, error) {
 		return root, err
 	}
 
-	// reset the write ahead state for the next block
-	// with the latest eth state
-	s.statedb = s.was.ethState
+	//Reset main ethState
+	if err := s.ethState.Reset(root); err != nil {
+		s.logger.WithError(err).Error("Resetting main StateDB")
+		return root, err
+	}
 	s.logger.WithField("root", root.Hex()).Debug("Committed")
-	s.resetWAS()
+
+	//Reset WAS
+	if err := s.was.Reset(root); err != nil {
+		s.logger.WithError(err).Error("Resetting WAS")
+		return root, err
+	}
+	s.logger.Debug("Reset WAS")
+
+	//Reset TxPool
+	if err := s.txPool.Reset(root); err != nil {
+		s.logger.WithError(err).Error("Resetting TxPool")
+		return root, err
+	}
+	s.logger.Debug("Reset TxPool")
 
 	return root, nil
 }
 
-func (s *State) resetWAS() {
-	state := s.statedb.Copy()
-	s.was = &WriteAheadState{
-		db:           s.db,
-		ethState:     state,
-		txIndex:      0,
-		totalUsedGas: big.NewInt(0),
-		gp:           new(core.GasPool).AddGas(gasLimit),
-		logger:       s.logger,
-	}
-	s.logger.Debug("Reset Write Ahead State")
-}
-
 //------------------------------------------------------------------------------
 
+//Call executes a readonly transaction on the statedb. Itiis called by the
+//service handlers
 func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	s.logger.Debug("Call")
-	s.commitMutex.Lock()
-	defer s.commitMutex.Unlock()
 
 	context := vm.Context{
 		CanTransfer: core.CanTransfer,
 		Transfer:    core.Transfer,
 		GetHash:     func(uint64) common.Hash { return common.Hash{} },
-		// Message information
-		Origin:   callMsg.From(),
-		GasPrice: callMsg.GasPrice(),
+		Origin:      callMsg.From(),
+		GasPrice:    callMsg.GasPrice(),
 	}
 
-	// The EVM should never be reused and is not thread safe.
-	// Call is done on a copy of the state...we dont want any changes to be persisted
-	// Call is a readonly operation
+	//We use a copy of the ethState because even call transactions increment the
+	//sender's nonce
 	vmenv := vm.NewEVM(context, s.was.ethState.Copy(), &s.chainConfig, s.vmConfig)
 
 	// Apply the transaction to the current state (included in the env)
-	res, _, _, err := core.ApplyMessage(vmenv, callMsg, s.was.gp)
+	res, _, _, err := core.ApplyMessage(vmenv, callMsg, new(core.GasPool).AddGas(gasLimit))
 	if err != nil {
 		s.logger.WithError(err).Error("Executing Call on WAS")
 		return nil, err
@@ -151,7 +165,16 @@ func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	return res, err
 }
 
-//ApplyTransaction applies a transaction to the WAS
+//CheckTx attempt to apply a transaction to the TxPool's statedb. It is called
+//by the Service handlers to check if a transaction is valid before submitting
+//it to the consensus system. This also updates the sender's Nonce in the
+//TxPool's statedb.
+func (s *State) CheckTx(tx *ethTypes.Transaction) error {
+	return s.txPool.CheckTx(tx)
+}
+
+//ApplyTransaction decodes a transaction and applies it to the WAS. It is meant
+//to be called by the consensus system to apply transactions sequentially.
 func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.Hash) error {
 
 	var t ethTypes.Transaction
@@ -162,68 +185,11 @@ func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.H
 	s.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
 	s.logger.WithField("tx", t.String()).Debug()
 
-	msg, err := t.AsMessage(s.signer)
-	if err != nil {
-		s.logger.WithError(err).Error("Converting Transaction to Message")
-		return err
-	}
-
-	context := vm.Context{
-		CanTransfer: core.CanTransfer,
-		Transfer:    core.Transfer,
-		GetHash:     func(uint64) common.Hash { return blockHash },
-		// Message information
-		Origin:      msg.From(),
-		GasLimit:    msg.Gas(),
-		GasPrice:    msg.GasPrice(),
-		BlockNumber: big.NewInt(0), //the vm has a dependency on this..
-	}
-
-	//Prepare the ethState with transaction Hash so that it can be used in emitted
-	//logs
-	s.was.ethState.Prepare(t.Hash(), blockHash, txIndex)
-
-	// The EVM should never be reused and is not thread safe.
-	vmenv := vm.NewEVM(context, s.was.ethState, &s.chainConfig, s.vmConfig)
-
-	// Apply the transaction to the current state (included in the env)
-	_, gas, failed, err := core.ApplyMessage(vmenv, msg, s.was.gp)
-	if err != nil {
-		s.logger.WithError(err).Error("Applying transaction to WAS")
-		return err
-	}
-
-	s.was.totalUsedGas.Add(s.was.totalUsedGas, gas)
-
-	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
-	// based on the eip phase, we're passing wether the root touch-delete accounts.
-	root := s.was.ethState.IntermediateRoot(true) //this has side effects. It updates StateObjects (SmartContract memory)
-	receipt := ethTypes.NewReceipt(root.Bytes(), failed, s.was.totalUsedGas)
-	receipt.TxHash = t.Hash()
-	receipt.GasUsed = new(big.Int).Set(gas)
-	// if the transaction created a contract, store the creation address in the receipt.
-	if msg.To() == nil {
-		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, t.Nonce())
-	}
-	// Set the receipt logs and create a bloom for filtering
-	receipt.Logs = s.was.ethState.GetLogs(t.Hash())
-	//receipt.Logs = s.was.state.Logs()
-	receipt.Bloom = ethTypes.CreateBloom(ethTypes.Receipts{receipt})
-
-	s.was.txIndex++
-	s.was.transactions = append(s.was.transactions, &t)
-	s.was.receipts = append(s.was.receipts, receipt)
-	s.was.allLogs = append(s.was.allLogs, receipt.Logs...)
-
-	s.logger.WithField("hash", t.Hash().Hex()).Debug("Applied tx to WAS")
-
-	return nil
+	return s.was.ApplyTransaction(t, txIndex, blockHash)
 }
 
+//CreateAccounts creates new accounts in the state via the WAS.
 func (s *State) CreateAccounts(accounts bcommon.AccountMap) error {
-	s.commitMutex.Lock()
-	defer s.commitMutex.Unlock()
-
 	for addr, account := range accounts {
 		address := common.HexToAddress(addr)
 		s.was.ethState.AddBalance(address, math.MustParseBig256(account.Balance))
@@ -239,14 +205,22 @@ func (s *State) CreateAccounts(accounts bcommon.AccountMap) error {
 	return err
 }
 
+//GetBalance returns an account's balance from the main ethState
 func (s *State) GetBalance(addr common.Address) *big.Int {
-	return s.statedb.GetBalance(addr)
+	return s.ethState.GetBalance(addr)
 }
 
+//GetNonce returns an account's nonce from the main ethState
 func (s *State) GetNonce(addr common.Address) uint64 {
-	return s.was.ethState.GetNonce(addr)
+	return s.ethState.GetNonce(addr)
 }
 
+//GetPoolNonce returns an account's nonce from the txpool's ethState
+func (s *State) GetPoolNonce(addr common.Address) uint64 {
+	return s.txPool.ethState.GetNonce(addr)
+}
+
+//GetTransaction fetches transactions by hash directly from the DB.
 func (s *State) GetTransaction(hash common.Hash) (*ethTypes.Transaction, error) {
 	// Retrieve the transaction itself from the database
 	data, err := s.db.Get(hash.Bytes())
@@ -263,6 +237,8 @@ func (s *State) GetTransaction(hash common.Hash) (*ethTypes.Transaction, error) 
 	return &tx, nil
 }
 
+//GetReceipt fetches transaction receipts by transaction hash directly from the
+//DB
 func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
 	data, err := s.db.Get(append(receiptsPrefix, txHash.Bytes()...))
 	if err != nil {

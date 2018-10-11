@@ -143,7 +143,7 @@ func (test *Test) prepareTransaction(from, to *accounts.Account,
 	value, gas, gasPrice *big.Int,
 	data []byte) (*ethTypes.Transaction, error) {
 
-	nonce := test.state.GetNonce(from.Address)
+	nonce := test.state.GetPoolNonce(from.Address)
 
 	var tx *ethTypes.Transaction
 	if to == nil {
@@ -457,7 +457,7 @@ func TestDB(t *testing.T) {
 
 	test.deployContract(from, contract, t)
 
-	code := test.state.statedb.GetCode(contract.address)
+	code := test.state.ethState.GetCode(contract.address)
 	t.Logf("code: %s", common.ToHex(code))
 
 	contract.parseABI(t)
@@ -477,7 +477,7 @@ func TestDB(t *testing.T) {
 	//check that state is the same
 
 	//check that contract code is there
-	code2 := test2.state.statedb.GetCode(contract.address)
+	code2 := test2.state.ethState.GetCode(contract.address)
 	t.Logf("code2: %s", common.ToHex(code2))
 	if !reflect.DeepEqual(code2, code) {
 		t.Fatalf("contract code should be equal")

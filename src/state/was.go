@@ -7,16 +7,26 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethState "github.com/ethereum/go-ethereum/core/state"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/sirupsen/logrus"
 )
 
-// write ahead state, updated with each AppendTx
-// and reset on Commit
+//WriteAheadState is a wrapper around a DB and StateDB object that applies
+//transactions to the StateDB and only commits them to the DB upon Commit. It
+//also handles persisting transactions, logs, and receipts to the DB.
+//NOT THREAD SAFE
 type WriteAheadState struct {
 	db       ethdb.Database
 	ethState *ethState.StateDB
+
+	signer      ethTypes.Signer
+	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
+	vmConfig    vm.Config
+	gasLimit    *big.Int
 
 	txIndex      int
 	transactions []*ethTypes.Transaction
@@ -29,14 +39,114 @@ type WriteAheadState struct {
 	logger *logrus.Logger
 }
 
+func NewWriteAheadState(db ethdb.Database,
+	root common.Hash,
+	signer ethTypes.Signer,
+	chainConfig params.ChainConfig,
+	vmConfig vm.Config,
+	gasLimit *big.Int,
+	logger *logrus.Logger) (*WriteAheadState, error) {
+
+	ethState, err := ethState.New(root, ethState.NewDatabase(db))
+	if err != nil {
+		return nil, err
+	}
+
+	return &WriteAheadState{
+		db:          db,
+		ethState:    ethState,
+		signer:      signer,
+		chainConfig: chainConfig,
+		vmConfig:    vmConfig,
+		gasLimit:    gasLimit,
+		logger:      logger,
+	}, nil
+}
+
+func (was *WriteAheadState) Reset(root common.Hash) error {
+
+	err := was.ethState.Reset(root)
+	if err != nil {
+		return err
+	}
+
+	was.txIndex = 0
+	was.transactions = []*ethTypes.Transaction{}
+	was.receipts = []*ethTypes.Receipt{}
+	was.allLogs = []*ethTypes.Log{}
+
+	was.totalUsedGas = big.NewInt(0)
+	was.gp = new(core.GasPool).AddGas(was.gasLimit)
+
+	return nil
+}
+
+func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex int, blockHash common.Hash) error {
+
+	msg, err := tx.AsMessage(was.signer)
+	if err != nil {
+		was.logger.WithError(err).Error("Converting Transaction to Message")
+		return err
+	}
+
+	context := vm.Context{
+		CanTransfer: core.CanTransfer,
+		Transfer:    core.Transfer,
+		GetHash:     func(uint64) common.Hash { return blockHash },
+		Origin:      msg.From(),
+		GasLimit:    msg.Gas(),
+		GasPrice:    msg.GasPrice(),
+		BlockNumber: big.NewInt(0), //the vm has a dependency on this..
+	}
+
+	//Prepare the ethState with transaction Hash so that it can be used in emitted
+	//logs
+	was.ethState.Prepare(tx.Hash(), blockHash, txIndex)
+
+	vmenv := vm.NewEVM(context, was.ethState, &was.chainConfig, was.vmConfig)
+
+	// Apply the transaction to the current state (included in the env)
+	_, gas, failed, err := core.ApplyMessage(vmenv, msg, was.gp)
+	if err != nil {
+		was.logger.WithError(err).Error("Applying transaction to WAS")
+		return err
+	}
+
+	was.totalUsedGas.Add(was.totalUsedGas, gas)
+
+	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
+	// based on the eip phase, we're passing wether the root touch-delete accounts.
+	root := was.ethState.IntermediateRoot(true) //this has side effects. It updates StateObjects (SmartContract memory)
+	receipt := ethTypes.NewReceipt(root.Bytes(), failed, was.totalUsedGas)
+	receipt.TxHash = tx.Hash()
+	receipt.GasUsed = new(big.Int).Set(gas)
+	// if the transaction created a contract, store the creation address in the receipt.
+	if msg.To() == nil {
+		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
+	}
+	// Set the receipt logs and create a bloom for filtering
+	receipt.Logs = was.ethState.GetLogs(tx.Hash())
+	//receipt.Logs = s.was.state.Logs()
+	receipt.Bloom = ethTypes.CreateBloom(ethTypes.Receipts{receipt})
+
+	was.txIndex++
+	was.transactions = append(was.transactions, &tx)
+	was.receipts = append(was.receipts, receipt)
+	was.allLogs = append(was.allLogs, receipt.Logs...)
+
+	was.logger.WithField("hash", tx.Hash().Hex()).Debug("Applied tx to WAS")
+
+	return nil
+}
+
 func (was *WriteAheadState) Commit() (common.Hash, error) {
 	//commit all state changes to the database
-	hashArray, err := was.ethState.CommitTo(was.db, true)
+	root, err := was.ethState.CommitTo(was.db, true)
 	if err != nil {
 		was.logger.WithError(err).Error("Committing state")
 		return common.Hash{}, err
 	}
-	if err := was.writeRoot(); err != nil {
+	if err := was.writeRoot(root); err != nil {
 		was.logger.WithError(err).Error("Writing root")
 		return common.Hash{}, err
 	}
@@ -48,11 +158,10 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 		was.logger.WithError(err).Error("Writing receipts")
 		return common.Hash{}, err
 	}
-	return hashArray, nil
+	return root, nil
 }
 
-func (was *WriteAheadState) writeRoot() error {
-	root := was.ethState.IntermediateRoot(true)
+func (was *WriteAheadState) writeRoot(root common.Hash) error {
 	return was.db.Put(rootKey, root.Bytes())
 }
 
