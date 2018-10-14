@@ -15,7 +15,7 @@ var (
 //RootCmd is the root command for evml
 var RootCmd = &cobra.Command{
 	Use:              "evml",
-	Short:            "Ethereum with interchangeable consensus",
+	Short:            "EVM-Lite node",
 	TraverseChildren: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
 		if cmd.Name() == VersionCmd.Name() {
