@@ -103,7 +103,8 @@ listen="127.0.0.1:1337"
 ## Configuration
 
 The application writes data and reads configuration from the directory specified 
-by the --datadir flag. The directory structure **MUST** be as follows:
+by the --datadir flag. The directory structure must respect the following 
+stucture:
 
 ```
 host:~/.evm-lite$ tree
@@ -139,6 +140,7 @@ Example Ethereum genesis.json defining two account:
    }
 }
 ```
+
 It is possible to enable evm-lite to control certain accounts by providing a  
 list of encrypted private keys in the keystore directory. With these private 
 keys, evm-lite will be able to sign transactions on behalf of the accounts 
@@ -296,6 +298,11 @@ host:-$ curl http://[api_addr]/info | json_pp
 }
 
 ```
+
+## CLIENT
+
+Please refer to [EVM-Lite Client](https://github.com/mosaicnetworks/evm-lite-client)
+for Javascript utilities and a CLI to interact with the API. 
 
 ## DEV
 

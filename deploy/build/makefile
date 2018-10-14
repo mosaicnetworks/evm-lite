@@ -7,7 +7,7 @@ docker:
 	go build \
 		--ldflags '-extldflags "-static"' \
 		-o ./docker/evml ./../../cmd/evml/ 
-	docker build -t mosaicnetworks/evm-lite:$(EVM_LITE_VERSION)-$(GIT_COMMIT) \
+	docker build -t mosaicnetworks/evm-lite:$(EVM_LITE_VERSION) \
 		-t mosaicnetworks/evm-lite:latest \
 		./docker/
 
