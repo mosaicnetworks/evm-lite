@@ -20,7 +20,7 @@ ex:
 
 ```bash
 evm-lite$ cd deploy
-evm-lite/deploy$ make consensus=babble nodes=4
+evm-lite/deploy$ make CONSENSUS=babble NODES=4
 ```
 
 Then, in an other terminal, start the interractive demo:
