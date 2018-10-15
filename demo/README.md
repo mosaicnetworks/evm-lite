@@ -1,6 +1,6 @@
 # DEMO
 
-Here we provide a few scripts to demonstrate how to interact with evm-lite 
+Here we provide a few scripts to demonstrate how to interact with evm-lite
 nodes.
 
 You might need to install NodeJS and dependencies first:
@@ -23,16 +23,16 @@ evm-lite$ cd deploy
 evm-lite/deploy$ make CONSENSUS=babble NODES=4
 ```
 
-Then, in an other terminal, start the interractive demo:
+Then, in an other terminal, start the interactive demo:
 
 ```bash
 $ ./demo.sh ../deploy/terraform/local/ips.dat
 ```
 
-The ips.dat file, generated during the deploy phase, tells the demo program 
+The ips.dat file, generated during the deploy phase, tells the demo program
 where to reach the nodes.
 
-In this case, we are using Babble consensus, so it is interresting to monitor 
+In this case, we are using Babble consensus, so it is interesting to monitor
 the babble nodes:
 
 ```bash
@@ -45,4 +45,3 @@ After the demo, destroy the testnet by running `make stop` from `deploy/`:
 $ cd ../deploy
 $ make stop
 ```
-

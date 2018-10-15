@@ -16,7 +16,7 @@ type TxPool struct {
 	ethState *ethState.StateDB
 
 	signer      ethTypes.Signer
-	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
+	chainConfig params.ChainConfig // vm.env is still tightly coupled with chainConfig
 	vmConfig    vm.Config
 	gasLimit    *big.Int
 
@@ -72,7 +72,7 @@ func (p *TxPool) CheckTx(tx *ethTypes.Transaction) error {
 		Origin:      msg.From(),
 		GasLimit:    msg.Gas(),
 		GasPrice:    msg.GasPrice(),
-		BlockNumber: big.NewInt(0), //the vm has a dependency on this..
+		BlockNumber: big.NewInt(0), // The vm has a dependency on this.
 	}
 
 	// The EVM should never be reused and is not thread safe.

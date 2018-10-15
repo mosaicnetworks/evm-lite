@@ -9,28 +9,28 @@ import (
 )
 
 var (
-	//Base
+	// Base
 	defaultLogLevel = "debug"
 	DefaultDataDir  = defaultHomeDir()
 )
 
-//Config contains de configuration for an EVM-Lite node
+// Config contains de configuration for an EVM-Lite node
 type Config struct {
 
-	//Top level options use an anonymous struct
+	// Top level options use an anonymous struct
 	BaseConfig `mapstructure:",squash"`
 
-	//Options for EVM and State
+	// Options for EVM and State
 	Eth *EthConfig `mapstructure:"eth"`
 
-	//Options for Babble consensus
+	// Options for Babble consensus
 	Babble *BabbleConfig `mapstructure:"babble"`
 
-	//Options for Raft consensus
+	// Options for Raft consensus
 	Raft *RaftConfig `mapstructure:"raft"`
 }
 
-//DefaultConfig returns the default configuration for an EVM-Lite node
+// DefaultConfig returns the default configuration for an EVM-Lite node
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: DefaultBaseConfig(),
@@ -40,8 +40,8 @@ func DefaultConfig() *Config {
 	}
 }
 
-//SetDataDir updates the root data directory as well as the various lower config
-//directories for eth and consensus
+// SetDataDir updates the root data directory as well as the various lower config
+// for eth and consensus
 func (c *Config) SetDataDir(datadir string) {
 	c.BaseConfig.DataDir = datadir
 	if c.Eth != nil {
@@ -59,17 +59,17 @@ func (c *Config) SetDataDir(datadir string) {
 BASE CONFIG
 *******************************************************************************/
 
-//BaseConfig contains the top level configuration for an EVM-Babble node
+// BaseConfig contains the top level configuration for an EVM-Babble node
 type BaseConfig struct {
 
-	//Top-level directory of evm-babble data
+	// Top-level directory of evm-babble data
 	DataDir string `mapstructure:"datadir"`
 
-	//Debug, info, warn, error, fatal, panic
+	// Debug, info, warn, error, fatal, panic
 	LogLevel string `mapstructure:"log"`
 }
 
-//DefaultBaseConfig returns the default top-level configuration for EVM-Babble
+// DefaultBaseConfig returns the default top-level configuration for EVM-Babble
 func DefaultBaseConfig() BaseConfig {
 	return BaseConfig{
 		DataDir:  DefaultDataDir,

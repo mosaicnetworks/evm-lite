@@ -1,6 +1,6 @@
 package templates
 
-//Index is the template for the info2 route
+// Index is the template for the info2 route
 var Index = `
 <html>
 <head>
@@ -16,6 +16,6 @@ var Index = `
             {{ end }}
             </ul>
         </div>
-    </div>   
+    </div>
 </body>
 </html>`

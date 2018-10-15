@@ -15,16 +15,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//WriteAheadState is a wrapper around a DB and StateDB object that applies
-//transactions to the StateDB and only commits them to the DB upon Commit. It
-//also handles persisting transactions, logs, and receipts to the DB.
-//NOT THREAD SAFE
+// WriteAheadState is a wrapper around a DB and StateDB object that applies
+// transactions to the StateDB and only commits them to the DB upon Commit. It
+// also handles persisting transactions, logs, and receipts to the DB.
+// NOT THREAD SAFE
 type WriteAheadState struct {
 	db       ethdb.Database
 	ethState *ethState.StateDB
 
 	signer      ethTypes.Signer
-	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
+	chainConfig params.ChainConfig // vm.env is still tightly coupled with chainConfig
 	vmConfig    vm.Config
 	gasLimit    *big.Int
 
@@ -96,7 +96,7 @@ func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex in
 		Origin:      msg.From(),
 		GasLimit:    msg.Gas(),
 		GasPrice:    msg.GasPrice(),
-		BlockNumber: big.NewInt(0), //the vm has a dependency on this..
+		BlockNumber: big.NewInt(0), // The vm has a dependency on this..
 	}
 
 	//Prepare the ethState with transaction Hash so that it can be used in emitted
@@ -140,7 +140,7 @@ func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex in
 }
 
 func (was *WriteAheadState) Commit() (common.Hash, error) {
-	//commit all state changes to the database
+	// Commit all state changes to the database
 	root, err := was.ethState.CommitTo(was.db, true)
 	if err != nil {
 		was.logger.WithError(err).Error("Committing state")

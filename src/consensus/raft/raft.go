@@ -13,8 +13,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//Raft implements the Consensus interface.
-//It uses Hashicorp Raft
+// Raft implements the Consensus interface.
+// It uses Hashicorp Raft
 type Raft struct {
 	config    config.RaftConfig
 	service   *service.Service
@@ -25,7 +25,7 @@ type Raft struct {
 	txIndex   int
 }
 
-//NewRaft returns a new Raft object
+// NewRaft returns a new Raft object
 func NewRaft(config config.RaftConfig, logger *logrus.Logger) *Raft {
 	return &Raft{
 		config:    config,
@@ -38,7 +38,7 @@ func NewRaft(config config.RaftConfig, logger *logrus.Logger) *Raft {
 IMPLEMENT CONSENSUS INTERFACE
 *******************************************************************************/
 
-//Init instantiates a Raft
+// Init instantiates a Raft
 func (r *Raft) Init(state *state.State, service *service.Service) error {
 
 	r.logger.Debug("INIT")
@@ -47,7 +47,7 @@ func (r *Raft) Init(state *state.State, service *service.Service) error {
 
 	r.fsm = NewFSM(state, r.logger)
 
-	//Initialize raft node
+	// Initialize raft node
 
 	//TODO: Use r.config
 	config := _raft.DefaultConfig()
@@ -92,10 +92,10 @@ func (r *Raft) Init(state *state.State, service *service.Service) error {
 	return nil
 }
 
-//Run starts the Raft node and service
+// Run starts the Raft node and service
 func (r *Raft) Run() error {
 
-	//Relay submitCh to Raft
+	// Relay submitCh to Raft
 	submitCh := r.service.GetSubmitCh()
 	signal.Notify(r.terminate, os.Interrupt)
 	for {
@@ -126,7 +126,7 @@ func (r *Raft) Run() error {
 	}
 }
 
-//Info returns Raft stats
+// Info returns Raft stats
 func (r *Raft) Info() (map[string]string, error) {
 	info := r.raftNode.Stats()
 	info["type"] = "raft"

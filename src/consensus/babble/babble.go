@@ -8,8 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//InmemBabble implementes the Consensus interface.
-//It uses an inmemory Babble node.
+// InmemBabble implementes the Consensus interface.
+// It uses an inmemory Babble node.
 type InmemBabble struct {
 	config     *config.BabbleConfig
 	babble     *_babble.Babble
@@ -18,7 +18,7 @@ type InmemBabble struct {
 	logger     *logrus.Logger
 }
 
-//NewInmemBabble instantiates a new InmemBabble consensus system
+// NewInmemBabble instantiates a new InmemBabble consensus system
 func NewInmemBabble(config *config.BabbleConfig, logger *logrus.Logger) *InmemBabble {
 	return &InmemBabble{
 		config: config,
@@ -30,7 +30,7 @@ func NewInmemBabble(config *config.BabbleConfig, logger *logrus.Logger) *InmemBa
 IMPLEMENT CONSENSUS INTERFACE
 *******************************************************************************/
 
-//Init instantiates a Babble inmemory node
+// Init instantiates a Babble inmemory node
 func (b *InmemBabble) Init(state *state.State, service *service.Service) error {
 
 	b.logger.Debug("INIT")
@@ -51,13 +51,13 @@ func (b *InmemBabble) Init(state *state.State, service *service.Service) error {
 	return nil
 }
 
-//Run starts the Babble node
+// Run starts the Babble node
 func (b *InmemBabble) Run() error {
 	b.babble.Run()
 	return nil
 }
 
-//Info returns Babble stats
+// Info returns Babble stats
 func (b *InmemBabble) Info() (map[string]string, error) {
 	info := b.babble.Node.GetStats()
 	info["type"] = "babble"

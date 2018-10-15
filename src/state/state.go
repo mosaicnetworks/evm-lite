@@ -138,7 +138,7 @@ func (s *State) Commit() (common.Hash, error) {
 
 //------------------------------------------------------------------------------
 
-//Call executes a readonly transaction on the statedb. Itiis called by the
+//Call executes a readonly transaction on the statedb. It is called by the
 //service handlers
 func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	s.logger.Debug("Call")
