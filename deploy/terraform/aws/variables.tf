@@ -1,6 +1,6 @@
-//This file defines the variables used in the main terraform file. Some of the 
-//private values are specified in a separate file (ex. secret.tfvars) which is 
-//not included in source countrol for obvious security reasons.
+//This file defines the variables used in the main terraform file. Some of the
+//private values are specified in a separate file (ex. secret.tfvars) which is
+//not included in source control for obvious security reasons.
 
 //AWS API access key
 variable "access_key" {}

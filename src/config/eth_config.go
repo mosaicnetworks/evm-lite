@@ -12,30 +12,30 @@ var (
 	defaultDbFile       = fmt.Sprintf("%s/chaindata", defaultEthDir)
 )
 
-//EthConfig contains the configuration relative to the accounts, EVM, trie/db,
-//and service API
+// EthConfig contains the configuration relative to the accounts, EVM, trie/db,
+// and service API
 type EthConfig struct {
 
-	//Genesis file
+	// Genesis file
 	Genesis string `mapstructure:"genesis"`
 
-	//Location of ethereum account keys
+	// Location of ethereum account keys
 	Keystore string `mapstructure:"keystore"`
 
-	//File containing passwords to unlock ethereum accounts
+	// File containing passwords to unlock ethereum accounts
 	PwdFile string `mapstructure:"pwd"`
 
-	//File containing the levelDB database
+	// File containing the levelDB database
 	DbFile string `mapstructure:"db"`
 
-	//Address of HTTP API Service
+	// Address of HTTP API Service
 	EthAPIAddr string `mapstructure:"listen"`
 
-	//Megabytes of memory allocated to internal caching (min 16MB / database forced)
+	// Megabytes of memory allocated to internal caching (min 16MB / database forced)
 	Cache int `mapstructure:"cache"`
 }
 
-//DefaultEthConfig return the default configuration for Eth services
+// DefaultEthConfig return the default configuration for Eth services
 func DefaultEthConfig() *EthConfig {
 	return &EthConfig{
 		Genesis:    defaultGenesisFile,
@@ -47,8 +47,8 @@ func DefaultEthConfig() *EthConfig {
 	}
 }
 
-//SetDataDir updates the eth configuration directories if they were set to
-//default values.
+// SetDataDir updates the eth configuration directories if they were set to
+// default values.
 func (c *EthConfig) SetDataDir(datadir string) {
 	if c.Genesis == defaultGenesisFile {
 		c.Genesis = fmt.Sprintf("%s/genesis.json", datadir)

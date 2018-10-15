@@ -1,20 +1,20 @@
 # EVM-LITE
 ## A lean Ethereum node with interchangeable consensus.
 
-We took the [Go-Ethereum](https://github.com/ethereum/go-ethereum) 
-implementation (Geth) and extracted the EVM and Trie components to create a 
-lean and modular version with interchangeable consensus. 
+We took the [Go-Ethereum](https://github.com/ethereum/go-ethereum)
+implementation (Geth) and extracted the EVM and Trie components to create a
+lean and modular version with interchangeable consensus.
 
-The EVM is a virtual machine specifically designed to run untrusted code on a 
-network of computers. Every transaction applied to the EVM modifies the State 
-which is persisted in a Merkle Patricia tree. This data structure allows to 
-simply check if a given transaction was actually applied to the VM and can 
-reduce the entire State to a single hash (merkle root) rather analogous to a 
+The EVM is a virtual machine specifically designed to run untrusted code on a
+network of computers. Every transaction applied to the EVM modifies the State
+which is persisted in a Merkle Patricia tree. This data structure allows to
+simply check if a given transaction was actually applied to the VM and can
+reduce the entire State to a single hash (merkle root) rather analogous to a
 fingerprint.
 
-The EVM is meant to be used in conjunction with a system that broadcasts 
-transactions across network participants and ensures that everyone executes the 
-same transactions in the same order. Ethereum uses a Blockchain and a Proof of 
+The EVM is meant to be used in conjunction with a system that broadcasts
+transactions across network participants and ensures that everyone executes the
+same transactions in the same order. Ethereum uses a Blockchain and a Proof of
 Work consensus algorithm. EVM-Lite makes it easy to use any consensus system,
 including [Babble](https://github.com/mosaicnetworks/babble) .
 
@@ -33,32 +33,32 @@ including [Babble](https://github.com/mosaicnetworks/babble) .
                 |         v                       |         |
                 |  +-------------------------------------+  |
                 |  | Engine                              |  |
-                |  |                                     |  | 
+                |  |                                     |  |
                 |  |       +----------------------+      |  |
                 |  |       | Consensus            |      |  |
                 |  |       +----------------------+      |  |
                 |  |                                     |  |
                 |  +-------------------------------------+  |
-                |                                           | 
+                |                                           |
                 +-------------------------------------------+
 
 ```
 
 ## Consensus Implementations:
 
-- **SOLO**: No Consensus. Transactions are relayed directly from Service to 
+- **SOLO**: No Consensus. Transactions are relayed directly from Service to
             State
 
 - **[BABBLE](https://github.com/mosaicnetworks/babble)**: Inmemory Babble node.
 
-- **[RAFT](https://github.com/hashicorp/raft)**: Hashicorp implementation of 
+- **[RAFT](https://github.com/hashicorp/raft)**: Hashicorp implementation of
   Raft (limited).
 
 more to come...
 
 ## USAGE
 
-Each consensus has its own subcommand `evml [consensus]`, and its own 
+Each consensus has its own subcommand `evml [consensus]`, and its own
 configuration flags.
 
 ```
@@ -75,13 +75,13 @@ Available Commands:
   version     Show version info
 
 Flags:
-  -d, --datadir string        Top-level directory for configuration and data (default "/home/martin/.evm-lite")
+  -d, --datadir string        Top-level directory for configuration and data (default "/home/user/.evm-lite")
       --eth.cache int         Megabytes of memory allocated to internal caching (min 16MB / database forced) (default 128)
-      --eth.db string         Eth database file (default "/home/martin/.evm-lite/eth/chaindata")
-      --eth.genesis string    Location of genesis file (default "/home/martin/.evm-lite/eth/genesis.json")
-      --eth.keystore string   Location of Ethereum account keys (default "/home/martin/.evm-lite/eth/keystore")
+      --eth.db string         Eth database file (default "/home/user/.evm-lite/eth/chaindata")
+      --eth.genesis string    Location of genesis file (default "/home/user/.evm-lite/eth/genesis.json")
+      --eth.keystore string   Location of Ethereum account keys (default "/home/user/.evm-lite/eth/keystore")
       --eth.listen string     Address of HTTP API service (default ":8080")
-      --eth.pwd string        Password file to unlock accounts (default "/home/martin/.evm-lite/eth/pwd.txt")
+      --eth.pwd string        Password file to unlock accounts (default "/home/user/.evm-lite/eth/pwd.txt")
   -h, --help                  help for evml
       --log string            debug, info, warn, error, fatal, panic (default "debug")
 
@@ -89,7 +89,7 @@ Use "evml [command] --help" for more information about a command.
 
 ```
 
-Options can also be specified in a `evml.toml` file in the `datadir`. 
+Options can also be specified in a `evml.toml` file in the `datadir`.
 
 ex (evml.toml):
 ``` toml
@@ -102,8 +102,8 @@ listen="127.0.0.1:1337"
 
 ## Configuration
 
-The application writes data and reads configuration from the directory specified 
-by the --datadir flag. The directory structure must respect the following 
+The application writes data and reads configuration from the directory specified
+by the --datadir flag. The directory structure must respect the following
 stucture:
 
 ```
@@ -117,10 +117,10 @@ host:~/.evm-lite$ tree
 │   │   └── UTC--2018-10-14T11-12-24.412349157Z--633139fa62d5c27f454259ba59fc34773bd19457
 │   └── pwd.txt
 └── evml.toml
-``` 
+```
 
-The above example shows a `babble` folder, but the general idea is that 
-consensus  configuration goes in a separate folder from the Ethereum 
+The above example shows a `babble` folder, but the general idea is that
+consensus  configuration goes in a separate folder from the Ethereum
 configuration.
 
 The Ethereum genesis file defines Ethereum accounts and is stripped of all   
@@ -142,8 +142,8 @@ Example Ethereum genesis.json defining two account:
 ```
 
 It is possible to enable evm-lite to control certain accounts by providing a  
-list of encrypted private keys in the keystore directory. With these private 
-keys, evm-lite will be able to sign transactions on behalf of the accounts 
+list of encrypted private keys in the keystore directory. With these private
+keys, evm-lite will be able to sign transactions on behalf of the accounts
 associated with the keys.  
 
 ```
@@ -153,7 +153,7 @@ host:~/.evm-lite/eth/keystore$ tree
 ├── UTC--2016-02-01T16-52-28.021010343Z--e32e14de8b81d8d3aedacb1868619c74a68feab0
 ```
 
-These keys are protected by a password. Use the `eth.pwd` flag to specifiy the 
+These keys are protected by a password. Use the `eth.pwd` flag to specify the
 location of the password file.
 
 **Needless to say you should not reuse these addresses and private keys**
@@ -161,7 +161,7 @@ location of the password file.
 ## Database
 
 EVM-Lite will use a LevelDB database to persist state objects. The file of the  
-database can be specified with the `eth.db` flag which defaults to 
+database can be specified with the `eth.db` flag which defaults to
 `<datadir>/eth/chaindata`.  
 
 If a database already exists when starting a new evm-lite instance, the state  
@@ -171,7 +171,7 @@ will be set to the one corresponding to the last committed block.
 The Service exposes an API at the address specified by the --eth.listen flag for
 clients to interact with Ethereum.  
 
-### Get controlled accounts 
+### Get controlled accounts
 
 This endpoint returns all the accounts that are controlled by the evm-lite
 instance. These are the accounts whose private keys are present in the keystore.
@@ -196,7 +196,7 @@ host:~$ curl http://[api_addr]/accounts -s | json_pp
 ```
 ### Get any account
 
-This method allows retrieving the information about any account, not just the 
+This method allows retrieving the information about any account, not just the
 ones whose keys are included in the keystore.  
 
 ```bash
@@ -260,8 +260,8 @@ Then check accounts again to see that the balances have changed:
 ### Send raw signed transactions
 
 Most of the time, one will require to send transactions from accounts that are
-not  controlled by the evm-lite instance. The transaction will be assembled, 
-signed  and encoded on the client side. The resulting raw signed transaction 
+not  controlled by the evm-lite instance. The transaction will be assembled,
+signed  and encoded on the client side. The resulting raw signed transaction
 bytes can be submitted to evm-lite through the ```/rawtx``` endpoint.  
 
 example:
@@ -274,7 +274,7 @@ host:~$ curl -X POST http://[api_addr]/rawtx -d '0xf8628080830f424094564686380e2
 
 ## Get consensus info
 
-The ```/info``` endpoint exposes a map of information provided by the consensus 
+The ```/info``` endpoint exposes a map of information provided by the consensus
 system.
 
 example (with Babble consensus):
@@ -302,19 +302,19 @@ host:-$ curl http://[api_addr]/info | json_pp
 ## CLIENT
 
 Please refer to [EVM-Lite Client](https://github.com/mosaicnetworks/evm-lite-client)
-for Javascript utilities and a CLI to interact with the API. 
+for Javascript utilities and a CLI to interact with the API.
 
 ## DEV
 
 DEPENDENCIES
 
-We use glide to manage dependencies: 
+We use glide to manage dependencies:
 
 ```bash
 [...]/evm-lite$ curl https://glide.sh/get | sh
 [...]/evm-lite$ glide install
 ```
-This will download all dependencies and put them in the **vendor** folder; it 
+This will download all dependencies and put them in the **vendor** folder; it
 could take a few minutes.
 
 CONSENSUS
@@ -328,8 +328,8 @@ To add a new consensus system:
 
 ## DEPLOY
 
-We provide a set of scripts to automate the deployment of testnets. This 
-requires [terraform](https://www.terraform.io/) and 
+We provide a set of scripts to automate the deployment of testnets. This
+requires [terraform](https://www.terraform.io/) and
 [docker](https://www.docker.com/).
 
 Support for AWS is also available (cf. deploy/)

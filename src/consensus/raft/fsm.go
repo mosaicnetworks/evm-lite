@@ -10,13 +10,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//FSM wraps a state object and implements the Raft FSM interface
+// FSM wraps a state object and implements the Raft FSM interface
 type FSM struct {
 	state  *state.State
 	logger *logrus.Entry
 }
 
-//NewFSM returns a new FSM
+// NewFSM returns a new FSM
 func NewFSM(state *state.State, logger *logrus.Entry) *FSM {
 	return &FSM{
 		state:  state,
@@ -28,8 +28,8 @@ func NewFSM(state *state.State, logger *logrus.Entry) *FSM {
 IMPLEMENT RAFT FSM INTERFACE
 *******************************************************************************/
 
-//Apply is invoked once a log entry is committed.
-//It applies the log data to the state as a transaction.
+// Apply is invoked once a log entry is committed.
+// It applies the log data to the state as a transaction.
 func (f *FSM) Apply(log *_raft.Log) interface{} {
 
 	f.logger.WithFields(logrus.Fields{
@@ -53,12 +53,12 @@ func (f *FSM) Apply(log *_raft.Log) interface{} {
 	return hash.Bytes()
 }
 
-//Snapshot is not implemented yet
+// Snapshot is not implemented yet
 func (f *FSM) Snapshot() (_raft.FSMSnapshot, error) {
 	return nil, fmt.Errorf("Snapshot function not implemented")
 }
 
-//Restore is not implemented yet
+// Restore is not implemented yet
 func (f *FSM) Restore(io.ReadCloser) error {
 	return fmt.Errorf("Restore function not implemented")
 }

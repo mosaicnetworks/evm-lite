@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//InmemProxy implements the Babble AppProxy interface
+// InmemProxy implements the Babble AppProxy interface
 type InmemProxy struct {
 	service  *service.Service
 	state    *state.State
@@ -16,7 +16,7 @@ type InmemProxy struct {
 	logger   *logrus.Entry
 }
 
-//NewInmemProxy initializes and return a new InmemProxy
+// NewInmemProxy initializes and return a new InmemProxy
 func NewInmemProxy(state *state.State,
 	service *service.Service,
 	submitCh chan []byte,
@@ -34,13 +34,13 @@ func NewInmemProxy(state *state.State,
 Implement Babble AppProxy Interface
 *******************************************************************************/
 
-//SubmitCh is the channel through which the Service sends transactions to the
-//node.
+// SubmitCh is the channel through which the Service sends transactions to the
+// node.
 func (p *InmemProxy) SubmitCh() chan []byte {
 	return p.submitCh
 }
 
-//CommitBlock commits Block to the State and expects the resulting state hash
+// CommitBlock commits Block to the State and expects the resulting state hash
 func (p *InmemProxy) CommitBlock(block hashgraph.Block) ([]byte, error) {
 	p.logger.Debug("CommitBlock")
 

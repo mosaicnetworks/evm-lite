@@ -177,7 +177,7 @@ func (test *Test) prepareTransaction(from, to *accounts.Account,
 
 func (test *Test) deployContract(from accounts.Account, contract *Contract, t *testing.T) {
 
-	//Create Contract transaction
+	// Create Contract transaction
 	tx, err := test.prepareTransaction(&from,
 		nil,
 		_defaultValue,
@@ -189,13 +189,13 @@ func (test *Test) deployContract(from accounts.Account, contract *Contract, t *t
 		t.Fatal(err)
 	}
 
-	//convert to raw bytes
+	// Convert to raw bytes
 	data, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	//try to commit the transaction
+	// Try to commit the transaction
 	err = test.state.ApplyTransaction(data, 0, common.Hash{})
 	if err != nil {
 		t.Fatal(err)
@@ -233,9 +233,9 @@ func TestTransfer(t *testing.T) {
 	to := test.keyStore.Accounts()[1]
 	toBalanceBefore := test.state.GetBalance(to.Address)
 
-	//Create transfer transaction
+	// Create transfer transaction
 	value := big.NewInt(1000000)
-	gas := big.NewInt(21000) //a value transfer transaction costs 21000 gas
+	gas := big.NewInt(21000) // A value transfer transaction costs 21000 gas
 	gasPrice := big.NewInt(0)
 
 	tx, err := test.prepareTransaction(&from,
@@ -249,13 +249,13 @@ func TestTransfer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	//convert to raw bytes
+	// Convert to raw bytes
 	data, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	//try to process the block
+	// Try to process the block
 	err = test.state.ApplyTransaction(data, 0, common.Hash{})
 	if err != nil {
 		t.Fatal(err)
@@ -383,13 +383,13 @@ func callDummyContractTestAsync(test *Test, from accounts.Account, contract *Con
 		t.Fatal(err)
 	}
 
-	//convert to raw bytes
+	// Convert to raw bytes
 	data, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	//try to process the block
+	// Try to process the block
 	err = test.state.ApplyTransaction(data, 0, common.Hash{})
 	if err != nil {
 		t.Fatal(err)
@@ -429,13 +429,13 @@ func TestCreateContract(t *testing.T) {
 
 	contract.parseABI(t)
 
-	//call constant test method
+	// Call constant test method
 	callDummyContractTest(test, from, contract, big.NewInt(10), t)
 
-	//execute state-altering testAsync method
+	// Execute state-altering testAsync method
 	callDummyContractTestAsync(test, from, contract, t)
 
-	//call constant test method
+	// Call constant test method
 	callDummyContractTest(test, from, contract, big.NewInt(110), t)
 
 }
@@ -445,7 +445,7 @@ func TestDB(t *testing.T) {
 	os.RemoveAll("test_data/eth/chaindata")
 	defer os.RemoveAll("test_data/eth/chaindata")
 
-	//initialise a fresh instance and commit stuff to the db
+	// Initialise a fresh instance and commit stuff to the db
 	test := NewTest("test_data/eth", bcommon.NewTestLogger(t), t)
 	if err := test.Init(); err != nil {
 		t.Fatal(err)
@@ -462,28 +462,28 @@ func TestDB(t *testing.T) {
 
 	contract.parseABI(t)
 
-	//execute state-altering testAsync method
+	// Execute state-altering testAsync method
 	callDummyContractTestAsync(test, from, contract, t)
 
-	//close the database
+	// Close the database
 	test.state.db.Close()
 
-	//initialise another instance from the existing db
+	// Initialise another instance from the existing db
 	test2 := NewTest("test_data/eth", bcommon.NewTestLogger(t), t)
 	if err := test2.Init(); err != nil {
 		t.Fatal(err)
 	}
 
-	//check that state is the same
+	// Check that state is the same
 
-	//check that contract code is there
+	// Check that contract code is there
 	code2 := test2.state.ethState.GetCode(contract.address)
 	t.Logf("code2: %s", common.ToHex(code2))
 	if !reflect.DeepEqual(code2, code) {
 		t.Fatalf("contract code should be equal")
 	}
 
-	//check contract memory
+	// Check contract memory
 	callDummyContractTest(test2, from, contract, big.NewInt(110), t)
 
 }

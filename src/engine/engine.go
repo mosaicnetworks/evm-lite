@@ -8,14 +8,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//Engine is the actor that coordinates State, Service and Consensus
+// Engine is the actor that coordinates State, Service and Consensus
 type Engine struct {
 	state     *state.State
 	service   *service.Service
 	consensus consensus.Consensus
 }
 
-//NewEngine instantiates a new Engine with coupled State, Service, and Consensus
+// NewEngine instantiates a new Engine with coupled State, Service, and Consensus
 func NewEngine(config config.Config,
 	consensus consensus.Consensus,
 	logger *logrus.Logger) (*Engine, error) {
@@ -51,8 +51,8 @@ func NewEngine(config config.Config,
 	return engine, nil
 }
 
-//Run starts the engine's Service asynchronously and starts the Consensus system
-//synchronously
+// Run starts the engine's Service asynchronously and starts the Consensus system
+// synchronously
 func (e *Engine) Run() error {
 
 	go e.service.Run()

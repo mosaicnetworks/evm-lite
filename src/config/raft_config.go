@@ -13,7 +13,7 @@ var (
 	defaultRaftID      = defaultNodeAddr
 )
 
-//RaftConfig contains the configuration of a Raft node
+// RaftConfig contains the configuration of a Raft node
 type RaftConfig struct {
 
 	// ProtocolVersion allows a Raft server to inter-operate with older
@@ -90,7 +90,7 @@ type RaftConfig struct {
 	NodeAddr    string `mapstructure:"node-addr"`
 }
 
-//DefaultRaftConfig returns the default configuration for a Raft node
+// DefaultRaftConfig returns the default configuration for a Raft node
 func DefaultRaftConfig() *RaftConfig {
 	return &RaftConfig{
 		ProtocolVersion:    _raft.ProtocolVersionMax,
@@ -110,8 +110,8 @@ func DefaultRaftConfig() *RaftConfig {
 	}
 }
 
-//SetDataDir updates the raft configuration directories if they were set to
-//default values
+// SetDataDir updates the raft configuration directories if they were set to
+// default values
 func (c *RaftConfig) SetDataDir(datadir string) {
 	if c.RaftDir == defaultRaftDir {
 		c.RaftDir = datadir

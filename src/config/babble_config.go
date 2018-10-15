@@ -20,38 +20,38 @@ var (
 	defaultPeersFile     = fmt.Sprintf("%s/peers.json", defaultBabbleDir)
 )
 
-//BabbleConfig contains the configuration of a Babble node
+// BabbleConfig contains the configuration of a Babble node
 type BabbleConfig struct {
 
-	//Directory containing priv_key.pem and peers.json files
+	// Directory containing priv_key.pem and peers.json files
 	DataDir string `mapstructure:"datadir"`
 
-	//Address of Babble node (where it talks to other Babble nodes)
+	// Address of Babble node (where it talks to other Babble nodes)
 	BindAddr string `mapstructure:"listen"`
 
-	//Babble HTTP API address
+	// Babble HTTP API address
 	ServiceAddr string `mapstructure:"service-listen"`
 
-	//Gossip heartbeat
+	// Gossip heartbeat
 	Heartbeat time.Duration `mapstructure:"heartbeat"`
 
-	//TCP timeout
+	// TCP timeout
 	TCPTimeout time.Duration `mapstructure:"timeout"`
 
-	//Max number of items in caches
+	// Max number of items in caches
 	CacheSize int `mapstructure:"cache-size"`
 
-	//Max number of Event in SyncResponse
+	// Max number of Event in SyncResponse
 	SyncLimit int `mapstructure:"sync-limit"`
 
-	//Max number of connections in net pool
+	// Max number of connections in net pool
 	MaxPool int `mapstructure:"max-pool"`
 
-	//Database type; badger or inmeum
+	// Database type; badger or inmeum
 	Store bool `mapstructure:"store"`
 }
 
-//DefaultBabbleConfig returns the default configuration for a Babble node
+// DefaultBabbleConfig returns the default configuration for a Babble node
 func DefaultBabbleConfig() *BabbleConfig {
 	return &BabbleConfig{
 		DataDir:     defaultBabbleDir,
@@ -65,16 +65,16 @@ func DefaultBabbleConfig() *BabbleConfig {
 	}
 }
 
-//SetDataDir updates the babble configuration directories if they were set to
-//to default values.
+// SetDataDir updates the babble configuration directories if they were set to
+// to default values.
 func (c *BabbleConfig) SetDataDir(datadir string) {
 	if c.DataDir == defaultBabbleDir {
 		c.DataDir = datadir
 	}
 }
 
-//ToRealBabbleConfig converts an evm-lite/src/config.BabbleConfig to a
-//babble/src/babble.BabbleConfig as used by Babble
+// ToRealBabbleConfig converts an evm-lite/src/config.BabbleConfig to a
+// babble/src/babble.BabbleConfig as used by Babble
 func (c *BabbleConfig) ToRealBabbleConfig(logger *logrus.Logger) *_babble.BabbleConfig {
 	babbleConfig := _babble.NewDefaultConfig()
 	babbleConfig.DataDir = c.DataDir
