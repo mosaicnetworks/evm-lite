@@ -192,17 +192,23 @@ func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.H
 func (s *State) CreateAccounts(accounts bcommon.AccountMap) error {
 	for addr, account := range accounts {
 		address := common.HexToAddress(addr)
-		s.was.ethState.AddBalance(address, math.MustParseBig256(account.Balance))
-		s.was.ethState.SetCode(address, common.Hex2Bytes(account.Code))
-		for key, value := range account.Storage {
-			s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
+		if !s.Exist(address) {
+			s.was.ethState.AddBalance(address, math.MustParseBig256(account.Balance))
+			s.was.ethState.SetCode(address, common.Hex2Bytes(account.Code))
+			for key, value := range account.Storage {
+				s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
+			}
+			s.logger.WithField("address", addr).Debug("Adding account")
 		}
-		s.logger.WithField("address", addr).Debug("Adding account")
 	}
-
 	_, err := s.Commit()
 
 	return err
+}
+
+//Exist reports whether the given account address exists in the state.
+func (s *State) Exist(addr common.Address) bool {
+	return s.ethState.Exist(addr)
 }
 
 //GetBalance returns an account's balance from the main ethState
