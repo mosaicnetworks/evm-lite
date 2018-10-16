@@ -247,16 +247,22 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	}
 	m.logger.WithField("raw tx bytes", rawTxBytes).Debug()
 
-	m.logger.Debug("submitting tx")
-	m.submitCh <- rawTxBytes
-	m.logger.Debug("submitted tx")
-
 	var t ethTypes.Transaction
 	if err := rlp.Decode(bytes.NewReader(rawTxBytes), &t); err != nil {
 		m.logger.WithError(err).Error("Decoding Transaction")
 		return
 	}
 	m.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
+
+	if err := m.state.CheckTx(&t); err != nil {
+		m.logger.WithError(err).Error("Checking Transaction")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	m.logger.Debug("submitting tx")
+	m.submitCh <- rawTxBytes
+	m.logger.Debug("submitted tx")
 
 	res := JsonTxRes{TxHash: t.Hash().Hex()}
 	js, err := json.Marshal(res)
