@@ -21,7 +21,7 @@ import (
 
 var (
 	chainID        = big.NewInt(1)
-	gasLimit       = big.NewInt(1000000000000000000)
+	gasLimit       = uint64(1000000000000000000)
 	txMetaSuffix   = []byte{0x01}
 	receiptsPrefix = []byte("receipts-")
 	MIPMapLevels   = []uint64{1000000, 500000, 100000, 50000, 1000}

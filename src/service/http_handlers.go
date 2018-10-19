@@ -325,7 +325,7 @@ func transactionReceiptHandler(w http.ResponseWriter, r *http.Request, m *Servic
 		ContractAddress:   receipt.ContractAddress,
 		Logs:              receipt.Logs,
 		LogsBloom:         receipt.Bloom,
-		Failed:            receipt.Failed,
+		Status:            receipt.Status,
 	}
 
 	if receipt.Logs == nil {
@@ -469,8 +469,8 @@ func prepareTransaction(args SendTxArgs, state *state.State, ks *keystore.KeySto
 }
 
 func prepareSendTxArgs(args SendTxArgs) (SendTxArgs, error) {
-	if args.Gas == nil {
-		args.Gas = defaultGas
+	if args.Gas == 0 {
+
 	}
 	if args.GasPrice == nil {
 		args.GasPrice = big.NewInt(0)

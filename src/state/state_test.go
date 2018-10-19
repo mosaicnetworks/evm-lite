@@ -23,7 +23,7 @@ import (
 
 var (
 	_defaultValue    = big.NewInt(0)
-	_defaultGas      = big.NewInt(1000000)
+	_defaultGas      = uint64(1000000)
 	_defaultGasPrice = big.NewInt(0)
 )
 
@@ -140,7 +140,9 @@ func (test *Test) Init() error {
 }
 
 func (test *Test) prepareTransaction(from, to *accounts.Account,
-	value, gas, gasPrice *big.Int,
+	value *big.Int,
+	gas uint64,
+	gasPrice *big.Int,
 	data []byte) (*ethTypes.Transaction, error) {
 
 	nonce := test.state.GetPoolNonce(from.Address)
@@ -235,7 +237,7 @@ func TestTransfer(t *testing.T) {
 
 	// Create transfer transaction
 	value := big.NewInt(1000000)
-	gas := big.NewInt(21000) // A value transfer transaction costs 21000 gas
+	gas := uint64(21000) // A value transfer transaction costs 21000 gas
 	gasPrice := big.NewInt(0)
 
 	tx, err := test.prepareTransaction(&from,

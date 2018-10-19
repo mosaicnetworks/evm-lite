@@ -4,7 +4,7 @@ import:
   version: =0.4.0
 - package: github.com/sirupsen/logrus
 - package: github.com/ethereum/go-ethereum
-  version: =1.7.0
+  version: =1.8.0
   subpackages:
   - accounts
   - accounts/keystore

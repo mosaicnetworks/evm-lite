@@ -5,8 +5,10 @@ SECURITY:
 FEATURES:
 
 IMPROVEMENTS:
+- deps: Use Geth v1.8.0
 
 BUG FIXES:
+- deps: Update version of Geth. Version 1.7.0 had broken dependencies.
 
 ## V0.1.0 (October 14, 2018)
 

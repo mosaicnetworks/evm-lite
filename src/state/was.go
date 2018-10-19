@@ -26,14 +26,14 @@ type WriteAheadState struct {
 	signer      ethTypes.Signer
 	chainConfig params.ChainConfig // vm.env is still tightly coupled with chainConfig
 	vmConfig    vm.Config
-	gasLimit    *big.Int
+	gasLimit    uint64
 
 	txIndex      int
 	transactions []*ethTypes.Transaction
 	receipts     []*ethTypes.Receipt
 	allLogs      []*ethTypes.Log
 
-	totalUsedGas *big.Int
+	totalUsedGas uint64
 	gp           *core.GasPool
 
 	logger *logrus.Logger
@@ -44,7 +44,7 @@ func NewWriteAheadState(db ethdb.Database,
 	signer ethTypes.Signer,
 	chainConfig params.ChainConfig,
 	vmConfig vm.Config,
-	gasLimit *big.Int,
+	gasLimit uint64,
 	logger *logrus.Logger) (*WriteAheadState, error) {
 
 	ethState, err := ethState.New(root, ethState.NewDatabase(db))
@@ -75,7 +75,7 @@ func (was *WriteAheadState) Reset(root common.Hash) error {
 	was.receipts = []*ethTypes.Receipt{}
 	was.allLogs = []*ethTypes.Log{}
 
-	was.totalUsedGas = big.NewInt(0)
+	was.totalUsedGas = 0
 	was.gp = new(core.GasPool).AddGas(was.gasLimit)
 
 	return nil
@@ -112,14 +112,14 @@ func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex in
 		return err
 	}
 
-	was.totalUsedGas.Add(was.totalUsedGas, gas)
+	was.totalUsedGas += gas
 
 	// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
 	// based on the eip phase, we're passing wether the root touch-delete accounts.
 	root := was.ethState.IntermediateRoot(true) //this has side effects. It updates StateObjects (SmartContract memory)
 	receipt := ethTypes.NewReceipt(root.Bytes(), failed, was.totalUsedGas)
 	receipt.TxHash = tx.Hash()
-	receipt.GasUsed = new(big.Int).Set(gas)
+	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
 	if msg.To() == nil {
 		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())
@@ -141,11 +141,16 @@ func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex in
 
 func (was *WriteAheadState) Commit() (common.Hash, error) {
 	// Commit all state changes to the database
-	root, err := was.ethState.CommitTo(was.db, true)
+	root, err := was.ethState.Commit(true)
 	if err != nil {
 		was.logger.WithError(err).Error("Committing state")
 		return common.Hash{}, err
 	}
+
+	//XXX FORCE DISK WRITE
+	//Apparenty Geth does something smarter here... but cant figure it out
+	was.ethState.Database().TrieDB().Commit(root, true)
+
 	if err := was.writeRoot(root); err != nil {
 		was.logger.WithError(err).Error("Writing root")
 		return common.Hash{}, err

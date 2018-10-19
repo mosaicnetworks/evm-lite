@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	"io/ioutil"
-	"math/big"
 	"net/http"
 	"os"
 	"strings"
@@ -16,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var defaultGas = big.NewInt(90000)
+var defaultGas = uint64(90000)
 
 type infoCallback func() (map[string]string, error)
 

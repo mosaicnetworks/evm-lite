@@ -9,5 +9,5 @@ NODE=${4:-"172.77.5.1"}
 
 
 for i in `seq 1 $COUNT`; do
-    curl -X POST http://$NODE:8080/tx -d '{"from":"'$FROM'","to":"'$TO'","value":6666}'
+    curl -X POST http://$NODE:8080/tx -d '{"from":"'$FROM'","to":"'$TO'","value":100, "gas":30000}'
 done; 

@@ -21,7 +21,7 @@ type JsonAccountList struct {
 type SendTxArgs struct {
 	From     common.Address  `json:"from"`
 	To       *common.Address `json:"to"`
-	Gas      *big.Int        `json:"gas"`
+	Gas      uint64          `json:"gas"`
 	GasPrice *big.Int        `json:"gasPrice"`
 	Value    *big.Int        `json:"value"`
 	Data     string          `json:"data"`
@@ -41,10 +41,10 @@ type JsonReceipt struct {
 	TransactionHash   common.Hash     `json:"transactionHash"`
 	From              common.Address  `json:"from"`
 	To                *common.Address `json:"to"`
-	GasUsed           *big.Int        `json:"gasUsed"`
-	CumulativeGasUsed *big.Int        `json:"cumulativeGasUsed"`
+	GasUsed           uint64          `json:"gasUsed"`
+	CumulativeGasUsed uint64          `json:"cumulativeGasUsed"`
 	ContractAddress   common.Address  `json:"contractAddress"`
 	Logs              []*ethTypes.Log `json:"logs"`
 	LogsBloom         ethTypes.Bloom  `json:"logsBloom"`
-	Failed            bool            `json:"failed"`
+	Status            uint            `json:"status"`
 }

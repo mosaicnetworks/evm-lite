@@ -15,12 +15,11 @@ import (
 type TxPool struct {
 	ethState *ethState.StateDB
 
-	signer      ethTypes.Signer
-	chainConfig params.ChainConfig // vm.env is still tightly coupled with chainConfig
-	vmConfig    vm.Config
-	gasLimit    *big.Int
-
-	totalUsedGas *big.Int
+	signer       ethTypes.Signer
+	chainConfig  params.ChainConfig // vm.env is still tightly coupled with chainConfig
+	vmConfig     vm.Config
+	gasLimit     uint64
+	totalUsedGas uint64
 	gp           *core.GasPool
 
 	logger *logrus.Logger
@@ -30,7 +29,7 @@ func NewTxPool(ethState *ethState.StateDB,
 	signer ethTypes.Signer,
 	chainConfig params.ChainConfig,
 	vmConfig vm.Config,
-	gasLimit *big.Int,
+	gasLimit uint64,
 	logger *logrus.Logger) *TxPool {
 
 	return &TxPool{
@@ -50,7 +49,7 @@ func (p *TxPool) Reset(root common.Hash) error {
 		return err
 	}
 
-	p.totalUsedGas = big.NewInt(0)
+	p.totalUsedGas = 0
 	p.gp = new(core.GasPool).AddGas(p.gasLimit)
 
 	return nil
@@ -85,7 +84,7 @@ func (p *TxPool) CheckTx(tx *ethTypes.Transaction) error {
 		return err
 	}
 
-	p.totalUsedGas.Add(p.totalUsedGas, gas)
+	p.totalUsedGas += gas
 
 	return nil
 }
