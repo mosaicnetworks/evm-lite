@@ -46,5 +46,5 @@ type JsonReceipt struct {
 	ContractAddress   common.Address  `json:"contractAddress"`
 	Logs              []*ethTypes.Log `json:"logs"`
 	LogsBloom         ethTypes.Bloom  `json:"logsBloom"`
-	Status            uint            `json:"status"`
+	Status            uint64          `json:"status"`
 }

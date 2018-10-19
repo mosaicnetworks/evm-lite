@@ -5,7 +5,7 @@ SECURITY:
 FEATURES:
 
 IMPROVEMENTS:
-- deps: Use Geth v1.8.0
+- deps: Use Geth v1.8.17
 
 BUG FIXES:
 - deps: Update version of Geth. Version 1.7.0 had broken dependencies.

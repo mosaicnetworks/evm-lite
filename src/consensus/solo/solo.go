@@ -54,7 +54,7 @@ func (s *Solo) Run() error {
 
 			err := s.state.ApplyTransaction(t,
 				s.txIndex,
-				common.StringToHash(fmt.Sprintf("block %d", s.txIndex)))
+				common.BytesToHash([]byte(fmt.Sprintf("block %d", s.txIndex))))
 			if err != nil {
 				s.logger.WithField("tx", s.txIndex).WithError(err).Errorf("ApplyTransaction")
 			}

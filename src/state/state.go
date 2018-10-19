@@ -56,7 +56,7 @@ func NewState(logger *logrus.Logger, dbFile string, dbCache int) (*State, error)
 	s := &State{
 		db:          db,
 		signer:      ethTypes.NewEIP155Signer(chainID),
-		chainConfig: params.ChainConfig{ChainId: chainID},
+		chainConfig: params.ChainConfig{ChainID: chainID},
 		vmConfig:    vm.Config{Tracer: vm.NewStructLogger(nil)},
 		logger:      logger,
 	}
@@ -183,7 +183,6 @@ func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.H
 		return err
 	}
 	s.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
-	s.logger.WithField("tx", t.String()).Debug()
 
 	return s.was.ApplyTransaction(t, txIndex, blockHash)
 }
