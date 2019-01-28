@@ -5,10 +5,22 @@ SECURITY:
 FEATURES:
 
 IMPROVEMENTS:
+
+BUG FIXES:
+
+## V0.1.1 (January 28, 2019)
+
+SECURITY:
+
+FEATURES:
+
+IMPROVEMENTS:
 - deps: Use Geth v1.8.17
+- consensus: Version 0.4.1 of Babble
 
 BUG FIXES:
 - deps: Update version of Geth. Version 1.7.0 had broken dependencies.
+
 
 ## V0.1.0 (October 14, 2018)
 

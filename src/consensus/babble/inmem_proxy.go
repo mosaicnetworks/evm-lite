@@ -3,6 +3,7 @@ package babble
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/mosaicnetworks/babble/src/hashgraph"
+	"github.com/mosaicnetworks/babble/src/proxy"
 	"github.com/mosaicnetworks/evm-lite/src/service"
 	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
@@ -41,7 +42,7 @@ func (p *InmemProxy) SubmitCh() chan []byte {
 }
 
 // CommitBlock commits Block to the State and expects the resulting state hash
-func (p *InmemProxy) CommitBlock(block hashgraph.Block) ([]byte, error) {
+func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, error) {
 	p.logger.Debug("CommitBlock")
 
 	blockHashBytes, err := block.Hash()
@@ -49,16 +50,20 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) ([]byte, error) {
 
 	for i, tx := range block.Transactions() {
 		if err := p.state.ApplyTransaction(tx, i, blockHash); err != nil {
-			return []byte{}, err
+			return proxy.CommitResponse{}, err
 		}
 	}
 
 	hash, err := p.state.Commit()
 	if err != nil {
-		return []byte{}, err
+		return proxy.CommitResponse{}, err
 	}
 
-	return hash.Bytes(), nil
+	res := proxy.CommitResponse{
+		StateHash: hash.Bytes(),
+	}
+
+	return res, nil
 }
 
 //TODO - Implement these two functions

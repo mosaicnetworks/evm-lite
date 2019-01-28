@@ -127,7 +127,9 @@ transfer = function(from, to, amount) {
     tx = {
         from: from.accounts[0].address,
         to: to.accounts[0].address,
-        value: amount
+        value: amount,
+        gas: 1000000,
+        gasPrice: 0,
     }
 
     stx = JSONbig.stringify(tx)
@@ -215,7 +217,7 @@ contribute = function(from, wei_amount) {
     tx = {
         from: from.accounts[0].address,
         to: _cfContract.address,
-        gaz:1000000,
+        gaz:100000000000,
         gazPrice:0,
         value:wei_amount,
         data: callData
