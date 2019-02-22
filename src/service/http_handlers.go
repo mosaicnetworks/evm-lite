@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"math/big"
@@ -16,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/mosaicnetworks/evm-lite/src/service/templates"
 	"github.com/mosaicnetworks/evm-lite/src/state"
+	"github.com/sirupsen/logrus"
 )
 
 /*
@@ -179,6 +181,16 @@ func transactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
+	m.logger.WithFields(logrus.Fields{
+		"hash":     tx.Hash().Hex(),
+		"to":       tx.To(),
+		"payload":  fmt.Sprintf("%x", tx.Data()),
+		"gas":      tx.Gas(),
+		"gasPrice": tx.GasPrice(),
+		"nonce":    tx.Nonce(),
+		"value":    tx.Value(),
+	}).Debug("Service decoded tx")
+
 	if err := m.state.CheckTx(tx); err != nil {
 		m.logger.WithError(err).Error("Checking Transaction")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -252,7 +264,16 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		m.logger.WithError(err).Error("Decoding Transaction")
 		return
 	}
-	m.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
+
+	m.logger.WithFields(logrus.Fields{
+		"hash":     t.Hash().Hex(),
+		"to":       t.To(),
+		"payload":  fmt.Sprintf("%x", t.Data()),
+		"gas":      t.Gas(),
+		"gasPrice": t.GasPrice(),
+		"nonce":    t.Nonce(),
+		"value":    t.Value(),
+	}).Debug("Service decoded tx")
 
 	if err := m.state.CheckTx(&t); err != nil {
 		m.logger.WithError(err).Error("Checking Transaction")
@@ -260,8 +281,16 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
+	//XXX
+	data, err := rlp.EncodeToBytes(&t)
+	if err != nil {
+		m.logger.WithError(err).Error("Encoding Transaction")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	m.logger.Debug("submitting tx")
-	m.submitCh <- rawTxBytes
+	m.submitCh <- data
 	m.logger.Debug("submitted tx")
 
 	res := JsonTxRes{TxHash: t.Hash().Hex()}

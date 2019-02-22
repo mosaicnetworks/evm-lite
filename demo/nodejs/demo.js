@@ -52,7 +52,7 @@ sleep = function(time) {
 function DemoNode(name, host, port) {
     this.name = name
     this.api = new EVMBabbleClient(host, port)
-    this.accounts = {}
+    this.account = {}
 }
 
 //------------------------------------------------------------------------------
@@ -66,7 +66,8 @@ var _wallet;
 
 init = function() {
     console.log(argv);
-    var ips = argv.ips.split(",");
+    var ips = argv.ips.split(",").sort();
+    console.log("sorted ips: ", ips);
     var port = argv.port;
     _contractFile = argv.contract;
     _keystore = argv.keystore;
@@ -118,15 +119,16 @@ getControlledAccounts = function() {
     return Promise.all(_demoNodes.map(function (node) {
         return  node.api.getAccounts().then((accs) => {
             log(FgGreen, util.format('%s accounts: %s', node.name, accs));
-            node.accounts = JSONbig.parse(accs).accounts;
+            temp = JSONbig.parse(accs).accounts;
+            node.account = _wallet[temp[0].address];
         });
     }));
 }
 
 transfer = function(from, to, amount) {
     tx = {
-        from: from.accounts[0].address,
-        to: to.accounts[0].address,
+        from: from.account.address,
+        to: to.account.address,
         value: amount,
         gas: 1000000,
         gasPrice: 0,
@@ -173,6 +175,54 @@ transferRaw = function(api, from, to, amount) {
     
 }
 
+deployContractRaw = function(from, contractFile, contractName, args) {
+    contract = new Contract(contractFile, contractName)
+    contract.compile()
+
+    var constructorParams = contract.encodeConstructorParams(args)
+
+    return from.api.getAccount(from.account.address).then( (res) => {
+        log(FgMagenta, 'account: ' + res)
+        acc = JSONbig.parse(res);
+
+        tx = {
+            from: from.account.address,
+            nonce: acc.nonce,
+            chainId:1,
+            gas: 1000000,
+            gasPrice:0,
+            data: contract.bytecode + constructorParams
+        }
+        console.log("XXX TX:", tx);
+
+        privateKey = from.account.privateKey;
+        
+
+        signedTx = accounts.signTransaction(tx, privateKey)
+        console.log("signed tx", signedTx)
+
+        return signedTx;
+    })
+    .then( (signedTx) => from.api.sendRawTx(signedTx.rawTransaction))
+    .then( (res) => {
+        log(FgGreen, 'Response: ' + res)
+        txHash = JSONbig.parse(res).txHash.replace("\"", "")
+        return txHash
+    })
+    .then( (txHash) => {
+        return sleep(5000).then(() => {
+            log(FgBlue, 'Requesting Receipt')
+            return from.api.getReceipt(txHash)
+        })
+    }) 
+    .then( (receipt) => {
+        log(FgGreen, 'Tx Receipt: ' + receipt)
+        address = JSONbig.parse(receipt).contractAddress
+        contract.address = address
+        return contract
+    })
+}
+
 deployContract = function(from, contractFile, contractName, args) {
     contract = new Contract(contractFile, contractName)
     contract.compile()
@@ -180,11 +230,13 @@ deployContract = function(from, contractFile, contractName, args) {
     var constructorParams = contract.encodeConstructorParams(args)
 
     tx = {
-        from: from.accounts[0].address,
+        from: from.account.address,
         gas: 1000000,
         gasPrice: 0,
         data: contract.bytecode + constructorParams
     }
+
+    console.log("XXX TX", tx)
 
     stx = JSONbig.stringify(tx)
     log(FgMagenta, 'Sending Contract-Creation Tx: ' + stx)
@@ -215,10 +267,10 @@ contribute = function(from, wei_amount) {
     log(FgMagenta, util.format('contribute() callData: %s', callData))
 
     tx = {
-        from: from.accounts[0].address,
+        from: from.account.address,
         to: _cfContract.address,
-        gaz:100000000000,
-        gazPrice:0,
+        gas:100000000000,
+        gasPrice:0,
         value:wei_amount,
         data: callData
     }
@@ -231,7 +283,7 @@ contribute = function(from, wei_amount) {
         return txHash
     })
     .then( (txHash) => {
-        return sleep(2000).then(() => {
+        return sleep(3000).then(() => {
             log(FgBlue, 'Requesting Receipt')
             return from.api.getReceipt(txHash)
         })
@@ -253,10 +305,12 @@ checkGoalReached = function(from) {
     log(FgMagenta, util.format('checkGoalReached() callData: %s', callData))
 
     tx = {
-        from: from.accounts[0].address,
+        from: from.account.address,
         value:0,
         to: _cfContract.address,
-        data: callData
+        data: callData,
+        gas: 10000000,
+        gasPrice: 0,
     }
     stx = JSONbig.stringify(tx)
     log(FgBlue, 'Calling Contract Method: ' + stx)
@@ -276,10 +330,10 @@ settle = function(from) {
     log(FgMagenta, util.format('settle() callData: %s', callData))
 
     tx = {
-        from: from.accounts[0].address,
+        from: from.account.address,
         to: _cfContract.address,
-        gaz:1000000,
-        gazPrice:0,
+        gas:1000000,
+        gasPrice:0,
         value:0,
         data: callData
     }
@@ -292,7 +346,7 @@ settle = function(from) {
         return txHash
     })
     .then( (txHash) => {
-        return sleep(2000).then(() => {
+        return sleep(3000).then(() => {
             log(FgBlue, 'Requesting Receipt')
             return from.api.getReceipt(txHash)
         })
@@ -345,8 +399,8 @@ init()
 .then(() => { space(); return getControlledAccounts()})
 .then(() => explain("Notice how the balances of node1 and node2 have changed."))
 
-.then(() => step("STEP 4) Send raw signed transaction"))
-.then(() => { space(); return transferRaw(_demoNodes[2].api, _wallet[0], _wallet[1].address, 500) })
+.then(() => step("STEP 4) Send raw signed transaction from node3 to node4 through node2"))
+.then(() => { space(); return transferRaw(_demoNodes[1].api, _demoNodes[2].account, _demoNodes[3].account.address, 500) })
 .then(() => explain(
 "We did the same thing as in the previous step but this time, the transaction \n" +
 "was signed locally using javascript utilities and the keys found in the local \n" +
