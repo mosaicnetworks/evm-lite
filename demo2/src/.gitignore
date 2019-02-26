@@ -1,1 +1,6 @@
 node_modules
+pwd.txt
+keystore
+test.js
+yarn.lock
+yarn-error.log

@@ -4,6 +4,42 @@ const JSONbig = require('json-bigint');
 const argv = require('minimist')(process.argv.slice(2));
 const evmlc = require('evm-lite-lib');
 const solc = require('solc');
+const prompt = require('prompt');
+
+const FgRed = '\x1b[31m';
+const FgGreen = '\x1b[32m';
+const FgYellow = '\x1b[33m';
+const FgBlue = '\x1b[34m';
+const FgMagenta = '\x1b[35m';
+const FgCyan = '\x1b[36m';
+const FgWhite = '\x1b[37m';
+
+const log = (color, text) => {
+	console.log(color + text + '\x1b[0m');
+};
+
+const step = message => {
+	log(FgWhite, '\n' + message);
+	return new Promise(resolve => {
+		prompt.get('PRESS ENTER TO CONTINUE', function(err, res) {
+			resolve();
+		});
+	});
+};
+
+const explain = message => {
+	log(FgCyan, util.format('\nEXPLANATION:\n%s', message));
+};
+
+const space = () => {
+	console.log('\n');
+};
+
+//------------------------------------------------------------------------------
+
+const sleep = function(time) {
+	return new Promise(resolve => setTimeout(resolve, time));
+};
 
 function Node(name, host, port) {
 	this.name = name;
@@ -17,6 +53,7 @@ function Node(name, host, port) {
 
 const allAccounts = [];
 const allNodes = [];
+var crowdFunding = {};
 
 const init = async () => {
 	console.group('Initialize Nodes: ');
@@ -118,9 +155,9 @@ class CrowdFunding {
 		this.account = account;
 	}
 
-	async deploy() {
-		await this.contract.deploy(this.account, [1000]);
-
+	async deploy(value) {
+		await this.contract.deploy(this.account, [value]);
+		console.log('Receipt:', this.contract.receipt);
 		return this;
 	}
 
@@ -128,8 +165,10 @@ class CrowdFunding {
 		const transaction = await this.contract.methods.contribute();
 		transaction.value(value);
 
+		console.log('Transaction: ', transaction.parse());
 		await transaction.submit({ timeout: 2 }, this.account);
 
+		console.log('Receipt: ', await transaction.receipt);
 		return transaction;
 	}
 
@@ -137,30 +176,145 @@ class CrowdFunding {
 		const transaction = await this.contract.methods.checkGoalReached();
 		const response = await transaction.submit({ timeout: 2 }, this.account);
 
+		console.log('Response: ', response);
 		return response;
+	}
+
+	async settle() {
+		const transaction = await this.contract.methods.settle();
+
+		console.log('Transaction: ', transaction.parse());
+		await transaction.submit({ timeout: 2 }, this.account);
+
+		console.log('Receipt: ', await transaction.receipt);
+		return transaction;
 	}
 }
 
 init()
 	.then(object => decryptAccounts(object))
-	.then(() => displayAllBalances())
-	.then(() => transferRaw(allNodes[0], allNodes[1], 200))
-	.then(() => displayAllBalances())
-	.then(() => compiledSmartContract())
-	.then(contract => new CrowdFunding(contract, allNodes[0].account))
-	.then(contract => contract.deploy())
-	.then(async contract => {
-		const transaction = await contract.contribute(20);
-		console.log(
-			'Contribute Transaction Receipt: ',
-			await transaction.receipt
-		);
-
-		return contract;
+	.then(() => step('STEP 1) Get ETH Accounts'))
+	.then(() => {
+		space();
+		return displayAllBalances();
+	})
+	.then(() =>
+		explain(
+			'Each node controls one account which allows it to send and receive Ether. \n' +
+				'The private keys reside directly on the evm-babble nodes. In a production \n' +
+				'setting, access to the nodes would be restricted to the people allowed to \n' +
+				'sign messages with the private key. We also keep a local copy of all the private \n' +
+				'keys to demonstrate client-side signing.'
+		)
+	)
+	.then(() => step('STEP 2) Send 500 wei (10^-18 ether) from node1 to node2'))
+	.then(() => {
+		space();
+		return transferRaw(allNodes[0], allNodes[1], 500);
+	})
+	.then(() =>
+		explain(
+			'We created an EVM transaction to send 500 wei from node1 to node2. The \n' +
+				'transaction was sent to node1 which controls the private key for the sender. \n' +
+				'EVM-Babble converted the transaction into raw bytes, signed it and submitted \n' +
+				'it to Babble for consensus ordering. Babble gossiped the raw transaction to \n' +
+				'the other Babble nodes which ran it through the consensus algorithm until they \n' +
+				'were each ready to commit it back to EVM-BABBLE. So each node received and \n' +
+				'processed the transaction. They each applied the same changes to their local \n' +
+				'copy of the ledger.'
+		)
+	)
+	.then(() => step('STEP 3) Check balances again'))
+	.then(() => {
+		space();
+		return displayAllBalances();
+	})
+	.then(() =>
+		explain('Notice how the balances of node1 and node2 have changed.')
+	)
+	.then(() =>
+		step(
+			'STEP 6) Deploy a CrowdFunding SmartContract for 1000 wei from node 1'
+		)
+	)
+	.then(() => {
+		space();
+		return compiledSmartContract();
 	})
 	.then(async contract => {
-		const response = await contract.checkGoalReached();
-
-		console.log(response);
+		crowdFunding = new CrowdFunding(contract, allNodes[0].account);
+		await crowdFunding.deploy(1000);
 	})
-	.catch(error => console.log(error));
+	.then(() =>
+		explain(
+			'Here we compiled and deployed the CrowdFunding SmartContract. \n' +
+				'The contract was written in the high-level Solidity language which compiles \n' +
+				'down to EVM bytecode. To deploy the SmartContract we created an EVM transaction \n' +
+				"with a 'data' field containing the bytecode. After going through consensus, the \n" +
+				'transaction is applied on every node, so every participant will run a copy of \n' +
+				'the same code with the same data.'
+		)
+	)
+	.then(() => step('STEP 4) Contribute 499 wei from node 1'))
+	.then(() => {
+		space();
+		return crowdFunding.contribute(499);
+	})
+	.then(() =>
+		explain(
+			"We created an EVM transaction to call the 'contribute' method of the SmartContract. \n" +
+				"The 'value' field of the transaction is the amount that the caller is actually \n" +
+				'going to contribute. The operation would fail if the account did not have enough Ether. \n' +
+				'As an exercise you can check that the transaction was run through every Babble \n' +
+				"node and that node2's balance has changed."
+		)
+	)
+	.then(() => step('STEP 5) Check goal reached'))
+	.then(() => {
+		space();
+		return crowdFunding.checkGoalReached();
+	})
+	.then(() =>
+		explain(
+			'Here we called another method of the SmartContract to check if the funding goal \n' +
+				'was met. Since only 499 of 1000 were received, the answer is no.'
+		)
+	)
+	.then(() => step('STEP 6) Contribute 501 wei from node 1 again'))
+	.then(() => {
+		space();
+		return crowdFunding.contribute(501);
+	})
+	.then(() => step('STEP 7) Check goal reached'))
+	.then(() => {
+		space();
+		return crowdFunding.checkGoalReached();
+	})
+	.then(() =>
+		step(
+			'STEP 8) Before we `settle` lets check balances again to show that node 1 balance decreased by a total of 1000.'
+		)
+	)
+	.then(() => {
+		space();
+		return displayAllBalances();
+	})
+	.then(() =>
+		explain('Since the funding goal was reached we can now settle.')
+	)
+	.then(() => step('STEP 9) Settle'))
+	.then(() => {
+		space();
+		return crowdFunding.settle();
+	})
+	.then(() =>
+		explain(
+			'The funds were transferred from the SmartContract back to node1.'
+		)
+	)
+	.then(() => step('STEP 10) Check balances again'))
+	.then(() => {
+		space();
+		return displayAllBalances();
+	})
+	.catch(err => log(FgRed, err));

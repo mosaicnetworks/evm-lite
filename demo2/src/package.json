@@ -7,6 +7,7 @@
     "evm-lite-lib": "^0.2.12",
     "json-bigint": "^0.3.0",
     "minimist": "^1.2.0",
+    "prompt": "^1.0.0",
     "solc": "0.4.18"
   },
   "devDependencies": {},
