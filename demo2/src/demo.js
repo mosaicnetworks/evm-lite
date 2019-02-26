@@ -92,7 +92,7 @@ const transferRaw = async (from, to, value) => {
 	);
 	console.log('Transaction: ', transaction.parse());
 
-	await transaction.submit({}, from.account);
+	await transaction.submit({ timeout: 2 }, from.account);
 
 	console.log('Receipt: ', await transaction.receipt);
 };
@@ -128,14 +128,14 @@ class CrowdFunding {
 		const transaction = await this.contract.methods.contribute();
 		transaction.value(value);
 
-		await transaction.submit({}, this.account);
+		await transaction.submit({ timeout: 2 }, this.account);
 
 		return transaction;
 	}
 
 	async checkGoalReached() {
 		const transaction = await this.contract.methods.checkGoalReached();
-		const response = await transaction.submit({}, this.account);
+		const response = await transaction.submit({ timeout: 2 }, this.account);
 
 		return response;
 	}
