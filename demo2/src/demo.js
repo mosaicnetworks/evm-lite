@@ -134,8 +134,8 @@ const transferRaw = async (from, to, value) => {
 	console.log('Receipt: ', await transaction.receipt);
 };
 
-const compiledSmartContract = async () => {
-	const input = fs.readFileSync('../smart-contracts/CrowdFunding.sol', {
+const compiledSmartContract = async path => {
+	const input = fs.readFileSync(path, {
 		encoding: 'utf8'
 	});
 	const output = solc.compile(input.toString(), 1);
@@ -168,7 +168,16 @@ class CrowdFunding {
 		console.log('Transaction: ', transaction.parse());
 		await transaction.submit({ timeout: 2 }, this.account);
 
-		console.log('Receipt: ', await transaction.receipt);
+		const receipt = await transaction.receipt;
+		// console.log('Receipt: ', receipt);
+
+		const logs = this.contract.parseLogs(receipt.logs);
+		for (const log of logs) {
+			console.log(
+				log.event || 'No Event Name',
+				JSON.stringify(log.args, null, 2)
+			);
+		}
 		return transaction;
 	}
 
@@ -186,7 +195,17 @@ class CrowdFunding {
 		console.log('Transaction: ', transaction.parse());
 		await transaction.submit({ timeout: 2 }, this.account);
 
-		console.log('Receipt: ', await transaction.receipt);
+		const receipt = await transaction.receipt;
+		// console.log('Receipt: ', receipt);
+
+		const logs = this.contract.parseLogs(receipt.logs);
+		for (const log of logs) {
+			console.log(
+				log.event || 'No Event Name',
+				JSON.stringify(log.args, null, 2)
+			);
+		}
+
 		return transaction;
 	}
 }
@@ -234,12 +253,12 @@ init()
 	)
 	.then(() =>
 		step(
-			'STEP 6) Deploy a CrowdFunding SmartContract for 1000 wei from node 1'
+			'STEP 4) Deploy a CrowdFunding SmartContract for 1000 wei from node 1'
 		)
 	)
 	.then(() => {
 		space();
-		return compiledSmartContract();
+		return compiledSmartContract('PATH_TO_CONTRACT_HERE');
 	})
 	.then(async contract => {
 		crowdFunding = new CrowdFunding(contract, allNodes[0].account);
@@ -255,7 +274,7 @@ init()
 				'the same code with the same data.'
 		)
 	)
-	.then(() => step('STEP 4) Contribute 499 wei from node 1'))
+	.then(() => step('STEP 5) Contribute 499 wei from node 1'))
 	.then(() => {
 		space();
 		return crowdFunding.contribute(499);
@@ -269,7 +288,7 @@ init()
 				"node and that node2's balance has changed."
 		)
 	)
-	.then(() => step('STEP 5) Check goal reached'))
+	.then(() => step('STEP 6) Check goal reached'))
 	.then(() => {
 		space();
 		return crowdFunding.checkGoalReached();
@@ -280,19 +299,19 @@ init()
 				'was met. Since only 499 of 1000 were received, the answer is no.'
 		)
 	)
-	.then(() => step('STEP 6) Contribute 501 wei from node 1 again'))
+	.then(() => step('STEP 7) Contribute 501 wei from node 1 again'))
 	.then(() => {
 		space();
 		return crowdFunding.contribute(501);
 	})
-	.then(() => step('STEP 7) Check goal reached'))
+	.then(() => step('STEP 8) Check goal reached'))
 	.then(() => {
 		space();
 		return crowdFunding.checkGoalReached();
 	})
 	.then(() =>
 		step(
-			'STEP 8) Before we `settle` lets check balances again to show that node 1 balance decreased by a total of 1000.'
+			'STEP 9) Before we `settle` lets check balances again to show that node 1 balance decreased by a total of 1000.'
 		)
 	)
 	.then(() => {
@@ -302,7 +321,7 @@ init()
 	.then(() =>
 		explain('Since the funding goal was reached we can now settle.')
 	)
-	.then(() => step('STEP 9) Settle'))
+	.then(() => step('STEP 10) Settle'))
 	.then(() => {
 		space();
 		return crowdFunding.settle();
@@ -312,7 +331,7 @@ init()
 			'The funds were transferred from the SmartContract back to node1.'
 		)
 	)
-	.then(() => step('STEP 10) Check balances again'))
+	.then(() => step('STEP 11) Check balances again'))
 	.then(() => {
 		space();
 		return displayAllBalances();
