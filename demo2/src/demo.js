@@ -156,7 +156,7 @@ class CrowdFunding {
 	}
 
 	async deploy(value) {
-		await this.contract.deploy(this.account, [value]);
+		await this.contract.deploy(this.account, [value], { timeout: 2 });
 		console.log('Receipt:', this.contract.receipt);
 		return this;
 	}
