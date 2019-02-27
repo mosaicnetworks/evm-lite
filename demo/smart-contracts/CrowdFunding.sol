@@ -43,7 +43,7 @@ contract CrowdFunding {
     function checkGoalReached() constant returns (bool reached, address beneficiary, uint goal, uint amount) {
         if (campaign.amount < campaign.fundingGoal)
             return (false, campaign.beneficiary, campaign.fundingGoal , campaign.amount);
-        else 
+        else
             return (true, campaign.beneficiary, campaign.fundingGoal , campaign.amount);
     }
 
