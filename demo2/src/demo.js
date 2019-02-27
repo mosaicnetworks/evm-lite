@@ -35,11 +35,13 @@ const space = () => {
 	console.log('\n');
 };
 
-//------------------------------------------------------------------------------
-
 const sleep = function(time) {
 	return new Promise(resolve => setTimeout(resolve, time));
 };
+
+/**
+ * Demo starts here.
+ */
 
 function Node(name, host, port) {
 	this.name = name;
@@ -53,7 +55,9 @@ function Node(name, host, port) {
 
 const allAccounts = [];
 const allNodes = [];
+
 var crowdFunding = {};
+var contractPath = '';
 
 const init = async () => {
 	console.group('Initialize Nodes: ');
@@ -67,9 +71,12 @@ const init = async () => {
 	const passwordPath = argv.pwd;
 	const password = readPasswordFile(passwordPath);
 
+	contractPath = argv.contract;
+
 	console.log('Sorted IPs: ', ips);
 	console.log('Keystore Path: ', keystore.path);
 	console.log('Password File Path: ', passwordPath);
+	console.log('Contract File Path: ', contractPath);
 
 	for (i = 0; i < ips.length; i++) {
 		node = new Node(util.format('node%d', i + 1), ips[i], port);
@@ -115,7 +122,7 @@ const displayAllBalances = async () => {
 
 	for (const node of allNodes) {
 		baseAccount = await node.api.accounts.getAccount(node.account.address);
-		console.log(node.name, JSON.stringify(baseAccount, null, 2));
+		console.log(`${node.name}: `, '\n', baseAccount, '\n');
 	}
 	console.groupEnd();
 };
@@ -127,15 +134,15 @@ const transferRaw = async (from, to, value) => {
 		to.account.address,
 		value
 	);
-	console.log('Transaction: ', transaction.parse());
+	console.log('Transaction: ', transaction.parse(), '\n');
 
 	await transaction.submit({ timeout: 2 }, from.account);
 
 	console.log('Receipt: ', await transaction.receipt);
 };
 
-const compiledSmartContract = async path => {
-	const input = fs.readFileSync(path, {
+const compiledSmartContract = async () => {
+	const input = fs.readFileSync(contractPath, {
 		encoding: 'utf8'
 	});
 	const output = solc.compile(input.toString(), 1);
@@ -165,13 +172,12 @@ class CrowdFunding {
 		const transaction = await this.contract.methods.contribute();
 		transaction.value(value);
 
-		console.log('Transaction: ', transaction.parse());
+		console.log('Transaction: ', transaction.parse(), '\n');
 		await transaction.submit({ timeout: 2 }, this.account);
 
 		const receipt = await transaction.receipt;
-		// console.log('Receipt: ', receipt);
-
 		const logs = this.contract.parseLogs(receipt.logs);
+
 		for (const log of logs) {
 			console.log(
 				log.event || 'No Event Name',
@@ -185,20 +191,27 @@ class CrowdFunding {
 		const transaction = await this.contract.methods.checkGoalReached();
 		const response = await transaction.submit({ timeout: 2 }, this.account);
 
-		console.log('Response: ', response);
+		const parsedResponse = {
+			goalReached: response[0],
+			beneficiary: response[1],
+			fundingTarget: response[2].toFormat(0),
+			current: response[3].toFormat(0)
+		};
+
+		log(FgBlue, JSON.stringify(parsedResponse, null, 2));
+
 		return response;
 	}
 
 	async settle() {
 		const transaction = await this.contract.methods.settle();
 
-		console.log('Transaction: ', transaction.parse());
+		console.log('Transaction: ', transaction.parse(), '\n');
 		await transaction.submit({ timeout: 2 }, this.account);
 
 		const receipt = await transaction.receipt;
-		// console.log('Receipt: ', receipt);
-
 		const logs = this.contract.parseLogs(receipt.logs);
+
 		for (const log of logs) {
 			console.log(
 				log.event || 'No Event Name',

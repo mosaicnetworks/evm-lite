@@ -12,7 +12,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node src/demo --ips=\"127.0.0.1,127.0.0.1,127.0.0.1,127.0.0.1\" --keystore=\"/Users/danu/Desktop/evm-lite/demo2/src/\" --pwd=\"/Users/danu/Desktop/evm-lite/demo2/src/pwd.txt\" --port=8080 --contract=\"./smart-contracts/CrowdFunding.sol\""
   },
   "keywords": [],
   "author": "",

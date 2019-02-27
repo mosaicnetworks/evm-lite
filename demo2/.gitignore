@@ -1,6 +1,5 @@
 node_modules
-pwd.txt
-keystore
-test.js
+src/pwd.txt
+src/keystore
 yarn.lock
 yarn-error.log
