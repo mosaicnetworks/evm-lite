@@ -136,7 +136,7 @@ const transferRaw = async (from, to, value) => {
 	);
 	console.log('Transaction: ', transaction.parse(), '\n');
 
-	await transaction.submit({ timeout: 2 }, from.account);
+	await transaction.submit({ timeout: 3 }, from.account);
 
 	console.log('Receipt: ', await transaction.receipt);
 };
@@ -163,7 +163,7 @@ class CrowdFunding {
 	}
 
 	async deploy(value) {
-		await this.contract.deploy(this.account, [value], { timeout: 2 });
+		await this.contract.deploy(this.account, [value], { timeout: 3 });
 		console.log('Receipt:', this.contract.receipt);
 		return this;
 	}
@@ -173,7 +173,7 @@ class CrowdFunding {
 		transaction.value(value);
 
 		console.log('Transaction: ', transaction.parse(), '\n');
-		await transaction.submit({ timeout: 2 }, this.account);
+		await transaction.submit({ timeout: 3 }, this.account);
 
 		const receipt = await transaction.receipt;
 		const logs = this.contract.parseLogs(receipt.logs);
@@ -189,7 +189,7 @@ class CrowdFunding {
 
 	async checkGoalReached() {
 		const transaction = await this.contract.methods.checkGoalReached();
-		const response = await transaction.submit({ timeout: 2 }, this.account);
+		const response = await transaction.submit({ timeout: 3 }, this.account);
 
 		const parsedResponse = {
 			goalReached: response[0],
@@ -207,7 +207,7 @@ class CrowdFunding {
 		const transaction = await this.contract.methods.settle();
 
 		console.log('Transaction: ', transaction.parse(), '\n');
-		await transaction.submit({ timeout: 2 }, this.account);
+		await transaction.submit({ timeout: 3 }, this.account);
 
 		const receipt = await transaction.receipt;
 		const logs = this.contract.parseLogs(receipt.logs);
