@@ -59,6 +59,7 @@ func NewWriteAheadState(db ethdb.Database,
 		chainConfig: chainConfig,
 		vmConfig:    vmConfig,
 		gasLimit:    gasLimit,
+		gp:          new(core.GasPool).AddGas(gasLimit),
 		logger:      logger,
 	}, nil
 }

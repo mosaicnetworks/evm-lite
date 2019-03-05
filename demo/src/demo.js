@@ -233,10 +233,10 @@ init()
 	.then(() =>
 		explain(
 			'Each node controls one account which allows it to send and receive Ether. \n' +
-				'The private keys reside directly on the evm-babble nodes. In a production \n' +
-				'setting, access to the nodes would be restricted to the people allowed to \n' +
-				'sign messages with the private key. We also keep a local copy of all the private \n' +
-				'keys to demonstrate client-side signing.'
+			'The private keys reside locally and directly on the evm-light nodes. In a \n' +
+			'production setting, access to the nodes would be restricted to the people  \n' +
+			'allowed to sign messages with the private key. We also keep a local copy \n' +
+			'of all the private keys to demonstrate client-side signing.'
 		)
 	)
 	.then(() => step('STEP 2) Send 500 wei (10^-18 ether) from node1 to node2'))
@@ -247,13 +247,12 @@ init()
 	.then(() =>
 		explain(
 			'We created an EVM transaction to send 500 wei from node1 to node2. The \n' +
-				'transaction was sent to node1 which controls the private key for the sender. \n' +
-				'EVM-Babble converted the transaction into raw bytes, signed it and submitted \n' +
-				'it to Babble for consensus ordering. Babble gossiped the raw transaction to \n' +
-				'the other Babble nodes which ran it through the consensus algorithm until they \n' +
-				'were each ready to commit it back to EVM-BABBLE. So each node received and \n' +
-				'processed the transaction. They each applied the same changes to their local \n' +
-				'copy of the ledger.'
+			'transaction was signed localy with node1 \'s private key and sent through node1. \n' +
+			'The client-facing service running in EVM-Lite relayed the transaction to Babble \n' +
+			'for consensus ordering. Babble gossiped the raw transaction to the other Babble \n' +
+			'nodes which ran it through the consensus algorithm before committing it back to \n' +
+			'EVM-Lite as part of Block. So each node received and processed the transaction. \n' +
+			'They each applied the same changes to their local copy of the ledger.\n'
 		)
 	)
 	.then(() => step('STEP 3) Check balances again'))
@@ -280,11 +279,11 @@ init()
 	.then(() =>
 		explain(
 			'Here we compiled and deployed the CrowdFunding SmartContract. \n' +
-				'The contract was written in the high-level Solidity language which compiles \n' +
-				'down to EVM bytecode. To deploy the SmartContract we created an EVM transaction \n' +
-				"with a 'data' field containing the bytecode. After going through consensus, the \n" +
-				'transaction is applied on every node, so every participant will run a copy of \n' +
-				'the same code with the same data.'
+			'The contract was written in the high-level Solidity language which compiles \n' +
+			'down to EVM bytecode. To deploy the SmartContract we created an EVM transaction \n' +
+			"with a 'data' field containing the bytecode. After going through consensus, the \n" +
+			'transaction is applied on every node, so every participant will run a copy of \n' +
+			'the same code with the same data.'
 		)
 	)
 	.then(() => step('STEP 5) Contribute 499 wei from node 1'))
@@ -295,10 +294,10 @@ init()
 	.then(() =>
 		explain(
 			"We created an EVM transaction to call the 'contribute' method of the SmartContract. \n" +
-				"The 'value' field of the transaction is the amount that the caller is actually \n" +
-				'going to contribute. The operation would fail if the account did not have enough Ether. \n' +
-				'As an exercise you can check that the transaction was run through every Babble \n' +
-				"node and that node2's balance has changed."
+			"The 'value' field of the transaction is the amount that the caller is actually \n" +
+			'going to contribute. The operation would fail if the account did not have enough Ether. \n' +
+			'As an exercise you can check that the transaction was run through every Babble \n' +
+			"node and that node2's balance has changed."
 		)
 	)
 	.then(() => step('STEP 6) Check goal reached'))
@@ -309,7 +308,7 @@ init()
 	.then(() =>
 		explain(
 			'Here we called another method of the SmartContract to check if the funding goal \n' +
-				'was met. Since only 499 of 1000 were received, the answer is no.'
+			'was met. Since only 499 of 1000 were received, the answer is no.'
 		)
 	)
 	.then(() => step('STEP 7) Contribute 501 wei from node 1 again'))
