@@ -2,7 +2,10 @@ package state
 
 import (
 	"bytes"
+	"encoding/json"
+	"io/ioutil"
 	"math/big"
+	"os"
 	"syscall"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -38,10 +41,12 @@ type State struct {
 	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
 	vmConfig    vm.Config
 
+	genesisFile string
+
 	logger *logrus.Logger
 }
 
-func NewState(logger *logrus.Logger, dbFile string, dbCache int) (*State, error) {
+func NewState(logger *logrus.Logger, dbFile string, dbCache int, genesisFile string) (*State, error) {
 
 	handles, err := getFdLimit()
 	if err != nil {
@@ -58,6 +63,7 @@ func NewState(logger *logrus.Logger, dbFile string, dbCache int) (*State, error)
 		signer:      ethTypes.NewEIP155Signer(chainID),
 		chainConfig: params.ChainConfig{ChainID: chainID},
 		vmConfig:    vm.Config{Tracer: vm.NewStructLogger(nil)},
+		genesisFile: genesisFile,
 		logger:      logger,
 	}
 
@@ -92,12 +98,29 @@ func (s *State) InitState() error {
 		return err
 	}
 
-	s.was, err = NewWriteAheadState(s.db, rootHash, s.signer, s.chainConfig, s.vmConfig, gasLimit, s.logger)
+	s.was, err = NewWriteAheadState(s.db,
+		rootHash,
+		s.signer,
+		s.chainConfig,
+		s.vmConfig,
+		gasLimit,
+		s.logger)
 	if err != nil {
 		return err
 	}
 
-	s.txPool = NewTxPool(s.ethState.Copy(), s.signer, s.chainConfig, s.vmConfig, gasLimit, s.logger)
+	s.txPool = NewTxPool(s.ethState.Copy(),
+		s.signer,
+		s.chainConfig,
+		s.vmConfig,
+		gasLimit,
+		s.logger)
+
+	//Initialize genesis accounts with balance, code, and state
+	err = s.CreateGenesisAccounts()
+	if err != nil {
+		return err
+	}
 
 	return err
 }
@@ -187,11 +210,28 @@ func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.H
 	return s.was.ApplyTransaction(t, txIndex, blockHash)
 }
 
-//CreateAccounts creates new accounts in the state via the WAS.
-func (s *State) CreateAccounts(accounts bcommon.AccountMap) error {
-	for addr, account := range accounts {
+func (s *State) CreateGenesisAccounts() error {
+
+	if _, err := os.Stat(s.genesisFile); os.IsNotExist(err) {
+		return nil
+	}
+
+	contents, err := ioutil.ReadFile(s.genesisFile)
+	if err != nil {
+		return err
+	}
+
+	var genesis struct {
+		Alloc bcommon.AccountMap
+	}
+
+	if err := json.Unmarshal(contents, &genesis); err != nil {
+		return err
+	}
+
+	for addr, account := range genesis.Alloc {
 		address := common.HexToAddress(addr)
-		if !s.Exist(address) {
+		if s.Empty(address) {
 			s.was.ethState.AddBalance(address, math.MustParseBig256(account.Balance))
 			s.was.ethState.SetCode(address, common.Hex2Bytes(account.Code))
 			for key, value := range account.Storage {
@@ -200,14 +240,20 @@ func (s *State) CreateAccounts(accounts bcommon.AccountMap) error {
 			s.logger.WithField("address", addr).Debug("Adding account")
 		}
 	}
-	_, err := s.Commit()
 
-	return err
+	if _, err = s.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
-//Exist reports whether the given account address exists in the state.
-func (s *State) Exist(addr common.Address) bool {
-	return s.ethState.Exist(addr)
+//Empty reports whether the account is non-existant or empty
+func (s *State) Empty(addr common.Address) bool {
+	res := s.ethState.Empty(addr)
+	s.logger.Debugf("%s Empty? %v", addr.Hex()[:4], res)
+	return res
 }
 
 //GetBalance returns an account's balance from the main ethState

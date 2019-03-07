@@ -23,13 +23,13 @@ func NewEngine(config config.Config,
 
 	state, err := state.NewState(logger,
 		config.Eth.DbFile,
-		config.Eth.Cache)
+		config.Eth.Cache,
+		config.Eth.Genesis)
 	if err != nil {
 		return nil, err
 	}
 
-	service := service.NewService(config.Eth.Genesis,
-		config.Eth.Keystore,
+	service := service.NewService(config.Eth.Keystore,
 		config.Eth.EthAPIAddr,
 		config.Eth.PwdFile,
 		state,

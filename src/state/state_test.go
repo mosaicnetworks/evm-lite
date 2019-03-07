@@ -1,7 +1,6 @@
 package state
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -41,9 +40,10 @@ type Test struct {
 func NewTest(dataDir string, logger *logrus.Logger, t *testing.T) *Test {
 	pwdFile := filepath.Join(dataDir, "pwd.txt")
 	dbFile := filepath.Join(dataDir, "chaindata")
+	genesisFile := filepath.Join(dataDir, "genesis.json")
 	cache := 128
 
-	state, err := NewState(logger, dbFile, cache)
+	state, err := NewState(logger, dbFile, cache, genesisFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,38 +101,12 @@ func (test *Test) unlockAccounts() error {
 	return nil
 }
 
-func (test *Test) createGenesisAccounts() error {
-	genesisFile := filepath.Join(test.dataDir, "genesis.json")
-
-	contents, err := ioutil.ReadFile(genesisFile)
-	if err != nil {
-		return err
-	}
-
-	var genesis struct {
-		Alloc bcommon.AccountMap
-	}
-
-	if err := json.Unmarshal(contents, &genesis); err != nil {
-		return err
-	}
-
-	if err := test.state.CreateAccounts(genesis.Alloc); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (test *Test) Init() error {
 	if err := test.initKeyStore(); err != nil {
 		return err
 	}
 
 	if err := test.unlockAccounts(); err != nil {
-		return err
-	}
-
-	if err := test.createGenesisAccounts(); err != nil {
 		return err
 	}
 

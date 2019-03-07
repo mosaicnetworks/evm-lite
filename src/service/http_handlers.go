@@ -281,16 +281,8 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
-	//XXX
-	data, err := rlp.EncodeToBytes(&t)
-	if err != nil {
-		m.logger.WithError(err).Error("Encoding Transaction")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	m.logger.Debug("submitting tx")
-	m.submitCh <- data
+	m.submitCh <- rawTxBytes
 	m.logger.Debug("submitted tx")
 
 	res := JsonTxRes{TxHash: t.Hash().Hex()}

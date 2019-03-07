@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/gorilla/mux"
-	"github.com/mosaicnetworks/evm-lite/src/common"
 	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
 )
@@ -23,23 +21,19 @@ type Service struct {
 	sync.Mutex
 	state       *state.State
 	submitCh    chan []byte
-	genesisFile string
 	keystoreDir string
 	apiAddr     string
 	keyStore    *keystore.KeyStore
 	pwdFile     string
+	getInfo     infoCallback
 	logger      *logrus.Logger
-
-	//XXX
-	getInfo infoCallback
 }
 
-func NewService(genesisFile, keystoreDir, apiAddr, pwdFile string,
+func NewService(keystoreDir, apiAddr, pwdFile string,
 	state *state.State,
 	submitCh chan []byte,
 	logger *logrus.Logger) *Service {
 	return &Service{
-		genesisFile: genesisFile,
 		keystoreDir: keystoreDir,
 		apiAddr:     apiAddr,
 		pwdFile:     pwdFile,
@@ -53,18 +47,14 @@ func (m *Service) Run() {
 
 	m.checkErr(m.unlockAccounts())
 
-	m.checkErr(m.createGenesisAccounts())
-
 	m.logger.Info("serving api...")
 	m.serveAPI()
 }
 
-//XXX
 func (m *Service) GetSubmitCh() chan []byte {
 	return m.submitCh
 }
 
-//XXX
 func (m *Service) SetInfoCallback(f infoCallback) {
 	m.getInfo = f
 }
@@ -100,30 +90,6 @@ func (m *Service) unlockAccounts() error {
 			return err
 		}
 		m.logger.WithField("address", ac.Address.Hex()).Debug("Unlocked account")
-	}
-	return nil
-}
-
-func (m *Service) createGenesisAccounts() error {
-	if _, err := os.Stat(m.genesisFile); os.IsNotExist(err) {
-		return nil
-	}
-
-	contents, err := ioutil.ReadFile(m.genesisFile)
-	if err != nil {
-		return err
-	}
-
-	var genesis struct {
-		Alloc common.AccountMap
-	}
-
-	if err := json.Unmarshal(contents, &genesis); err != nil {
-		return err
-	}
-
-	if err := m.state.CreateAccounts(genesis.Alloc); err != nil {
-		return err
 	}
 	return nil
 }
