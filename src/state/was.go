@@ -152,10 +152,6 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 	//Apparenty Geth does something smarter here... but cant figure it out
 	was.ethState.Database().TrieDB().Commit(root, true)
 
-	if err := was.writeRoot(root); err != nil {
-		was.logger.WithError(err).Error("Writing root")
-		return common.Hash{}, err
-	}
 	if err := was.writeTransactions(); err != nil {
 		was.logger.WithError(err).Error("Writing txs")
 		return common.Hash{}, err
@@ -165,10 +161,6 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 		return common.Hash{}, err
 	}
 	return root, nil
-}
-
-func (was *WriteAheadState) writeRoot(root common.Hash) error {
-	return was.db.Put(rootKey, root.Bytes())
 }
 
 func (was *WriteAheadState) writeTransactions() error {

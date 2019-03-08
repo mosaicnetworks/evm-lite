@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -413,53 +412,5 @@ func TestCreateContract(t *testing.T) {
 
 	// Call constant test method
 	callDummyContractTest(test, from, contract, big.NewInt(110), t)
-
-}
-
-func TestDB(t *testing.T) {
-
-	os.RemoveAll("test_data/eth/chaindata")
-	defer os.RemoveAll("test_data/eth/chaindata")
-
-	// Initialise a fresh instance and commit stuff to the db
-	test := NewTest("test_data/eth", bcommon.NewTestLogger(t), t)
-	if err := test.Init(); err != nil {
-		t.Fatal(err)
-	}
-
-	from := test.keyStore.Accounts()[0]
-
-	contract := dummyContract()
-
-	test.deployContract(from, contract, t)
-
-	code := test.state.ethState.GetCode(contract.address)
-	t.Logf("code: %s", common.ToHex(code))
-
-	contract.parseABI(t)
-
-	// Execute state-altering testAsync method
-	callDummyContractTestAsync(test, from, contract, t)
-
-	// Close the database
-	test.state.db.Close()
-
-	// Initialise another instance from the existing db
-	test2 := NewTest("test_data/eth", bcommon.NewTestLogger(t), t)
-	if err := test2.Init(); err != nil {
-		t.Fatal(err)
-	}
-
-	// Check that state is the same
-
-	// Check that contract code is there
-	code2 := test2.state.ethState.GetCode(contract.address)
-	t.Logf("code2: %s", common.ToHex(code2))
-	if !reflect.DeepEqual(code2, code) {
-		t.Fatalf("contract code should be equal")
-	}
-
-	// Check contract memory
-	callDummyContractTest(test2, from, contract, big.NewInt(110), t)
 
 }

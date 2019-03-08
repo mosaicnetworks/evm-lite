@@ -5,8 +5,12 @@ SECURITY:
 FEATURES:
 
 IMPROVEMENTS:
+- demo: Use evm-lite-lib package in demo scripts.
+- state: Move genesis account creation from service to state. 
 
 BUG FIXES:
+- state: Initialize from empty state instead of latest trie root. This enables
+         bootstrapping evm-lite/babble nodes from the babble DB only.
 
 ## V0.1.1 (January 28, 2019)
 
@@ -20,7 +24,6 @@ IMPROVEMENTS:
 
 BUG FIXES:
 - deps: Update version of Geth. Version 1.7.0 had broken dependencies.
-
 
 ## V0.1.0 (October 14, 2018)
 

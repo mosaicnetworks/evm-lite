@@ -47,9 +47,12 @@ including [Babble](https://github.com/mosaicnetworks/babble) .
 ## Consensus Implementations:
 
 - **SOLO**: No Consensus. Transactions are relayed directly from Service to
-            State
+  State.
 
 - **[BABBLE](https://github.com/mosaicnetworks/babble)**: Inmemory Babble node.
+  EVM-Lite does not support Babble's FastSync and Dynamic Membership protocols
+  yet, so it is important to set the `--store` flag, and a high `--sync-limit` 
+  value. 
 
 - **[RAFT](https://github.com/hashicorp/raft)**: Hashicorp implementation of
   Raft (limited).
@@ -163,9 +166,6 @@ location of the password file.
 EVM-Lite will use a LevelDB database to persist state objects. The file of the  
 database can be specified with the `eth.db` flag which defaults to
 `<datadir>/eth/chaindata`.  
-
-If a database already exists when starting a new evm-lite instance, the state  
-will be set to the one corresponding to the last committed block.  
 
 ## API
 The Service exposes an API at the address specified by the --eth.listen flag for

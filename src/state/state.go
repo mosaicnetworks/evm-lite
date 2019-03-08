@@ -28,7 +28,6 @@ var (
 	txMetaSuffix   = []byte{0x01}
 	receiptsPrefix = []byte("receipts-")
 	MIPMapLevels   = []uint64{1000000, 500000, 100000, 50000, 1000}
-	rootKey        = []byte("root")
 )
 
 type State struct {
@@ -76,35 +75,27 @@ func NewState(logger *logrus.Logger, dbFile string, dbCache int, genesisFile str
 
 //------------------------------------------------------------------------------
 
-//InitState initializes the statedb object. It checks if there was already a
-//root hash in the underlying database, in which case it initializes the statedb
-//from that root.
+//InitState initializes the statedb object, the write-ahead state, the
+//transaction-pool, and creates genesis accounts.
 func (s *State) InitState() error {
 
-	rootHash := common.Hash{}
+	initState := common.Hash{}
 
-	//get root hash
-	data, _ := s.db.Get(rootKey)
-	if len(data) != 0 {
-		rootHash = common.BytesToHash(data)
-		s.logger.WithField("root", rootHash.Hex()).Debug("Existing State Root")
-	}
-
-	//use root to initialise the state
 	var err error
 
-	s.ethState, err = ethState.New(rootHash, ethState.NewDatabase(s.db))
+	s.ethState, err = ethState.New(initState, ethState.NewDatabase(s.db))
 	if err != nil {
 		return err
 	}
 
 	s.was, err = NewWriteAheadState(s.db,
-		rootHash,
+		initState,
 		s.signer,
 		s.chainConfig,
 		s.vmConfig,
 		gasLimit,
 		s.logger)
+
 	if err != nil {
 		return err
 	}
