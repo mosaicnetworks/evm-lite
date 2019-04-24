@@ -1,4 +1,4 @@
-USER = 1000
+USER = $(id -u)
 NODES = 1
 CONSENSUS = solo
 VERSION = latest
