@@ -99,10 +99,10 @@ const decryptAccounts = async ({ keystore, password }) => {
 	console.group('Decrypt Accounts');
 	console.log('Password: ', password);
 
-	const baseAccounts = await keystore.list(true, allNodes[0].api);
+        const baseAccounts = await keystore.list(allNodes[0].api);
 
 	for (const baseAccount of baseAccounts) {
-		account = await keystore.decryptAccount(baseAccount.address, password);
+		account = await keystore.decrypt(baseAccount.address, password);
 		account.balance = baseAccount.balance;
 
 		console.log('Decrypted: ', `${account.address}(${account.balance})`);
@@ -136,7 +136,7 @@ const transferRaw = async (from, to, value) => {
 	);
 	console.log('Transaction: ', transaction.parse(), '\n');
 
-	await transaction.submit({ timeout: 3 }, from.account);
+	await transaction.submit(from.account, { timeout: 3 });
 
 	console.log('Receipt: ', await transaction.receipt);
 };
@@ -173,7 +173,7 @@ class CrowdFunding {
 		transaction.value(value);
 
 		console.log('Transaction: ', transaction.parse(), '\n');
-		await transaction.submit({ timeout: 3 }, this.account);
+		await transaction.submit(this.account, { timeout: 3 });
 
 		const receipt = await transaction.receipt;
 		const logs = this.contract.parseLogs(receipt.logs);
@@ -189,7 +189,7 @@ class CrowdFunding {
 
 	async checkGoalReached() {
 		const transaction = await this.contract.methods.checkGoalReached();
-		const response = await transaction.submit({ timeout: 3 }, this.account);
+		const response = await transaction.submit(this.account, { timeout: 3 });
 
 		const parsedResponse = {
 			goalReached: response[0],
@@ -207,7 +207,7 @@ class CrowdFunding {
 		const transaction = await this.contract.methods.settle();
 
 		console.log('Transaction: ', transaction.parse(), '\n');
-		await transaction.submit({ timeout: 3 }, this.account);
+		await transaction.submit(this.account, { timeout: 3 });
 
 		const receipt = await transaction.receipt;
 		const logs = this.contract.parseLogs(receipt.logs);

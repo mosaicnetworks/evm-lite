@@ -84,7 +84,7 @@ func bindFlagsLoadViper(cmd *cobra.Command) error {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		// stderr, so if we redirect output to json file, this doesn't appear
-		logger.Debugf("Using config file: ", viper.ConfigFileUsed())
+		logger.Debugf("Using config file: %v", viper.ConfigFileUsed())
 	} else if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		logger.Debugf("No config file found in %s", config.DataDir)
 	} else {
