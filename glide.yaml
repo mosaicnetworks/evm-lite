@@ -2,12 +2,12 @@ package: github.com/mosaicnetworks/evm-lite
 import:
 
   # Start of Development Branch Config. Uncomment the line below and comment out Master Config.
-- package: github.com/mosaicnetworks/babble/tree/develop
+  # - package: github.com/mosaicnetworks/babble/tree/develop
   # End of Development Branch Config.
   
   # Start of Master Config. Uncomment the 2 lines below. Comment out Development Branch Config. 
-  # - package: github.com/mosaicnetworks/babble
-  # version: =0.4.1
+   - package: github.com/mosaicnetworks/babble
+   version: =0.4.1
   # End of Master Config.
 
 - package: github.com/ethereum/go-ethereum
