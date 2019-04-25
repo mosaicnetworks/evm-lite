@@ -3,7 +3,7 @@
 Here we provide a few scripts to demonstrate how to interact with evm-lite
 nodes.
 
-You might need to install [https://github.com/creationix/nvm](Node Version Manager) and [https://nodejs.org](NodeJS) and dependencies first:
+You might need to install [Node Version Manager](https://github.com/creationix/nvm) and [Node.js](https://nodejs.org) and dependencies first:
 
 ```bash
 # install node version manager 
@@ -16,7 +16,7 @@ $ nvm use lts/dubnium
 evm-lite/demo$ npm install
 ```
 
-You may also need to install [https://www.terraform.io/](terraform). 
+You may also need to install [Terraform](https://www.terraform.io/). 
 ```bash
 # Download stable release
 $ cd /tmp
@@ -36,7 +36,7 @@ Within the ...evm-lite/deploy/terraform/aws directory run:
 terraform init
 ```
 
-To start a testnet, execute the deploy commands from the `deploy/` directory - the dependencies are described in the [https://github.com/mosaicnetworks/evm-lite/blob/master/deploy/README.md](README) file in the deploy folder:
+To start a testnet, execute the deploy commands from the `deploy/` directory - the dependencies are described in the [README](https://github.com/mosaicnetworks/evm-lite/blob/master/deploy/README.md) file in the deploy folder:
 
 ex:
 
