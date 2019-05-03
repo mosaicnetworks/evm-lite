@@ -1,0 +1,20 @@
+{
+  "name": "src",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "evm-lite-lib": "^0.2.14",
+    "json-bigint": "^0.3.0",
+    "minimist": "^1.2.0",
+    "prompt": "^1.0.0",
+    "solc": "0.4.25"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node src/demo --ips=\"127.0.0.1,127.0.0.1,127.0.0.1,127.0.0.1\" --keystore=\"/Users/danu/Desktop/evm-lite/demo2/src/\" --pwd=\"/Users/danu/Desktop/evm-lite/demo2/src/pwd.txt\" --port=8080 --contract=\"./smart-contracts/CrowdFunding.sol\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
