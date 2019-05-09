@@ -1,7 +1,12 @@
 package babble
 
 import (
+	"math/big"
+	"strings"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/mosaicnetworks/babble/src/hashgraph"
 	"github.com/mosaicnetworks/babble/src/proxy"
 	"github.com/mosaicnetworks/evm-lite/src/service"
@@ -59,8 +64,57 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 		return proxy.CommitResponse{}, err
 	}
 
+	internalTransactions := block.InternalTransactions()
+
+	objABI, _ := abi.JSON(strings.NewReader("[{\"type\":\"function\",\"inputs\": [{\"name\":\"pubKey\",\"type\":\"bytes32\"}],\"name\":\"checkAuthorisedPublicKey\",\"outputs\": [{\"name\":\"\",\"type\":\"bool\"}]}]"))
+	fromAddress := common.HexToAddress("0x1337133713371337133713371337133713371337") // there's no state update and no nonce check so doesn't matter what address we use
+	contractAddress := common.HexToAddress("0xabbaabbaabbaabbaabbaabbaabbaabbaabbaabba")
+	nonce := uint64(1) // checkNonce set to false so doesn't matter
+	amount := big.NewInt(0)
+	gasLimit := uint64(0) // gasLimit of zero should be OK since the gasPrice is zero
+	gasPrice := big.NewInt(0)
+	checkNonce := false
+
+	for i, tx := range internalTransactions {
+
+		if tx.Type == hashgraph.PEER_ADD {
+
+			callData, err := objABI.Pack("checkAuthorisedPublicKey", []byte(tx.Peer.PubKeyHex)) // check for errors
+
+			if err != nil {
+				return proxy.CommitResponse{}, err
+			}
+
+			ethMsg := ethTypes.NewMessage(fromAddress,
+				&contractAddress,
+				nonce,
+				amount,
+				gasLimit,
+				gasPrice,
+				callData,
+				checkNonce)
+
+			if res, err := p.state.Call(ethMsg); err != nil {
+				if err != nil {
+					var unpackRes bool
+					objABI.Unpack(unpackRes, "checkAuthorisedPublicKey", res)
+
+					if unpackRes {
+						internalTransactions[i].Accept()
+					} else {
+						internalTransactions[i].Refuse()
+					}
+				} else {
+					internalTransactions[i].Refuse()
+				}
+			}
+
+		}
+	}
+
 	res := proxy.CommitResponse{
-		StateHash: hash.Bytes(),
+		StateHash:            hash.Bytes(),
+		InternalTransactions: internalTransactions,
 	}
 
 	return res, nil
