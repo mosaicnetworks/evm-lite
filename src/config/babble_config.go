@@ -5,7 +5,6 @@ import (
 	"time"
 
 	_babble "github.com/mosaicnetworks/babble/src/babble"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -75,18 +74,16 @@ func (c *BabbleConfig) SetDataDir(datadir string) {
 
 // ToRealBabbleConfig converts an evm-lite/src/config.BabbleConfig to a
 // babble/src/babble.BabbleConfig as used by Babble
-func (c *BabbleConfig) ToRealBabbleConfig(logger *logrus.Logger) *_babble.BabbleConfig {
+func (c *BabbleConfig) ToRealBabbleConfig() *_babble.BabbleConfig {
 	babbleConfig := _babble.NewDefaultConfig()
 	babbleConfig.DataDir = c.DataDir
 	babbleConfig.BindAddr = c.BindAddr
 	babbleConfig.ServiceAddr = c.ServiceAddr
 	babbleConfig.MaxPool = c.MaxPool
 	babbleConfig.Store = c.Store
-	babbleConfig.Logger = logger
 	babbleConfig.NodeConfig.HeartbeatTimeout = c.Heartbeat
 	babbleConfig.NodeConfig.TCPTimeout = c.TCPTimeout
 	babbleConfig.NodeConfig.CacheSize = c.CacheSize
 	babbleConfig.NodeConfig.SyncLimit = c.SyncLimit
-	babbleConfig.NodeConfig.Logger = logger
 	return babbleConfig
 }
