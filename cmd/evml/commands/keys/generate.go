@@ -2,15 +2,14 @@ package keys
 
 import (
 	"crypto/ecdsa"
+	"crypto/rand"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/pborman/uuid"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -60,9 +59,9 @@ func generate(cmd *cobra.Command, args []string) error {
 		keyfilepath = defaultKeyfile
 	}
 	if _, err := os.Stat(keyfilepath); err == nil {
-		utils.Fatalf("Keyfile already exists at %s.", keyfilepath)
+		return fmt.Errorf("Keyfile already exists at %s", keyfilepath)
 	} else if !os.IsNotExist(err) {
-		utils.Fatalf("Error checking if keyfile exists: %v", err)
+		return fmt.Errorf("Error checking if keyfile exists: %v", err)
 	}
 
 	var privateKey *ecdsa.PrivateKey
@@ -71,37 +70,41 @@ func generate(cmd *cobra.Command, args []string) error {
 		// Load private key from file.
 		privateKey, err = crypto.LoadECDSA(file)
 		if err != nil {
-			utils.Fatalf("Can't load private key: %v", err)
+			return fmt.Errorf("Can't load private key: %v", err)
 		}
 	} else {
 		// If not loaded, generate random.
 		privateKey, err = crypto.GenerateKey()
 		if err != nil {
-			utils.Fatalf("Failed to generate random private key: %v", err)
+			return fmt.Errorf("Failed to generate random private key: %v", err)
 		}
 	}
 
-	// Create the keyfile object with a random UUID.
-	id := uuid.NewRandom()
-	key := &keystore.Key{
-		Id:         id,
-		Address:    crypto.PubkeyToAddress(privateKey.PublicKey),
-		PrivateKey: privateKey,
-	}
+	//Create the keyfile object with a random UUID
+	//It would be preferable to create the key manually, rather by calling this
+	//function, but we cannot use pborman/uuid directly because it is vendored
+	//in go-ethereum. That package defines the type of keystore.Key.Id.
+	key := keystore.NewKeyForDirectICAP(rand.Reader)
+	key.Address = crypto.PubkeyToAddress(privateKey.PublicKey)
+	key.PrivateKey = privateKey
 
 	// Encrypt key with passphrase.
-	passphrase := promptPassphrase(true)
+	passphrase, err := promptPassphrase(true)
+	if err != nil {
+		return err
+	}
+
 	keyjson, err := keystore.EncryptKey(key, passphrase, keystore.StandardScryptN, keystore.StandardScryptP)
 	if err != nil {
-		utils.Fatalf("Error encrypting key: %v", err)
+		return fmt.Errorf("Error encrypting key: %v", err)
 	}
 
 	// Store the file to disk.
 	if err := os.MkdirAll(filepath.Dir(keyfilepath), 0700); err != nil {
-		utils.Fatalf("Could not create directory %s", filepath.Dir(keyfilepath))
+		return fmt.Errorf("Could not create directory %s", filepath.Dir(keyfilepath))
 	}
 	if err := ioutil.WriteFile(keyfilepath, keyjson, 0600); err != nil {
-		utils.Fatalf("Failed to write keyfile to %s: %v", keyfilepath, err)
+		return fmt.Errorf("Failed to write keyfile to %s: %v", keyfilepath, err)
 	}
 
 	// Output some information.

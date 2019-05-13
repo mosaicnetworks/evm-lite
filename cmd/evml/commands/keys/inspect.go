@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -51,14 +50,18 @@ func inspect(cmd *cobra.Command, args []string) error {
 	// Read key from file.
 	keyjson, err := ioutil.ReadFile(keyfilepath)
 	if err != nil {
-		utils.Fatalf("Failed to read the keyfile at '%s': %v", keyfilepath, err)
+		return fmt.Errorf("Failed to read the keyfile at '%s': %v", keyfilepath, err)
 	}
 
 	// Decrypt key with passphrase.
-	passphrase := getPassphrase()
+	passphrase, err := getPassphrase()
+	if err != nil {
+		return err
+	}
+
 	key, err := keystore.DecryptKey(keyjson, passphrase)
 	if err != nil {
-		utils.Fatalf("Error decrypting key: %v", err)
+		return fmt.Errorf("Error decrypting key: %v", err)
 	}
 
 	// Output all relevant information we can retrieve.

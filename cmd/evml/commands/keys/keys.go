@@ -21,7 +21,8 @@ func init() {
 	//Subcommands
 	KeysCmd.AddCommand(
 		NewGenerateCmd(),
-		NewInspectCmd())
+		NewInspectCmd(),
+		NewUpdateCmd())
 
 	//Commonly used command line flags
 	KeysCmd.PersistentFlags().StringVar(&passwordFile, "passfile", "", "the file that contains the passphrase for the keyfile")
