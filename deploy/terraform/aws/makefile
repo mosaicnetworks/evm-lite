@@ -6,7 +6,7 @@ apply:
 	rm -f ips.dat && \
 	terraform apply -auto-approve \
 	    -var-file=secret.tfvars \
-		-var command=$(CONSENSUS) \
+		-var command="run $(CONSENSUS)" \
 		-var nodes=$(NODES) \
 		-var conf=$(CONF)
 destroy:

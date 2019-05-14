@@ -19,13 +19,22 @@ l=$((N-1))
 
 for i in $(seq 0 $l) 
 do
-	dest=$DEST/node$i/babble
-	mkdir -p $dest
+	babble_dest=$DEST/node$i/babble
+	eth_source=$DEST/node$i/eth
+
+	mkdir -p $babble_dest
 	echo "Generating key pair for node$i"
+	
 	docker run \
-		-v $dest:/.babble \
-		--rm mosaicnetworks/babble:0.4.0 keygen
-	echo "$IPBASE$(($IPADD + $i)):$PORT" > $dest/addr
+		-u $(id -u) \
+		-v $eth_source:/.evm-lite \
+		--rm \
+		mosaicnetworks/evm-lite:latest keys --json --passfile /.evm-lite/pwd.txt inspect --private /.evm-lite/keystore/key.json  \
+		> $babble_dest/key_info
+	
+	awk '/PublicKey/ { gsub("[\",]", ""); print $2 }' $babble_dest/key_info >> $babble_dest/key.pub
+	awk '/PrivateKey/ { gsub("[\",]", ""); print $2 }' $babble_dest/key_info >> $babble_dest/priv_key
+	echo "$IPBASE$(($IPADD + $i)):$PORT" >> $babble_dest/addr
 done
 
 PFILE=$DEST/peers.json
@@ -41,7 +50,7 @@ do
 	
 	printf "\t{\n" >> $PFILE
 	printf "\t\t\"NetAddr\":\"$(cat $dest/addr)\",\n" >> $PFILE
-	printf "\t\t\"PubKeyHex\":\"$(cat $dest/key.pub)\"\n" >> $PFILE
+	printf "\t\t\"PubKeyHex\":\"0x$(cat $dest/key.pub)\"\n" >> $PFILE
 	printf "\t}%s\n"  $com >> $PFILE
 
 done

@@ -8,7 +8,7 @@ apply:
 	rm -f ips.dat && \
 	terraform apply -auto-approve \
 		-var user=$(USER) \
-		-var command=$(CONSENSUS) \
+		-var consensus=$(CONSENSUS) \
 		-var nodes=$(NODES) \
 		-var version=$(VERSION) \
 		-var conf=$(CONF)

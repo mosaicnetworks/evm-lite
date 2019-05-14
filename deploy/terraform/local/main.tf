@@ -41,7 +41,7 @@ resource "docker_container" "evm-lite" {
   }
 
   #entrypoint = ["tail", "-f", "/dev/null"]
-  command = ["${var.command}"]
+  entrypoint = ["evml", "run", "${var.consensus}"]
 
   provisioner "local-exec" {
     command = "echo node${count.index} ${self.ip_address} >> ips.dat"

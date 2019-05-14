@@ -65,11 +65,11 @@ do
     # use a Docker container to run the geth command that creates accounts. This
 	# saves us the trouble of installing geth locally
     docker run --rm \
-		-u `id -u $USER` \
+		-u $(id -u) \
 		-v $dest:/datadir \
 		-v $PASS:/pwd.txt \
-		ethereum/client-go -verbosity=1 --datadir=/datadir --password=/pwd.txt account new  | \
-    		awk '{gsub("[{}]", "\""); print $2}'  >> $dest/addr
+		mosaicnetworks/evm-lite:latest keys --passfile=/pwd.txt generate /datadir/keystore/key.json  | \
+    		awk '/Address/ {print $2}'  >> $dest/addr
 done
 
 # Generate the genesis file
@@ -82,7 +82,7 @@ do
 	if [[ $i == $l ]]; then 
 		com=""
 	fi
-	printf "\t\t$(cat $DEST/node$i/eth/addr): {\n" >> $GFILE
+	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
     printf "\t\t\t\"balance\": \"1337000000000000000000\"\n" >> $GFILE
     printf "\t\t}%s\n" $com >> $GFILE
 done
@@ -98,7 +98,7 @@ do
 	dest=$DEST/node$i
 	cp $DEST/genesis.json $dest/eth
 	cp $PASS $dest/eth
-	cp -r $dest/eth/keystore/* $gKeystore
+	cp -r $dest/eth/keystore/key.json $gKeystore/node$i-key.json
     rm $dest/eth/addr
 done
 

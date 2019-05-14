@@ -89,7 +89,7 @@ func generate(cmd *cobra.Command, args []string) error {
 	key.PrivateKey = privateKey
 
 	// Encrypt key with passphrase.
-	passphrase, err := promptPassphrase(true)
+	passphrase, err := getPassphrase()
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func generate(cmd *cobra.Command, args []string) error {
 
 	// Store the file to disk.
 	if err := os.MkdirAll(filepath.Dir(keyfilepath), 0700); err != nil {
-		return fmt.Errorf("Could not create directory %s", filepath.Dir(keyfilepath))
+		return fmt.Errorf("Could not create directory %s: %v", filepath.Dir(keyfilepath), err)
 	}
 	if err := ioutil.WriteFile(keyfilepath, keyjson, 0600); err != nil {
 		return fmt.Errorf("Failed to write keyfile to %s: %v", keyfilepath, err)
