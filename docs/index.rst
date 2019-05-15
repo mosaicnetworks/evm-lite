@@ -20,6 +20,7 @@ EVM-Lite
    :maxdepth: 2
 
    root_readme.rst
+   usage.rst
    deploy_readme.rst
 	
 ..   install.rst
