@@ -11,6 +11,7 @@ type JsonAccount struct {
 	Address string   `json:"address"`
 	Balance *big.Int `json:"balance"`
 	Nonce   uint64   `json:"nonce"`
+	Code	string	 `json:"bytecode"`
 }
 
 type JsonAccountList struct {
