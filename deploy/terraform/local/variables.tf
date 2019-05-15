@@ -8,8 +8,8 @@ variable "user" {
   default = "1000"
 }
 
-//evml command (solo, babble, raft)
-variable "command" {
+//evml run sub-command (solo, babble, raft)
+variable "consensus" {
   default = "solo"
 }
 

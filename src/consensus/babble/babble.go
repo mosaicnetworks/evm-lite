@@ -32,20 +32,21 @@ IMPLEMENT CONSENSUS INTERFACE
 
 // Init instantiates a Babble inmemory node
 func (b *InmemBabble) Init(state *state.State, service *service.Service) error {
-
 	b.logger.Debug("INIT")
 
 	b.ethState = state
 	b.ethService = service
 
-	realConfig := b.config.ToRealBabbleConfig(b.logger)
+	realConfig := b.config.ToRealBabbleConfig()
 	realConfig.Proxy = NewInmemProxy(state, service, service.GetSubmitCh(), b.logger)
 
 	babble := _babble.NewBabble(realConfig)
+
 	err := babble.Init()
 	if err != nil {
 		return err
 	}
+
 	b.babble = babble
 
 	return nil

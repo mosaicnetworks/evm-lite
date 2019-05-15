@@ -61,34 +61,52 @@ more to come...
 
 ## USAGE
 
-Each consensus has its own subcommand `evml [consensus]`, and its own
-configuration flags.
+There are two sub-commands: `keys` and `run`.
 
 ```
-EVM-Lite node
+EVM-Lite
 
 Usage:
   evml [command]
 
 Available Commands:
-  babble      Run the evm-lite node with Babble consensus
   help        Help about any command
-  raft        Run the evm-lite node with Raft consensus
-  solo        Run the evm-lite node with Solo consensus (no consensus)
+  keys        An Ethereum key manager
+  run         Run a node
   version     Show version info
 
 Flags:
-  -d, --datadir string        Top-level directory for configuration and data (default "/home/user/.evm-lite")
-      --eth.cache int         Megabytes of memory allocated to internal caching (min 16MB / database forced) (default 128)
-      --eth.db string         Eth database file (default "/home/user/.evm-lite/eth/chaindata")
-      --eth.genesis string    Location of genesis file (default "/home/user/.evm-lite/eth/genesis.json")
-      --eth.keystore string   Location of Ethereum account keys (default "/home/user/.evm-lite/eth/keystore")
-      --eth.listen string     Address of HTTP API service (default ":8080")
-      --eth.pwd string        Password file to unlock accounts (default "/home/user/.evm-lite/eth/pwd.txt")
-  -h, --help                  help for evml
-      --log string            debug, info, warn, error, fatal, panic (default "debug")
+  -h, --help   help for evml
 
 Use "evml [command] --help" for more information about a command.
+```
+
+Each consensus has its own sub-sub-command `evml run [consensus]`, and its own
+configuration flags.
+
+```
+Run a node
+
+Usage:
+  evml run [command]
+
+Available Commands:
+  babble      Run the evm-lite node with Babble consensus
+  raft        Run the evm-lite node with Raft consensus
+  solo        Run the evm-lite node with Solo consensus (no consensus)
+
+Flags:
+  -d, --datadir string        Top-level directory for configuration and data (default "/home/martin/.evm-lite")
+      --eth.cache int         Megabytes of memory allocated to internal caching (min 16MB / database forced) (default 128)
+      --eth.db string         Eth database file (default "/home/martin/.evm-lite/eth/chaindata")
+      --eth.genesis string    Location of genesis file (default "/home/martin/.evm-lite/eth/genesis.json")
+      --eth.keystore string   Location of Ethereum account keys (default "/home/martin/.evm-lite/eth/keystore")
+      --eth.listen string     Address of HTTP API service (default ":8080")
+      --eth.pwd string        Password file to unlock accounts (default "/home/martin/.evm-lite/eth/pwd.txt")
+  -h, --help                  help for run
+      --log string            debug, info, warn, error, fatal, panic (default "debug")
+
+Use "evml run [command] --help" for more information about a command.
 
 ```
 
@@ -126,9 +144,9 @@ The above example shows a `babble` folder, but the general idea is that
 consensus  configuration goes in a separate folder from the Ethereum
 configuration.
 
-The Ethereum genesis file defines Ethereum accounts and is stripped of all   
-the Ethereum POW stuff. This file is useful to predefine a set of accounts  
-that own all the initial Ether at the inception of the network.  
+The Ethereum genesis file defines Ethereum accounts and is stripped of all the 
+Ethereum POW stuff. This file is useful to predefine a set of accounts that own 
+all the initial Ether at the inception of the network.
 
 Example Ethereum genesis.json defining two account:
 ```json
@@ -144,7 +162,7 @@ Example Ethereum genesis.json defining two account:
 }
 ```
 
-It is possible to enable evm-lite to control certain accounts by providing a  
+It is possible to enable evm-lite to control certain accounts by providing a
 list of encrypted private keys in the keystore directory. With these private
 keys, evm-lite will be able to sign transactions on behalf of the accounts
 associated with the keys.  
@@ -196,8 +214,8 @@ host:~$ curl http://[api_addr]/accounts -s | json_pp
 ```
 ### Get any account
 
-This method allows retrieving the information about any account, not just the
-ones whose keys are included in the keystore.  
+This method retrieves the information about any account, not just the ones whose 
+keys are included in the keystore.  
 
 ```bash
 host:~$ curl http://[api_addr]/account/0x629007eb99ff5c3539ada8a5800847eacfc25727 -s | json_pp
@@ -223,6 +241,7 @@ host:~$ curl -X POST http://[api_addr]/tx -d '{"from":"0x629007eb99ff5c3539ada8a
 ```
 
 ### Get Transaction receipt
+
 example:
 ```bash
 host:~$ curl http://[api_addr]/tx/0xeeeed34877502baa305442e3a72df094cfbb0b928a7c53447745ff35d50020bf -s | json_pp
@@ -240,29 +259,12 @@ host:~$ curl http://[api_addr]/tx/0xeeeed34877502baa305442e3a72df094cfbb0b928a7c
 
 ```
 
-Then check accounts again to see that the balances have changed:
-```bash
-{
-   "accounts" : [
-      {
-         "address" : "0x629007eb99ff5c3539ada8a5800847eacfc25727",
-         "balance" : 1336999999999999993334,
-         "nonce":1
-      },
-      {
-         "address" : "0xe32e14de8b81d8d3aedacb1868619c74a68feab0",
-         "balance" : 1337000000000000006666,
-         "nonce":0
-      }
-   ]
-}
-```
 ### Send raw signed transactions
 
 Most of the time, one will require to send transactions from accounts that are
 not  controlled by the evm-lite instance. The transaction will be assembled,
 signed  and encoded on the client side. The resulting raw signed transaction
-bytes can be submitted to evm-lite through the ```/rawtx``` endpoint.  
+bytes can be submitted to evm-lite through the `/rawtx` endpoint.  
 
 example:
 ```bash
@@ -274,7 +276,7 @@ host:~$ curl -X POST http://[api_addr]/rawtx -d '0xf8628080830f424094564686380e2
 
 ## Get consensus info
 
-The ```/info``` endpoint exposes a map of information provided by the consensus
+The `/info` endpoint exposes a map of information provided by the consensus
 system.
 
 example (with Babble consensus):
@@ -301,7 +303,7 @@ host:-$ curl http://[api_addr]/info | json_pp
 
 ## CLIENT
 
-Please refer to [EVM-Lite Client](https://github.com/mosaicnetworks/evm-lite-client)
+Please refer to [EVM-Lite CLI](https://github.com/mosaicnetworks/evm-lite-cli)
 for Javascript utilities and a CLI to interact with the API.
 
 ## DEV

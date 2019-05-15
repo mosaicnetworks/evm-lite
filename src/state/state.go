@@ -243,7 +243,7 @@ func (s *State) CreateGenesisAccounts() error {
 //Empty reports whether the account is non-existant or empty
 func (s *State) Empty(addr common.Address) bool {
 	res := s.ethState.Empty(addr)
-	s.logger.Debugf("%s Empty? %v", addr.Hex()[:4], res)
+	s.logger.Debugf("%s Empty? %v", addr.Hex(), res)
 	return res
 }
 

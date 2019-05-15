@@ -84,43 +84,49 @@ node, there will usually be two configuration sub-directories: one for the
 Ethereum-related things, and one for the consensus related things. For example,
 creating the configuration for two babble nodes yields the following files:
 
-`$ make consensus=babble nodes=2`
+`$ make conf CONSENSUS=babble NODES=2`
 
 ```bash
 conf/babble/conf/
 ├── evml.toml
 ├── genesis.json
 ├── keystore
-│   ├── UTC--2018-09-28T15-17-47.839800703Z--370728a25a925a4db0f59ddcd82a0874225bc43b
-│   └── UTC--2018-09-28T15-17-49.835572440Z--2c2e382b974716daa13a919fc3143f0cdcef08ce
+│   ├── node0-key.json
+│   └── node1-key.json
 ├── node0
 │   ├── babble
+│   │   ├── addr
+│   │   ├── key_info
+│   │   ├── key.pub
 │   │   ├── peers.json
-│   │   └── priv_key.pem
-│   ├── evml.toml
-│   └── eth
-│       ├── genesis.json
-│       ├── keystore
-│       │   └── UTC--2018-09-28T15-17-47.839800703Z--370728a25a925a4db0f59ddcd82a0874225bc43b
-│       └── pwd.txt
+│   │   └── priv_key
+│   ├── eth
+│   │   ├── genesis.json
+│   │   ├── keystore
+│   │   │   └── key.json
+│   │   └── pwd.txt
+│   └── evml.toml
 ├── node1
 │   ├── babble
+│   │   ├── addr
+│   │   ├── key_info
+│   │   ├── key.pub
 │   │   ├── peers.json
-│   │   └── priv_key.pem
-│   ├── evml.toml
-│   └── eth
-│       ├── genesis.json
-│       ├── keystore
-│       │   └── UTC--2018-09-28T15-17-49.835572440Z--2c2e382b974716daa13a919fc3143f0cdcef08ce
-│       └── pwd.txt
+│   │   └── priv_key
+│   ├── eth
+│   │   ├── genesis.json
+│   │   ├── keystore
+│   │   │   └── key.json
+│   │   └── pwd.txt
+│   └── evml.toml
 └── peers.json
+
 ```
 
 It creates an Ethereum key for each node using the default password file, and a
-config.json file. The genesis file is used by evm-lite to initialize the state
-with some funded accounts. It also created a Babble key and peers.json file
-defining the Babble network. The evml.toml file contains parameters for babble
-and evm-lite.
+genesis.json file. The genesis file is used by evm-lite to initialize the state
+and prefund the accounts. The same keys are reused in Babble to participate in
+consensus. The evml.toml file contains parameters for Babble and evm-lite.
 
 ## DEPLOY
 
@@ -152,14 +158,6 @@ pre-packaged with `evml`. Configuration files are mounted through a volume
 attached to the default `~/.evm-lite` directory, which is the default location
 for `evml`.  
 
-MACOS USERS
-
-The configuration folders are mounted as volumes in the docker containers, and
-require read/write access from the process running in the container. Hence, when
-running the docker containers (cf examples below), specify a user that has
-read/write access to the configuration folders. In most cases, this will be the
-current user (1000 on Linux, 501 on MACOS).
-
 Examples:
 
 First, build the evm-lite docker image (cf BUILD).
@@ -168,8 +166,6 @@ First, build the evm-lite docker image (cf BUILD).
 cd deploy
 # configure and start a testnet of 4 evm-lite nodes with Babble consensus
 make CONSENSUS=babble NODES=4
-# same for MACOS users
-make USER=501 CONSENSUS=babble NODES=4
 #configure and start a single evm-lite instance with Solo consensus
 make CONSENSUS=solo NODES=1
 #configure and start a testnet of 3 evm-lite nodes with Raft consensus
@@ -192,8 +188,8 @@ There are two types of credentials to provide to Terraform:
 - An SSH key to communicate with the provisioned instances
 
 These credentials must be created from the AWS console before using these
-scripts. Once created and retrieved from AWS, the credentials must be provided in
-the `/aws/secret.tfvars` file:
+scripts. Once created and retrieved from AWS, the credentials must be provided 
+in the `/aws/secret.tfvars` file:
 
 ```
 //AWS API ACCESS KEY
@@ -213,7 +209,7 @@ using the evm-lite AMI (cf. BUILD), and connect them within this subnetwork.
 Examples:
 
 First, build the evm-lite AMI (cf BUILD) and record its ID in the `ami`
-terraform variable (aws/variables.tf).
+terraform variable (aws/variables.tf). Then: 
 
 ```bash
 # configure and start a testnet of 4 nodes in AWS

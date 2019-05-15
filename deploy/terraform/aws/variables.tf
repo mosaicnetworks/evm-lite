@@ -24,7 +24,7 @@ variable "nodes" {
   default = 4
 }
 
-variable "command" {
+variable "consensus" {
   default = "solo"
 }
 
