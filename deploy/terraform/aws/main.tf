@@ -109,7 +109,7 @@ resource "aws_instance" "node" {
 
   provisioner "remote-exec" {
     inline = [
-      "nohup evml ${var.command} > babble_logs 2>&1 &",
+      "nohup evml run ${var.consensus} > babble_logs 2>&1 &",
       "sleep 1"
       ]
   }

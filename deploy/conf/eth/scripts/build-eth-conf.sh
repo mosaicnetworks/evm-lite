@@ -11,42 +11,38 @@
 # flag). The output of this script, executed with default parameters, will look 
 # something like this:
 #
-#	conf/
-#	├── evml.toml
+#	conf/solo/conf
 #	├── genesis.json
 #	├── keystore
-#	│   ├── UTC--2018-09-15T13-58-07.652863115Z--664f52f5866d0bea946fcb5cec67f18b93b574c0
-#	│   ├── UTC--2018-09-15T13-58-09.640035569Z--c1a67fac13e90b93f28fce79a34eea63a9cfebfc
-#	│   ├── UTC--2018-09-15T13-58-11.693951535Z--5917d40005da07924796a396d2e522da49490afd
-#	│   └── UTC--2018-09-15T13-58-13.749396512Z--98a6b9400d294bb5a787583affd72b28faf2273f
+#	│   ├── node0-key.json
+#	│   ├── node1-key.json
+#	│   ├── node2-key.json
+#	│   └── node3-key.json
 #	├── node0
-#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
-#	│       │   └── UTC--2018-09-15T13-58-07.652863115Z--664f52f5866d0bea946fcb5cec67f18b93b574c0
+#	│       │   └── key.json
 #	│       └── pwd.txt
 #	├── node1
-#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
-#	│       │   └── UTC--2018-09-15T13-58-09.640035569Z--c1a67fac13e90b93f28fce79a34eea63a9cfebfc
+#	│       │   └── key.json
 #	│       └── pwd.txt
 #	├── node2
-#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
-#	│       │   └── UTC--2018-09-15T13-58-11.693951535Z--5917d40005da07924796a396d2e522da49490afd
+#	│       │   └── key.json
 #	│       └── pwd.txt
 #	└── node3
-#	    ├── evml.toml
 #	    └── eth
 #	        ├── genesis.json
 #	        ├── keystore
-#	        │   └── UTC--2018-09-15T13-58-13.749396512Z--98a6b9400d294bb5a787583affd72b28faf2273f
+#	        │   └── key.json
 #	        └── pwd.txt
+
 
 
 
@@ -62,8 +58,9 @@ for i in $(seq 0 $l)
 do
 	dest=$DEST/node$i/eth
 	mkdir -p $dest
-    # use a Docker container to run the geth command that creates accounts. This
-	# saves us the trouble of installing geth locally
+    # Use a Docker container to run the 'evml keys' command that creates 
+	# accounts. This saves us the trouble of installing evml locally.
+	# The file is written directly into the mounted directory.
     docker run --rm \
 		-u $(id -u) \
 		-v $dest:/datadir \
