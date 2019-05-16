@@ -72,9 +72,7 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 
 	objABI, _ := abi.JSON(strings.NewReader("[{\"type\":\"function\",\"inputs\": [{\"name\":\"pubKey\",\"type\":\"bytes32\"}],\"name\":\"checkAuthorisedPublicKey\",\"outputs\": [{\"name\":\"\",\"type\":\"bool\"}]}]"))
 	fromAddress := common.HexToAddress("0x1337133713371337133713371337133713371337")
-	contractAddress := common.HexToAddress("0xabbaabbaabbaabbaabbaabbaabbaabbaabbaabba") // FIXME ##########################
-	//contractAddress := common.HexToAddress("0xE36142eC7175e90c00866EedC1a2885aDcEB2Cc3")
-	//contractAddress := common.HexToAddress(p.state.GetAuthorisingAccount())
+	contractAddress := common.HexToAddress(p.state.GetAuthorisingAccount())
 	nonce := uint64(1) // not used
 	amount := big.NewInt(0)
 	gasLimit := p.state.GetGasLimit()
@@ -105,7 +103,6 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 				internalTransactions[i].Refuse()
 			} else {
 				unpackRes := new(bool)
-				p.logger.Debugf(res)
 				objABI.Unpack(&unpackRes, "checkAuthorisedPublicKey", res)
 
 				if *unpackRes {
