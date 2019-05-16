@@ -80,11 +80,66 @@ do
 		com=""
 	fi
 	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
-    printf "\t\t\t\"balance\": \"1337000000000000000000\"\n" >> $GFILE
+    printf "\t\t\t\"balance\": \"133700000000000000000$i\"\n" >> $GFILE
     printf "\t\t}%s\n" $com >> $GFILE
 done
 printf "\t}\n" >> $GFILE
 echo "}" >> $GFILE
+
+
+
+# Generate the pregenesis file
+GFILE=$DEST/pregenesis.json
+echo "{" > $GFILE 
+
+printf "\t\"precompiler\":{\n" >> $GFILE
+printf "\t\t \"contracts\": [\n" >> $GFILE
+printf "\t\t\t {\n" >> $GFILE
+printf "\t\t\t\t \"address\": \"abbaabbaabbaabbaabbaabbaabbaabbaabbaabba\",\n" >> $GFILE
+printf "\t\t\t\t \"filename\": \"genesis.sol\",\n" >> $GFILE
+printf "\t\t\t\t \"contractname\": \"POA_Genesis\",\n" >> $GFILE
+printf "\t\t\t\t \"balance\": \"1337000000000000000099\",\n" >> $GFILE
+printf "\t\t\t\t \"preauthorised\": [\n" >> $GFILE
+
+
+comma=""
+
+if [ $l -lt 3 ] ; then
+  preauthnum=0
+else
+  preauthnum=1
+fi
+for i in $(seq 0 $preauthnum)
+do
+   printf "\t\t\t\t\t $comma{ \"address\": \"$(cat $DEST/node$i/eth/addr)\", \"moniker\": \"User$i\"}\n" >> $GFILE
+   comma=","
+done
+
+
+printf "\t\t\t\t ]\n" >> $GFILE
+printf "\t\t\t }\n" >> $GFILE
+printf "\t\t ]\n" >> $GFILE
+printf "\t },\n" >> $GFILE
+
+
+
+printf "\t\"alloc\": {\n" >> $GFILE
+for i in $(seq 0 $l)
+do
+	com=","
+	if [[ $i == $l ]]; then 
+		com=""
+	fi
+	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
+    printf "\t\t\t\"balance\": \"133700000000000000000$i\"\n" >> $GFILE
+    printf "\t\t}%s\n" $com >> $GFILE
+done
+printf "\t}\n" >> $GFILE
+echo "}" >> $GFILE
+
+
+
+
 
 gKeystore=$DEST/keystore
 mkdir -p $gKeystore
