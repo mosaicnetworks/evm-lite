@@ -1,8 +1,6 @@
 package state
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethState "github.com/ethereum/go-ethereum/core/state"
@@ -90,15 +88,7 @@ func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex in
 		return err
 	}
 
-	context := vm.Context{
-		CanTransfer: core.CanTransfer,
-		Transfer:    core.Transfer,
-		GetHash:     func(uint64) common.Hash { return blockHash },
-		Origin:      msg.From(),
-		GasLimit:    msg.Gas(),
-		GasPrice:    msg.GasPrice(),
-		BlockNumber: big.NewInt(0), // The vm has a dependency on this..
-	}
+	context := NewContext(msg.From(), msg.Gas(), msg.GasPrice())
 
 	//Prepare the ethState with transaction Hash so that it can be used in emitted
 	//logs

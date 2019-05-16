@@ -23,7 +23,6 @@ import (
 )
 
 var (
-	chainID        = big.NewInt(1)
 	gasLimit       = uint64(1000000000000000000)
 	txMetaSuffix   = []byte{0x01}
 	receiptsPrefix = []byte("receipts-")
@@ -46,7 +45,6 @@ type State struct {
 }
 
 func NewState(logger *logrus.Logger, dbFile string, dbCache int, genesisFile string) (*State, error) {
-
 	handles, err := getFdLimit()
 	if err != nil {
 		return nil, err
@@ -59,8 +57,8 @@ func NewState(logger *logrus.Logger, dbFile string, dbCache int, genesisFile str
 
 	s := &State{
 		db:          db,
-		signer:      ethTypes.NewEIP155Signer(chainID),
-		chainConfig: params.ChainConfig{ChainID: chainID},
+		signer:      ethTypes.NewEIP155Signer(CustomChainConfig.ChainID),
+		chainConfig: CustomChainConfig,
 		vmConfig:    vm.Config{Tracer: vm.NewStructLogger(nil)},
 		genesisFile: genesisFile,
 		logger:      logger,
@@ -157,13 +155,7 @@ func (s *State) Commit() (common.Hash, error) {
 func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	s.logger.Debug("Call")
 
-	context := vm.Context{
-		CanTransfer: core.CanTransfer,
-		Transfer:    core.Transfer,
-		GetHash:     func(uint64) common.Hash { return common.Hash{} },
-		Origin:      callMsg.From(),
-		GasPrice:    callMsg.GasPrice(),
-	}
+	context := NewContext(callMsg.From(), 0, callMsg.GasPrice())
 
 	//We use a copy of the ethState because even call transactions increment the
 	//sender's nonce

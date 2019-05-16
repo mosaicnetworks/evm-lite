@@ -1,8 +1,6 @@
 package state
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethState "github.com/ethereum/go-ethereum/core/state"
@@ -63,16 +61,7 @@ func (p *TxPool) CheckTx(tx *ethTypes.Transaction) error {
 		return err
 	}
 
-	context := vm.Context{
-		CanTransfer: core.CanTransfer,
-		Transfer:    core.Transfer,
-		GetHash:     func(uint64) common.Hash { return common.Hash{} },
-		// Message information
-		Origin:      msg.From(),
-		GasLimit:    msg.Gas(),
-		GasPrice:    msg.GasPrice(),
-		BlockNumber: big.NewInt(0), // The vm has a dependency on this.
-	}
+	context := NewContext(msg.From(), msg.Gas(), msg.GasPrice())
 
 	// The EVM should never be reused and is not thread safe.
 	vmenv := vm.NewEVM(context, p.ethState, &p.chainConfig, p.vmConfig)
