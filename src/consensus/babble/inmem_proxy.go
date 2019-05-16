@@ -64,26 +64,33 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 		return proxy.CommitResponse{}, err
 	}
 
-	internalTransactions := block.InternalTransactions()
+	// Process internal transactions
+	// For every join request check whether the peer's public key has been authorised.
+	// Apply an ethereum call message (no state update) to query the smart contract.
+	// Since there's no nonce check and the gas price is set to zero, an arbitrary address
+	// can be used as the source of the tx.
 
 	objABI, _ := abi.JSON(strings.NewReader("[{\"type\":\"function\",\"inputs\": [{\"name\":\"pubKey\",\"type\":\"bytes32\"}],\"name\":\"checkAuthorisedPublicKey\",\"outputs\": [{\"name\":\"\",\"type\":\"bool\"}]}]"))
-	fromAddress := common.HexToAddress("0x1337133713371337133713371337133713371337") // there's no state update and no nonce check so doesn't matter what address we use
-	contractAddress := common.HexToAddress("0xabbaabbaabbaabbaabbaabbaabbaabbaabbaabba")
-	nonce := uint64(1) // checkNonce set to false so doesn't matter
+	fromAddress := common.HexToAddress("0x1337133713371337133713371337133713371337")
+	contractAddress := common.HexToAddress("0xabbaabbaabbaabbaabbaabbaabbaabbaabbaabba") // FIXME ##########################
+	//contractAddress := common.HexToAddress("0xE36142eC7175e90c00866EedC1a2885aDcEB2Cc3")
+	//contractAddress := common.HexToAddress(p.state.GetAuthorisingAccount())
+	nonce := uint64(1) // not used
 	amount := big.NewInt(0)
-	gasLimit := uint64(0) // gasLimit of zero should be OK since the gasPrice is zero
+	gasLimit := p.state.GetGasLimit()
 	gasPrice := big.NewInt(0)
 	checkNonce := false
+
+	internalTransactions := block.InternalTransactions()
 
 	for i, tx := range internalTransactions {
 
 		if tx.Type == hashgraph.PEER_ADD {
 
-			callData, err := objABI.Pack("checkAuthorisedPublicKey", []byte(tx.Peer.PubKeyHex)) // check for errors
+			var pubKey [32]byte
+			copy(pubKey[:], tx.Peer.PubKeyHex)
 
-			if err != nil {
-				return proxy.CommitResponse{}, err
-			}
+			callData, _ := objABI.Pack("checkAuthorisedPublicKey", pubKey)
 
 			ethMsg := ethTypes.NewMessage(fromAddress,
 				&contractAddress,
@@ -95,16 +102,17 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 				checkNonce)
 
 			if res, err := p.state.Call(ethMsg); err != nil {
-				if err != nil {
-					var unpackRes bool
-					objABI.Unpack(unpackRes, "checkAuthorisedPublicKey", res)
+				internalTransactions[i].Refuse()
+			} else {
+				unpackRes := new(bool)
+				p.logger.Debugf(res)
+				objABI.Unpack(&unpackRes, "checkAuthorisedPublicKey", res)
 
-					if unpackRes {
-						internalTransactions[i].Accept()
-					} else {
-						internalTransactions[i].Refuse()
-					}
+				if *unpackRes {
+					p.logger.Debug("Accepted peer")
+					internalTransactions[i].Accept()
 				} else {
+					p.logger.Error("Rejected peer")
 					internalTransactions[i].Refuse()
 				}
 			}
