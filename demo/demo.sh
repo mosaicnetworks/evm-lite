@@ -3,13 +3,14 @@
 set -eu
 
 IPS=${1:-"../deploy/terraform/local/ips.dat"}
-KEY_DIR=${2:-"../deploy/conf/babble/conf/"}
+KEY_DIR=${2:-"../deploy/conf/babble/conf/keystore/"}
 PWD_FILE=${3:-"../deploy/conf/eth/pwd.txt"}
 PORT=${4:-8080}
 SOL_FILE=${5:-"smart-contracts/CrowdFunding.sol"}
 
 ips=($(cat ${IPS} | awk '{ print $2 }' | paste -sd "," -))
 
+set -x
 node src/demo.js --ips=$ips \
     --port=$PORT \
     --contract=$SOL_FILE \

@@ -17,15 +17,40 @@ const FgWhite = '\x1b[37m';
 const log = (color, text) => {
 	console.log(color + text + '\x1b[0m');
 };
+const online = true;
+
+const schema = {
+    properties: {
+      enters: {
+        description: 'PRESS ENTER TO CONTINUE',
+        ask: function() {
+                         if (!online){console.log("Skipping prompt");}
+          return online;
+        }
+      }
+    }
+  };
+
 
 const step = message => {
-	log(FgWhite, '\n' + message);
-	return new Promise(resolve => {
-		prompt.get('PRESS ENTER TO CONTINUE', function(err, res) {
-			resolve();
-		});
-	});
+        log(FgWhite, '\n' + message);
+        return new Promise(resolve => {
+                prompt.get(schema, function(err, res) {
+                        resolve();
+                });
+        });
 };
+
+const hardstep = message => {
+        log(FgWhite, '\n' + message);
+        return new Promise(resolve => {
+                prompt.get('PRESS ENTER TO CONTINUE', function(err, res) {
+                        resolve();
+                });
+        });
+};
+
+
 
 const explain = message => {
 	log(FgCyan, util.format('\nEXPLANATION:\n%s', message));
@@ -163,7 +188,7 @@ class CrowdFunding {
 	}
 
 	async deploy(value) {
-		await this.contract.deploy(this.account, [value], { timeout: 3 });
+		await this.contract.deploy([value], { timeout: 3 }, this.account);
 		console.log('Receipt:', this.contract.receipt);
 		return this;
 	}
