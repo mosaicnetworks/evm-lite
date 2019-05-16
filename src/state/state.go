@@ -35,6 +35,9 @@ type State struct {
 	was      *WriteAheadState
 	txPool   *TxPool
 
+	gasLimit           uint64
+	authorisingAccount string
+
 	signer      ethTypes.Signer
 	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
 	vmConfig    vm.Config
@@ -77,6 +80,8 @@ func NewState(logger *logrus.Logger, dbFile string, dbCache int, genesisFile str
 //transaction-pool, and creates genesis accounts.
 func (s *State) InitState() error {
 
+	s.gasLimit = gasLimit
+
 	initState := common.Hash{}
 
 	var err error
@@ -102,7 +107,7 @@ func (s *State) InitState() error {
 		s.signer,
 		s.chainConfig,
 		s.vmConfig,
-		gasLimit,
+		s.gasLimit,
 		s.logger)
 
 	//Initialize genesis accounts with balance, code, and state
@@ -221,6 +226,10 @@ func (s *State) CreateGenesisAccounts() error {
 				s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
 			}
 			s.logger.WithField("address", addr).Debug("Adding account")
+
+			if account.Authorising {
+				s.authorisingAccount = addr
+			}
 		}
 	}
 
@@ -291,6 +300,17 @@ func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
 	}
 
 	return (*ethTypes.Receipt)(&receipt), nil
+}
+
+//GetGasLimit returns the gas limit set between commit calls
+func (s *State) GetGasLimit() uint64 {
+	return s.gasLimit
+}
+
+//GetAuthorisingAccount returns the address of the smart contract which handles
+//the list of authorized peers
+func (s *State) GetAuthorisingAccount() string {
+	return s.authorisingAccount
 }
 
 //------------------------------------------------------------------------------
