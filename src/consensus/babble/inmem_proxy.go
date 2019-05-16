@@ -100,17 +100,17 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 				checkNonce)
 
 			if res, err := p.state.Call(ethMsg); err != nil {
-				internalTransactions[i].Refuse()
+				internalTransactions[i] = internalTransactions[i].AsRefuse()
 			} else {
 				unpackRes := new(bool)
 				objABI.Unpack(&unpackRes, "checkAuthorisedPublicKey", res)
 
 				if *unpackRes {
 					p.logger.Debug("Accepted peer")
-					internalTransactions[i].Accept()
+					internalTransactions[i] = internalTransactions[i].AsAccepted()
 				} else {
 					p.logger.Error("Rejected peer")
-					internalTransactions[i].Refuse()
+					internalTransactions[i] = internalTransactions[i].AsRefuse()
 				}
 			}
 

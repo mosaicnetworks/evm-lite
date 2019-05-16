@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mosaicnetworks/babble/src/common"
 	"github.com/mosaicnetworks/babble/src/hashgraph"
 	"github.com/mosaicnetworks/babble/src/peers"
 	"github.com/mosaicnetworks/evm-lite/src/state"
@@ -89,7 +90,7 @@ func TestMixedContract(t *testing.T) {
 		t.Fatalf("Length response too short")
 	}
 
-	if res.InternalTransactions[0].Accepted != hashgraph.True {
+	if res.InternalTransactions[0].Accepted != common.True {
 		t.Log(res.InternalTransactions[0].Accepted)
 		t.Fatalf("Result wrong")
 	}
