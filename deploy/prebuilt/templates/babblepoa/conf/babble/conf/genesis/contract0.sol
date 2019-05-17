@@ -222,7 +222,7 @@ contract POA_Genesis {
 
 
 //      Check that this sender has not voted before. Initial config is no redos - so just reject
-            if (nomineeList[_nomineeAddress].vote[msg.sender].voter != address(0)) {
+            if (nomineeList[_nomineeAddress].vote[msg.sender].voter == address(0)) {
                 // Vote is valid. So lets cast the Vote
                 nomineeList[_nomineeAddress].vote[msg.sender] = NomineeVote({voter: msg.sender, accept: _accepted });
 
