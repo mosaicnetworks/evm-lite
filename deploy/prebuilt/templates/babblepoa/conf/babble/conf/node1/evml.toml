@@ -1,0 +1,5 @@
+[babble]
+store = true
+heartbeat = "50ms"
+timeout = "200ms"
+listen = "node1:1337"
