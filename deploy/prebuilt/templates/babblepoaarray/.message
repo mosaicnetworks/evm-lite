@@ -1,0 +1,5 @@
+To start this instance run the command below in the deploy directory:
+
+
+make start CONSENSUS=babble NODES=4
+
