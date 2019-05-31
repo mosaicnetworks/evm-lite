@@ -69,5 +69,6 @@ for i in $(seq 0 $l)
 do
 	dest=$DEST/node$i/babble
 	cp $DEST/peers.json $dest/
+	cp $DEST/peers.json $dest/peers.genesis.json
 done
 

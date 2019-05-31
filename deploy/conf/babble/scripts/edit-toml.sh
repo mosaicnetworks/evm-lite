@@ -16,6 +16,7 @@ echo "[babble]" >> $PFILE
 echo "store = true" >> $PFILE
 echo "heartbeat = \"50ms\"" >> $PFILE
 echo "timeout = \"200ms\"" >> $PFILE
+echo "enable-fast-sync = false" >> $PFILE
     
 for i in $(seq 0 $l) 
 do
