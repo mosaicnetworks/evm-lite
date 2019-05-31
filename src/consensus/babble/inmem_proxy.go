@@ -79,14 +79,14 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 	gasPrice := big.NewInt(0)
 	checkNonce := false
 
-	internalTransactions := block.InternalTransactions()
+	receipts := []hashgraph.InternalTransactionReceipt{}
 
-	for i, tx := range internalTransactions {
+	for _, tx := range block.InternalTransactions() {
 
-		if tx.Type == hashgraph.PEER_ADD {
+		if tx.Body.Type == hashgraph.PEER_ADD {
 
 			var pubKey [32]byte
-			copy(pubKey[:], tx.Peer.PubKeyHex)
+			copy(pubKey[:], tx.Body.Peer.PubKeyHex)
 
 			callData, _ := objABI.Pack("checkAuthorisedPublicKey", pubKey)
 
@@ -100,17 +100,17 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 				checkNonce)
 
 			if res, err := p.state.Call(ethMsg); err != nil {
-				internalTransactions[i] = internalTransactions[i].AsRefuse()
+				receipts = append(receipts, tx.AsRefused())
 			} else {
 				unpackRes := new(bool)
 				objABI.Unpack(&unpackRes, "checkAuthorisedPublicKey", res)
 
 				if *unpackRes {
 					p.logger.Debug("Accepted peer")
-					internalTransactions[i] = internalTransactions[i].AsAccepted()
+					receipts = append(receipts, tx.AsAccepted())
 				} else {
 					p.logger.Error("Rejected peer")
-					internalTransactions[i] = internalTransactions[i].AsRefuse()
+					receipts = append(receipts, tx.AsRefused())
 				}
 			}
 
@@ -118,8 +118,8 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 	}
 
 	res := proxy.CommitResponse{
-		StateHash:            hash.Bytes(),
-		InternalTransactions: internalTransactions,
+		StateHash:                   hash.Bytes(),
+		InternalTransactionReceipts: receipts,
 	}
 
 	return res, nil

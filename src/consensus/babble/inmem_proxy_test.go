@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mosaicnetworks/babble/src/common"
 	"github.com/mosaicnetworks/babble/src/hashgraph"
 	"github.com/mosaicnetworks/babble/src/peers"
 	"github.com/mosaicnetworks/evm-lite/src/state"
@@ -86,13 +85,12 @@ func TestMixedContract(t *testing.T) {
 
 	res, _ := inmemProxy.CommitBlock(*block)
 
-	if len(res.InternalTransactions) < 1 {
-		t.Fatalf("Length response too short")
+	if len(res.InternalTransactionReceipts) < 1 {
+		t.Fatal("Length response too short")
 	}
 
-	if res.InternalTransactions[0].Accepted != common.True {
-		t.Log(res.InternalTransactions[0].Accepted)
-		t.Fatalf("Result wrong")
+	if !res.InternalTransactionReceipts[0].Accepted {
+		t.Fatal("InternalTransactionReceipts[0] should be accepted")
 	}
 
 }
