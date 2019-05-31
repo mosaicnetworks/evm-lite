@@ -191,7 +191,7 @@ const compiledSmartContract = async () => {
 class GenesisContract {
 	constructor (account, ip) {
 		this.account = account;
-		this.contract = new evmlc.Contract({"gas":100000, "gasPrice": 0, 
+		this.contract = new evmlc.Contract({"gas":10000000, "gasPrice": 0, 
 "from": this.account.address, 
 "address": "0xabbaabbaabbaabbaabbaabbaabbaabbaabbaabba", "interface": 
 [{"constant":true,"inputs":[{"name":"_publicKey","type":"bytes32"}],"name":"checkAuthorisedPublicKey","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_address","type":"address"}],"name":"dev_isGenesisWhitelisted","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[],"name":"dev_27","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[{"name":"_address","type":"address"}],"name":"checkAuthorised","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"whiteList","outputs":[{"name":"person","type":"address"},{"name":"flags","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"dev_getSender","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"dev_getWhitelistCount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_nomineeAddress","type":"address"},{"name":"_accepted","type":"bool"}],"name":"castNomineeVote","outputs":[{"name":"decided","type":"bool"},{"name":"voteresult","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[],"name":"dev_getGenesisWhitelist0","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[{"name":"_address","type":"address"}],"name":"dev_isWhitelisted","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_address","type":"address"}],"name":"dev_getCurrentNomineeVotes","outputs":[{"name":"yes","type":"uint256"},{"name":"no","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_nomineeAddress","type":"address"},{"name":"_moniker","type":"bytes32"}],"name":"submitNominee","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"inputs":[{"name":"_moniker","type":"bytes32"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_nominee","type":"address"},{"indexed":false,"name":"_yesVotes","type":"uint256"},{"indexed":false,"name":"_noVotes","type":"uint256"},{"indexed":true,"name":"_accepted","type":"bool"}],"name":"NomineeDecision","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_nominee","type":"address"},{"indexed":true,"name":"_voter","type":"address"},{"indexed":false,"name":"_yesVotes","type":"uint256"},{"indexed":false,"name":"_noVotes","type":"uint256"},{"indexed":true,"name":"_accepted","type":"bool"}],"name":"NomineeVoteCast","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_nominee","type":"address"},{"indexed":true,"name":"_proposer","type":"address"}],"name":"NomineeProposed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_address","type":"address"},{"indexed":true,"name":"_moniker","type":"bytes32"}],"name":"MonikerAnnounce","type":"event"}]
@@ -200,7 +200,7 @@ class GenesisContract {
 	
 
 
-async genericTrans(functionname, value, params) {
+async genericTrans(functionname, value, params, istx) {
 
       console.log(functionname, params);
   //    console.log('Contract: ', this.contract);
@@ -209,7 +209,7 @@ async genericTrans(functionname, value, params) {
 
       transaction.value(value);
 //      console.log("Value Set");
-//      console.dir(transaction, { depth: 6, colors: true });
+      console.dir(transaction, { depth: 6, colors: true });
       console.log("From", transaction.tx.from) ;
       console.log("Data", transaction.tx.data) ;
 //      console.log('Transaction: ', transaction.parse(), '\n');
@@ -217,7 +217,7 @@ async genericTrans(functionname, value, params) {
 
 //      console.dir(response, { depth: 6, colors: true });
     //  console.log('Response: ', response, '\n');
-      if (value > 0)
+      if (istx)
       {
          const receipt = await transaction.receipt;
 
@@ -252,36 +252,36 @@ init()
         })
         .then(() =>
                 explain(
-                        'Quick check that we can talk to EVM-Lite \n'
+                        'Check that we can talk to EVM-Lite \n'
                 )
         )
         .then(() => step('STEP 0.2) Set Up Object for accessing for Genesis Authority Smart Contract'))
 
         .then(async contract => {
                 genesis = new GenesisContract(allNodes[nodeno].account, allNodes[nodeno].ip);
-                await genesis.genericTrans('dev_27', 0, []);
-                await genesis.genericTrans('dev_getGenesisWhitelist0', 0, []);
+                await genesis.genericTrans('dev_27', 0, [], false);
+                await genesis.genericTrans('dev_getGenesisWhitelist0', 0, [], false);
 
 	})
         .then(() =>
                 explain(
-                        'Quick check that things are working. We should have a return value of 27 from the test function and the first hard coded Genesis whitelist entry.  \n'
+                        'Check that things are working. We should have a return value of 27 from the test function and the first hard coded Genesis whitelist entry.  \n'
                 )
         )
 
 
-        .then(() => step('STEP 1) Am I on the whitelist or genesis whitelist?'))
+        .then(() => step('STEP 1) 4 checks: Is on whitelist, is on genesis whitelist, number of entries in whitelist and checkAuthorised.'))
 
         .then(async contract => {
-                await genesis.genericTrans('dev_isWhitelisted', 0, [allNodes[nodeno].account.address]);
-                await genesis.genericTrans('dev_isGenesisWhitelisted', 0, [allNodes[nodeno].account.address]);
-                await genesis.genericTrans('dev_getWhitelistCount', 0, []);
+                await genesis.genericTrans('dev_isWhitelisted', 0, [allNodes[nodeno].account.address], false);
+                await genesis.genericTrans('dev_isGenesisWhitelisted', 0, [allNodes[nodeno].account.address], false);
+                await genesis.genericTrans('dev_getWhitelistCount', 0, [], false);
 
-                await genesis.genericTrans('checkAuthorised', 0, [allNodes[nodeno].account.address]);
+                await genesis.genericTrans('checkAuthorised', 0, [allNodes[nodeno].account.address], false);
 	})
         .then(() =>
                 explain(
-                        'Check the authority of this account.  \n'
+                        'Check the authority of this account. On first run, node 0 and 1 should answer false, true, 0, true. Node 2 and 3 should answer false, false, 0, false. \n'
                 )
         )
 
@@ -293,10 +293,10 @@ init()
 
 		if ( nodeno == 0)
 		{ 	
-                    await genesis.genericTrans('submitNominee', 100000, [allNodes[2].account.address, 'Node 2']);
-                    await genesis.genericTrans('dev_getCurrentNomineeVotes', 0, [allNodes[2].account.address]);
-                    await genesis.genericTrans('dev_getWhitelistCount', 0, []);
-                    await genesis.genericTrans('dev_isWhitelisted', 0, [allNodes[nodeno].account.address]);
+                    await genesis.genericTrans('submitNominee', 0, [allNodes[2].account.address, 'Node 2'], true);
+                    await genesis.genericTrans('dev_getCurrentNomineeVotes', 0, [allNodes[2].account.address], false);
+                    await genesis.genericTrans('dev_getWhitelistCount', 0, [] ,false);
+                    await genesis.genericTrans('dev_isWhitelisted', 0, [allNodes[nodeno].account.address], false);
 
 		    
 		}
@@ -309,10 +309,11 @@ init()
 
         .then(() =>
                 explain(
-                        ' \n'
+                     'On first run only node zero should emit multiple NomineeDecision and MonikerAnnounce events as it processes the Genesis Whitelist. \n'+
+	             'On every run, where node 2 is not already on the whitelist or nominee list, a NomineeProposed and MonikerAnnounce address will be emitted. \n'
                 )
         )
-	.then(() => {process.exit(0);} )
+//	.then(() => {process.exit(0);} )
 
 
         .then(() => step('STEP 3) Node 0 Votes for Node 2'))
@@ -320,8 +321,8 @@ init()
 
 		if ( nodeno == 0)
 		{ 	
-                    await genesis.genericTrans('castNomineeVote', 100000, [allNodes[2].account.address, true]);
-                    await genesis.genericTrans('dev_getCurrentNomineeVotes', 0, [allNodes[2].account.address]);
+                    await genesis.genericTrans('castNomineeVote', 0, [allNodes[2].account.address, true], true);
+                    await genesis.genericTrans('dev_getCurrentNomineeVotes', 0, [allNodes[2].account.address], false);
 		}
 		else
 		{
@@ -332,7 +333,7 @@ init()
 
         .then(() =>
                 explain(
-                        ' \n'
+                        'Node 0 votes for Node 2. This will cause the emission of a NomineeVoteCast event, including updated vote targets. \n'
                 )
         )
         .then(() => step('STEP 4) Node 2 Tries to Join'))
@@ -351,7 +352,7 @@ init()
 
         .then(() =>
                 explain(
-                        ' \n'
+                        'Node 2 is still a nominee, and thus cannot join. His application to join is rejected.  \n'
                 )
         )
         .then(() => step('STEP 5) Node 1 Votes for Node 2'))
@@ -359,8 +360,8 @@ init()
 
 		if ( nodeno == 1)
 		{ 	
-                    await genesis.genericTrans('castNomineeVote', 100000, [allNodes[2].account.address,true]);
-                    await genesis.genericTrans('dev_getCurrentNomineeVotes', 0, [allNodes[2].account.address]);
+                    await genesis.genericTrans('castNomineeVote', 0, [allNodes[2].account.address,true], true);
+                    await genesis.genericTrans('dev_getCurrentNomineeVotes', 0, [allNodes[2].account.address], false);
 		}
 		else
 		{
@@ -371,13 +372,14 @@ init()
 
         .then(() =>
                 explain(
-                        ' \n'
+                        'Node 1 votes for node 2, which means that all the nodes on the whitelist have voted for node 2. \n' +
+                        'Thus a decision is reached. A NomineeDecision and a NomineeVoteCast event are emitted. \n' 
                 )
         )
         .then(() => step('STEP 6) Node 2 joins'))
         .then(() =>
                 explain(
-                        ' \n'
+                        'Node 2 has been added to the whitelist so is now able to join. \n'
                 )
         )
         .then(() => step('STEP 7) Node 0 Nominates Node 3'))
@@ -385,7 +387,7 @@ init()
 
 		if ( nodeno == 0)
 		{ 	
-                    await genesis.genericTrans('submitNominee', 100000, [allNodes[3].account.address, 'Node 3']);
+                    await genesis.genericTrans('submitNominee', 0, [allNodes[3].account.address, 'Node 3'], true);
 		}
 		else
 		{
@@ -404,7 +406,7 @@ init()
 
 		if ( nodeno == 0)
 		{ 	
-                    await genesis.genericTrans('castNomineeVote', 100000, [allNodes[3].account.address, true]);
+                    await genesis.genericTrans('castNomineeVote', 0, [allNodes[3].account.address, true], true);
 		}
 		else
 		{
@@ -423,7 +425,7 @@ init()
 
 		if ( nodeno == 1)
 		{ 	
-                    await genesis.genericTrans('castNomineeVote', 100000, [allNodes[3].account.address, true]);
+                    await genesis.genericTrans('castNomineeVote', 0, [allNodes[3].account.address, true], true);
 		}
 		else
 		{
@@ -442,7 +444,7 @@ init()
 
 		if ( nodeno == 2)
 		{ 	
-                    await genesis.genericTrans('castNomineeVote', 100000, [allNodes[3].account.address, false]);
+                    await genesis.genericTrans('castNomineeVote', 0, [allNodes[3].account.address, false], true);
 		}
 		else
 		{
