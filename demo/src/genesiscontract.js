@@ -186,8 +186,6 @@ const compiledSmartContract = async () => {
 	return contract;
 };
 
-
-
 class GenesisContract {
 	constructor (account, ip) {
 		this.account = account;

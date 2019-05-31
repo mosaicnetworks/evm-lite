@@ -1,12 +1,14 @@
 package babble
 
 import (
+	"encoding/hex"
 	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/mosaicnetworks/babble/src/hashgraph"
 	"github.com/mosaicnetworks/babble/src/proxy"
 	"github.com/mosaicnetworks/evm-lite/src/service"
@@ -70,7 +72,7 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 	// Since there's no nonce check and the gas price is set to zero, an arbitrary address
 	// can be used as the source of the tx.
 
-	objABI, _ := abi.JSON(strings.NewReader("[{\"type\":\"function\",\"inputs\": [{\"name\":\"pubKey\",\"type\":\"bytes32\"}],\"name\":\"checkAuthorisedPublicKey\",\"outputs\": [{\"name\":\"\",\"type\":\"bool\"}]}]"))
+	objABI, _ := abi.JSON(strings.NewReader("[{\"type\":\"function\",\"inputs\": [{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"checkAuthorised\",\"outputs\": [{\"name\":\"\",\"type\":\"bool\"}]}]"))
 	fromAddress := common.HexToAddress("0x1337133713371337133713371337133713371337")
 	contractAddress := common.HexToAddress(p.state.GetAuthorisingAccount())
 	nonce := uint64(1) // not used
@@ -85,10 +87,22 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 
 		if tx.Body.Type == hashgraph.PEER_ADD {
 
-			var pubKey [32]byte
-			copy(pubKey[:], tx.Body.Peer.PubKeyHex)
+			pk, err := crypto.UnmarshalPubkey(tx.Body.Peer.PubKeyBytes())
+			if err != nil {
+				p.logger.Warningf("couldn't unmarshal pubkey bytes: %v", err)
+			}
 
-			callData, _ := objABI.Pack("checkAuthorisedPublicKey", pubKey)
+			addr := crypto.PubkeyToAddress(*pk)
+
+			// var param [32]byte
+			// copy(param[12:], addr.Bytes())
+
+			callData, err := objABI.Pack("checkAuthorised", addr)
+			if err != nil {
+				p.logger.Warningf("couldn't pack arguments: %v", err)
+			}
+
+			//0x1a3e994500000000000000000000000038842a05b3dfd507bf14b8c33ea90f747f0e0ec2
 
 			ethMsg := ethTypes.NewMessage(fromAddress,
 				&contractAddress,
@@ -99,11 +113,17 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 				callData,
 				checkNonce)
 
+			p.logger.WithFields(logrus.Fields{
+				"addr":     addr.Hex(),
+				"callData": hex.EncodeToString(callData),
+				"contract": contractAddress.Hex(),
+			}).Debug("checkAuthorised")
+
 			if res, err := p.state.Call(ethMsg); err != nil {
 				receipts = append(receipts, tx.AsRefused())
 			} else {
 				unpackRes := new(bool)
-				objABI.Unpack(&unpackRes, "checkAuthorisedPublicKey", res)
+				objABI.Unpack(&unpackRes, "checkAuthorised", res)
 
 				if *unpackRes {
 					p.logger.Debug("Accepted peer")

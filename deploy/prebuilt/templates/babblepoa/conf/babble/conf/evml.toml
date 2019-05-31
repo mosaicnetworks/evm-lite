@@ -2,3 +2,4 @@
 store = true
 heartbeat = "50ms"
 timeout = "200ms"
+enable-fast-sync = false
