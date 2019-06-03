@@ -2,6 +2,7 @@ package state
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
 	"math/big"
@@ -311,6 +312,50 @@ func (s *State) GetGasLimit() uint64 {
 //the list of authorized peers
 func (s *State) GetAuthorisingAccount() string {
 	return s.authorisingAccount
+}
+
+//CheckAuthorised queries the POA smart-contract to check if the address is
+//authorised
+func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
+	contractAddress := common.HexToAddress(s.GetAuthorisingAccount())
+
+	callData, err := POAABI.Pack("checkAuthorised", addr)
+	if err != nil {
+		s.logger.Warningf("couldn't pack arguments: %v", err)
+	}
+
+	// Apply an ethereum call message (no state update) to query the
+	// smart-contract. Since there's no nonce check and the gas price is set to
+	// zero, an arbitrary address can be used as the source of the tx.
+	ethMsg := ethTypes.NewMessage(POAFROM,
+		&contractAddress,
+		uint64(1),
+		big.NewInt(0),
+		s.GetGasLimit(),
+		big.NewInt(0),
+		callData,
+		false)
+
+	s.logger.WithFields(logrus.Fields{
+		"addr":     addr.Hex(),
+		"callData": hex.EncodeToString(callData),
+		"contract": contractAddress.Hex(),
+	}).Debug("checkAuthorised")
+
+	res, err := s.Call(ethMsg)
+	if err != nil {
+		return false, err
+	}
+
+	unpackRes := new(bool)
+	POAABI.Unpack(&unpackRes, "checkAuthorised", res)
+
+	if *unpackRes {
+		return true, nil
+	}
+
+	return false, nil
+
 }
 
 //------------------------------------------------------------------------------

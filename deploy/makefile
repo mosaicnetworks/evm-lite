@@ -18,7 +18,6 @@ conf:
 	$(MAKE) -C conf/$(CONSENSUS) conf NODES=$(NODES) IPBASE=$(IPBASE) IPADD=$(IPADD)
 
 prebuilt:
-
 	$(MAKE) -C prebuilt prebuilt PREBUILT="$(PREBUILT)"
 
 start: 

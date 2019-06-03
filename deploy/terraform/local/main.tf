@@ -31,7 +31,6 @@ resource "docker_container" "evm-lite" {
   # specified below, will read and write to this volume. So the user, needs
   # permissions on the host machine (host_path at least). Here, you want to
   # provide the same user that created the /conf folder.
-  # Most probably: set user=1000 on linux, and user=501 (502)? on macOS.
   user = "${var.user}"
   env = ["HOME=/home/${var.user}"]
   volumes {

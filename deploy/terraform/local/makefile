@@ -11,6 +11,7 @@ apply:
 		-var nodes=$(NODES) \
 		-var version=$(VERSION) \
 		-var conf=$(CONF)
+		
 destroy:
 	terraform destroy -auto-approve
 
