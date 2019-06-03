@@ -14,7 +14,6 @@ docker network create \
   --gateway=172.77.5.254 \
   babblenet
 
-
 docker create \
     -u $(id -u) \
     --name=node1 \
