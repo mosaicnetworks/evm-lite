@@ -2,7 +2,7 @@
 	"precompiler":{
 		 "contracts": [
 			 {
-				 "address": "abbaabbaabbaabbaabbaabbaabbaabbaabbaabba",
+				 "address": "0XABBAABBAABBAABBAABBAABBAABBAABBAABBAABBA",
 				 "filename": "genesis_array.sol",
 				 "contractname": "POA_Genesis",
 				 "balance": "1337000000000000000099",
