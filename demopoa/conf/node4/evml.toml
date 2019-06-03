@@ -1,0 +1,6 @@
+[babble]
+store = true
+heartbeat = "50ms"
+timeout = "200ms"
+listen = "node4:1337"
+enable-fast-sync = false

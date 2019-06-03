@@ -414,3 +414,54 @@ func TestCreateContract(t *testing.T) {
 	callDummyContractTest(test, from, contract, big.NewInt(110), t)
 
 }
+
+/*
+
+This test verifies if CheckAuthorised works. The only requirement for the POA
+contract is to expose a checkAuthorized(address) method that returns a bool. So
+we are using the following dummy POA contract:
+
+	pragma solidity 0.5.7;
+
+	contract Test {
+		function checkAuthorised(address _address) public pure returns (bool) {
+			if(_address == address(0x89acCD6b63d6eE73550eca0Cba16C2027c13FDa6)) {
+			return true;
+			} else {
+			return false;
+			}
+		}
+	}
+
+The corresponding bytecode is provided in the test_data/eth/genesis.json file.
+The smart-contract is automatically deployed by the state object when it is
+initialised.
+
+*/
+func TestPOA(t *testing.T) {
+	os.RemoveAll("test_data/eth/chaindata")
+	defer os.RemoveAll("test_data/eth/chaindata")
+
+	testLogger := bcommon.NewTestLogger(t)
+
+	test := NewTest("test_data/eth", testLogger, t)
+	//defer test.state.db.Close()
+
+	ok, err := test.state.CheckAuthorised(common.HexToAddress("0x89acCD6b63d6eE73550eca0Cba16C2027c13FDa6"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !ok {
+		t.Fatal("CheckAuthorised(0x89acCD6b63d6eE73550eca0Cba16C2027c13FDa6) should return true")
+	}
+
+	ok, err = test.state.CheckAuthorised(common.HexToAddress("3e735ec89371214b3f1fb2a59e3957f4ac4eaa03"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if ok {
+		t.Fatal("CheckAuthorised(3e735ec89371214b3f1fb2a59e3957f4ac4eaa03) should return false")
+	}
+}
