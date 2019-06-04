@@ -19,6 +19,7 @@ func AddBabbleFlags(cmd *cobra.Command) {
 	cmd.Flags().Duration("babble.timeout", config.Babble.TCPTimeout, "TCP timeout milliseconds")
 	cmd.Flags().Int("babble.cache-size", config.Babble.CacheSize, "Number of items in LRU caches")
 	cmd.Flags().Int("babble.sync-limit", config.Babble.SyncLimit, "Max number of Events per sync")
+	cmd.Flags().Bool("babble.enable-fast-sync", config.Babble.EnableFastSync, "Enable FastSync")
 	cmd.Flags().Int("babble.max-pool", config.Babble.MaxPool, "Max number of pool connections")
 	cmd.Flags().Bool("babble.store", config.Babble.Store, "use persistent store")
 	viper.BindPFlags(cmd.Flags())
