@@ -1,6 +1,6 @@
 #!/bin/bash
 
 
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $1
+docker inspect -f '{{ .NetworkSettings.Networks.monet.IPAddress }}' $1
 
 
