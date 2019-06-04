@@ -1,5 +1,0 @@
-To start the node run the command below in the deploy directory:
-
-
-make start CONSENSUS=babble NODES=1
-

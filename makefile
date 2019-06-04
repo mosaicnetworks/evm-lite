@@ -9,6 +9,7 @@ install:
 	go install \
 		--ldflags "-X github.com/mosaicnetworks/evm-lite/src/version.GitCommit=`git rev-parse HEAD`" \
 		./cmd/evml
+
 test:
 	glide novendor | xargs go test
 
