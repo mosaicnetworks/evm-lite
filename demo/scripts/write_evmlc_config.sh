@@ -10,7 +10,7 @@ mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 HOSTIP=$(bash $mydir/get_ip_of_container.sh $NODEID  )
 DEFAULTADDRESS=$(bash $mydir/get_node_address.sh $NODEID | sed -e's/"address"://g;s/"//g')
-KEYSTORE=$(readlink -f $mydir/../conf/babble/conf/$NODEID/eth/keystore)
+KEYSTORE=$(readlink -f $mydir/../../deploy/conf/babble/conf/$NODEID/eth/keystore)
 
 {
 echo "[connection]"

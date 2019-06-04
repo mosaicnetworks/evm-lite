@@ -5,7 +5,7 @@ mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 # This will become a command line parameter in production
  
-IPSDAT="$mydir/../terraform/local/ips.dat"
+IPSDAT="$mydir/../../deploy/terraform/local/ips.dat"
 
 
 # Find nodes running babble
