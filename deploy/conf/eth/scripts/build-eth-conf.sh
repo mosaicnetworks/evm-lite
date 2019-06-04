@@ -80,7 +80,8 @@ do
 		com=""
 	fi
 	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
-    printf "\t\t\t\"balance\": \"133700000000000000000$i\"\n" >> $GFILE
+    printf "\t\t\t\"balance\": \"133700000000000000000$i\",\n" >> $GFILE
+    printf "\t\t\t\"moniker\": \"node$i\"\n" >> $GFILE
     printf "\t\t}%s\n" $com >> $GFILE
 done
 printf "\t}\n" >> $GFILE
@@ -97,6 +98,7 @@ printf "\t\t \"contracts\": [\n" >> $GFILE
 printf "\t\t\t {\n" >> $GFILE
 printf "\t\t\t\t \"address\": \"abbaabbaabbaabbaabbaabbaabbaabbaabbaabba\",\n" >> $GFILE
 printf "\t\t\t\t \"filename\": \"genesis.sol\",\n" >> $GFILE
+printf "\t\t\t\t \"authorising\": \"true\",\n" >> $GFILE
 printf "\t\t\t\t \"contractname\": \"POA_Genesis\",\n" >> $GFILE
 printf "\t\t\t\t \"balance\": \"1337000000000000000099\",\n" >> $GFILE
 printf "\t\t\t\t \"preauthorised\": [\n" >> $GFILE
@@ -131,7 +133,8 @@ do
 		com=""
 	fi
 	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
-    printf "\t\t\t\"balance\": \"133700000000000000000$i\"\n" >> $GFILE
+    printf "\t\t\t\"balance\": \"133700000000000000000$i\",\n" >> $GFILE
+    printf "\t\t\t\"moniker\": \"node$i\"\n" >> $GFILE
     printf "\t\t}%s\n" $com >> $GFILE
 done
 printf "\t}\n" >> $GFILE
