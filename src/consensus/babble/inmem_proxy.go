@@ -42,7 +42,10 @@ func (p *InmemProxy) SubmitCh() chan []byte {
 	return p.submitCh
 }
 
-// CommitBlock commits Block to the State and expects the resulting state hash
+// CommitBlock applies the block's transactions to the state and commits. It
+// also checks the block's internal transactions against the POA smart-contract
+// to check if joining peers are authorised to become validators in Babble. It
+// returns the resulting state-hash and internal transaction receips.
 func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, error) {
 	p.logger.Debug("CommitBlock")
 
@@ -60,16 +63,25 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 		return proxy.CommitResponse{}, err
 	}
 
-	// Process internal transactions
-	// For every join request check whether the peer's public key has been
-	// authorised.
+	receipts := p.processInternalTransactions(block.InternalTransactions())
 
+	res := proxy.CommitResponse{
+		StateHash:                   hash.Bytes(),
+		InternalTransactionReceipts: receipts,
+	}
+
+	return res, nil
+}
+
+// processInternalTransactions decides if InternalTransactions should be
+// accepted. For PEER_ADD transactions, it checks the if the peer is authorised
+// in the POA smart-contract. All PEER_REMOVE transactions are accepted
+func (p *InmemProxy) processInternalTransactions(internalTransactions []hashgraph.InternalTransaction) []hashgraph.InternalTransactionReceipt {
 	receipts := []hashgraph.InternalTransactionReceipt{}
 
-	for _, tx := range block.InternalTransactions() {
-
-		if tx.Body.Type == hashgraph.PEER_ADD {
-
+	for _, tx := range internalTransactions {
+		switch tx.Body.Type {
+		case hashgraph.PEER_ADD:
 			pk, err := crypto.UnmarshalPubkey(tx.Body.Peer.PubKeyBytes())
 			if err != nil {
 				p.logger.Warningf("couldn't unmarshal pubkey bytes: %v", err)
@@ -91,15 +103,12 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 					receipts = append(receipts, tx.AsRefused())
 				}
 			}
+		case hashgraph.PEER_REMOVE:
+			receipts = append(receipts, tx.AsAccepted())
 		}
 	}
 
-	res := proxy.CommitResponse{
-		StateHash:                   hash.Bytes(),
-		InternalTransactionReceipts: receipts,
-	}
-
-	return res, nil
+	return receipts
 }
 
 //TODO - Implement these two functions
