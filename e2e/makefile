@@ -4,9 +4,9 @@ deps:
 	cd crowd-funding && npm install
 
 deploy:
+	$(MAKE) -C ../deploy check  && \
 	$(MAKE) -C ../deploy prebuilt PREBUILT=babblepoademo && \
-	$(MAKE) -C ../deploy start CONSENSUS=babble NODES=10 && \
-	./scripts/kill_docker_node.sh node4 node5 node6 node7 node8 node9 && \
+	$(MAKE) -C ../deploy startnoerr CONSENSUS=babble NODES=10 && \
         ./scripts/rebuild_ipsdat.sh && \
 	./scripts/get_running_nodes.sh
 

@@ -14,17 +14,28 @@ build-docker-image:
 build-ami:
 	$(MAKE) -C build ami
 
+check: 
+	scripts/check_docker_running.sh	
+
 conf:
 	$(MAKE) -C conf/$(CONSENSUS) conf NODES=$(NODES) IPBASE=$(IPBASE) IPADD=$(IPADD)
 
 prebuilt:
 	$(MAKE) -C prebuilt prebuilt PREBUILT="$(PREBUILT)"
 
-start: 
+
+
+start: check startnocheck
+
+startnocheck: 
 	$(MAKE) -C terraform/$(ENV) apply NODES=$(NODES) CONSENSUS=$(CONSENSUS) VERSION=$(VERSION)
+
+
+startnoerr: 
+	-$(MAKE) -C terraform/$(ENV) apply NODES=$(NODES) CONSENSUS=$(CONSENSUS) VERSION=$(VERSION)
+
 
 stop:
 	$(MAKE) -C terraform/$(ENV) destroy
 
-.PHONY: up build-docker build-ami conf prebuilt start stop
-	
+.PHONY: up build-docker build-ami check conf prebuilt start startnoerr startnocheck stop

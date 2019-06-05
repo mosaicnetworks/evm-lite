@@ -47,8 +47,9 @@ evm-lite/e2e$ make deps
 some scripts to sign and send transactions.
 
 ```bash
-TODO: Installation steps
-$npm install evm-lite-cli -g
+# TODO: Installation steps - the line below installs the published release, which may not be new enough.
+
+$ npm install evm-lite-cli -g
 ```
 
 ## Launch a testnet
@@ -57,6 +58,15 @@ Create the testnet configuration, and launch the first 4 nodes:
 
 ```bash
 $ make deploy
+```
+This loads and starts a prebuilt testnet with 10 nodes, with the first 4 nodes preset as validators. The other 6 nodes are shut down. The last lines of the output shows which nodes are running, and their IP addresses, such as below:
+
+```
+node0 172.77.5.3
+node1 172.77.5.9
+node2 172.77.5.7
+node3 172.77.5.8
+
 ```
 
 For more information, refer to `/deploy/prebuilt/templates/babblepoademo`, or 
