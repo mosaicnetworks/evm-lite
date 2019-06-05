@@ -10,7 +10,7 @@ IPSDAT="$mydir/../../deploy/terraform/local/ips.dat"
 
 # Find nodes running babble
 # The search parameters may become soft coded in a future revision
-RUNNINGNODES=$(docker ps | grep "run babble" | cut -c134- | sort -u )
+RUNNINGNODES=$(docker ps --format "{{.Names}}" | sort -u )
 
 for i in $(echo $RUNNINGNODES)
 do

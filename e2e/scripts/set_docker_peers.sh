@@ -16,3 +16,4 @@ do
    docker cp $PEERSFILE $node:/home/1000/.evm-lite/babble/peers.json
 done
 
+rm -f $PEERSFILE

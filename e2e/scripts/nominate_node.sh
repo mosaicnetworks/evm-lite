@@ -9,4 +9,4 @@ NOMADD=$(scripts/get_sleeping_node_address.sh $NOMINEENODE)
 FROMADD=$(scripts/get_sleeping_node_address.sh $FROMNODE)
 PASSWD=$(cat $mydir/../../deploy/conf/eth/pwd.txt)
 
-evmlc poa nominate --nominee $NOMADD --from $FROMADD --moniker $NOMINEENODE --pwd $PASSWD
+evmlc poa nominate --nominee 0x$NOMADD --from 0x$FROMADD --moniker $NOMINEENODE --pwd $PASSWD
