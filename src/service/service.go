@@ -104,6 +104,7 @@ func (m *Service) serveAPI() {
 	r.HandleFunc("/tx/{tx_hash}", m.makeHandler(transactionReceiptHandler)).Methods("GET")
 	r.HandleFunc("/info", m.makeHandler(infoHandler)).Methods("GET")
 	r.HandleFunc("/html/info", m.makeHandler(htmlInfoHandler)).Methods("GET")
+	r.HandleFunc("/contract", m.makeHandler(contractHandler)).Methods("GET")
 	http.Handle("/", &CORSServer{r})
 	http.ListenAndServe(m.apiAddr, nil)
 }

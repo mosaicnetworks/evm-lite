@@ -49,3 +49,12 @@ type JsonReceipt struct {
 	LogsBloom         ethTypes.Bloom  `json:"logsBloom"`
 	Status            uint64          `json:"status"`
 }
+
+type JsonContract struct {
+	Address common.Address `json:"address"`
+	ABI     string         `json:"abi"`
+}
+
+type JsonContractList struct {
+	Contracts []JsonContract `json:"contracts"`
+}
