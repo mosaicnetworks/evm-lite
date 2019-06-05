@@ -24,7 +24,7 @@ $ sudo mv terraform /usr/local/bin/
 # Check terraform is available from your standard path. 
 $ terraform --version
 ```
-### Node.js 
+### Node
 
 We use [Node.js](https://nodejs.org) to run the interractive crowd-funding demo,
 which is partly written in javascript. The best way to install Node.js is with 
@@ -47,9 +47,8 @@ evm-lite/e2e$ make deps
 some scripts to sign and send transactions.
 
 ```bash
-
 TODO: Installation steps
-
+$npm install evm-lite-cli -g
 ```
 
 ## Launch a testnet

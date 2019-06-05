@@ -5,7 +5,11 @@ deps:
 
 deploy:
 	$(MAKE) -C ../deploy prebuilt PREBUILT=babblepoademo && \
-	$(MAKE) -C ../deploy start CONSENSUS=babble NODES=10
+	$(MAKE) -C ../deploy start CONSENSUS=babble NODES=10 && \
+	./scripts/kill_docker_node.sh node4 node5 node6 node7 node8 node9 && \
+        ./scripts/rebuild_ipsdat.sh && \
+	./scripts/get_running_nodes.sh
+
 
 stop:
 	$(MAKE) -C ../deploy stop
@@ -21,6 +25,7 @@ add-node:
 	./scripts/nominate_node.sh node0 $(NODE) && \
 	./scripts/all_vote_node.sh $(NODE) && \
 	./scripts/set_docker_peers.sh $(NODE) && \
-	./scripts/restart_docker_node.sh $(NODE)
+	./scripts/restart_docker_node.sh $(NODE) && \
+	./scripts/rebuild_ipsdat.sh
 
 .PHONY: deps deploy stop watch crowd-funding-demo add-node
