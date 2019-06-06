@@ -10,4 +10,6 @@ conf:
 	./scripts/build-raft-conf.sh $(NODES) $(IPBASE) $(IPADD)
 	./scripts/edit-toml.sh $(NODES) $(IPBASE) $(IPADD)
 
-.PHONY: conf
+compile: ;
+
+.PHONY: conf compile

@@ -44,6 +44,8 @@
 #	        └── pwd.txt
 
 
+#         Invocation line in conf/babble/makefile
+#         ./../eth/scripts/build-eth-conf.sh $(NODES) $(DEST) $(PASS) $(VALIDATORS) $(POA)
 
 
 set -e
@@ -51,8 +53,18 @@ set -e
 N=${1:-4} # number of nodes
 DEST=${2:-"$(pwd)/../conf"} # output directory
 PASS=${3:-"$(pwd)/../pwd.txt"} # password file for Ethereum accounts
+VALIDATORS=${4:-4} # number of validators on genesis whitelist
+POA=${5:-true} # is this a POA network?
+
+
+if [ "$VALIDATORS" -gt "$N" ] ; then # Simple sanity check. We cannot have more nodes than validators
+  VALIDATORS=$N
+fi
+
+mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 l=$((N-1))
+v=$((VALIDATORS-1))
 
 for i in $(seq 0 $l) 
 do
@@ -89,59 +101,58 @@ echo "}" >> $GFILE
 
 
 
-# Generate the pregenesis file
-GFILE=$DEST/pregenesis.json
-echo "{" > $GFILE 
+if [ $POA ] ; then
+    # Copy the POA contract into place. 	
 
-printf "\t\"precompiler\":{\n" >> $GFILE
-printf "\t\t \"contracts\": [\n" >> $GFILE
-printf "\t\t\t {\n" >> $GFILE
-printf "\t\t\t\t \"address\": \"abbaabbaabbaabbaabbaabbaabbaabbaabbaabba\",\n" >> $GFILE
-printf "\t\t\t\t \"filename\": \"genesis.sol\",\n" >> $GFILE
-printf "\t\t\t\t \"authorising\": \"true\",\n" >> $GFILE
-printf "\t\t\t\t \"contractname\": \"POA_Genesis\",\n" >> $GFILE
-printf "\t\t\t\t \"balance\": \"1337000000000000000099\",\n" >> $GFILE
-printf "\t\t\t\t \"preauthorised\": [\n" >> $GFILE
+       cp $mydir/../../../smart-contracts/genesis_array.sol $DEST/genesis.sol
 
-
-comma=""
-
-if [ $l -lt 3 ] ; then
-  preauthnum=0
-else
-  preauthnum=1
-fi
-for i in $(seq 0 $preauthnum)
-do
-   printf "\t\t\t\t\t $comma{ \"address\": \"$(cat $DEST/node$i/eth/addr)\", \"moniker\": \"User$i\"}\n" >> $GFILE
-   comma=","
-done
-
-
-printf "\t\t\t\t ]\n" >> $GFILE
-printf "\t\t\t }\n" >> $GFILE
-printf "\t\t ]\n" >> $GFILE
-printf "\t },\n" >> $GFILE
-
-
-
-printf "\t\"alloc\": {\n" >> $GFILE
-for i in $(seq 0 $l)
-do
-	com=","
-	if [[ $i == $l ]]; then 
-		com=""
-	fi
-	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
-    printf "\t\t\t\"balance\": \"133700000000000000000$i\",\n" >> $GFILE
-    printf "\t\t\t\"moniker\": \"node$i\"\n" >> $GFILE
-    printf "\t\t}%s\n" $com >> $GFILE
-done
-printf "\t}\n" >> $GFILE
-echo "}" >> $GFILE
-
-
-
+    # Generate the pregenesis file
+    GFILE=$DEST/pregenesis.json
+    echo "{" > $GFILE 
+    
+    printf "\t\"precompiler\":{\n" >> $GFILE
+    printf "\t\t \"contracts\": [\n" >> $GFILE
+    printf "\t\t\t {\n" >> $GFILE
+    printf "\t\t\t\t \"address\": \"0XABBAABBAABBAABBAABBAABBAABBAABBAABBAABBA\",\n" >> $GFILE
+    printf "\t\t\t\t \"filename\": \"genesis.sol\",\n" >> $GFILE
+    printf "\t\t\t\t \"authorising\": \"true\",\n" >> $GFILE
+    printf "\t\t\t\t \"contractname\": \"POA_Genesis\",\n" >> $GFILE
+    printf "\t\t\t\t \"balance\": \"1337000000000000000099\",\n" >> $GFILE
+    printf "\t\t\t\t \"preauthorised\": [\n" >> $GFILE
+    
+    
+    comma=""
+    
+    for i in $(seq 0 $v)
+    do
+       printf "\t\t\t\t\t $comma{ \"address\": \"$(cat $DEST/node$i/eth/addr)\", \"moniker\": \"node$i\"}\n" >> $GFILE
+       comma=","
+    done
+    
+    
+    printf "\t\t\t\t ]\n" >> $GFILE
+    printf "\t\t\t }\n" >> $GFILE
+    printf "\t\t ]\n" >> $GFILE
+    printf "\t },\n" >> $GFILE
+    
+    
+    
+    printf "\t\"alloc\": {\n" >> $GFILE
+    for i in $(seq 0 $l)
+    do
+    	com=","
+    	if [[ $i == $l ]]; then 
+    		com=""
+    	fi
+    	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
+        printf "\t\t\t\"balance\": \"133700000000000000000$i\",\n" >> $GFILE
+        printf "\t\t\t\"moniker\": \"node$i\"\n" >> $GFILE
+        printf "\t\t}%s\n" $com >> $GFILE
+    done
+    printf "\t}\n" >> $GFILE
+    echo "}" >> $GFILE
+fi    
+    
 
 
 gKeystore=$DEST/keystore
