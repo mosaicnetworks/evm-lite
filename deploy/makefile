@@ -2,6 +2,8 @@ ENV = local # local or aws
 VERSION = 0.2.0 # evm-lite Docker Image
 CONSENSUS = solo # solo, babble, or raft
 NODES = 1
+VALIDATORS = 1
+POA = true
 IPBASE = node # use 10.0.2. for aws 
 IPADD = 0 # use 10 for aws
 PREBUILT = "" # prebuilt configurations
@@ -18,7 +20,7 @@ check:
 	scripts/check_docker_running.sh	
 
 conf:
-	$(MAKE) -C conf/$(CONSENSUS) conf NODES=$(NODES) IPBASE=$(IPBASE) IPADD=$(IPADD)
+	$(MAKE) -C conf/$(CONSENSUS) conf NODES=$(NODES) IPBASE=$(IPBASE) IPADD=$(IPADD) VALIDATORS=$(VALIDATORS) POA=$(POA)
 
 prebuilt:
 	$(MAKE) -C prebuilt prebuilt PREBUILT="$(PREBUILT)"

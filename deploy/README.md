@@ -61,7 +61,7 @@ Provide the AWS access key in the `build/ami/secret.json` file:
 ## CONFIG
 
 ```bash
-$ make conf CONSENSUS=[solo] NODES=[1] IPBASE=[node] IPADD=[0]
+$ make conf CONSENSUS=[solo] NODES=[1] IPBASE=[node] IPADD=[0] VALIDATORS=[validator] POA=[true|false]
 ```
 
 Create the configuration files for the network.
@@ -79,12 +79,16 @@ ex: If IPBASE=10.0.2. IPADD=10, and NODES=4, the resulting addresses will be:
     If IPBASE and IPADD are not specified, the resulting addresses will default
     to: node0, node1, node2, and node3.
 
+- POA: denotes whether to build a POA network or not
+
+- VALIDATORS: denotes the number of validators to add to the smart contract in the genesis block. It cannot exceed the NODES parameter.
+
 The configuration is written to the `conf/[consensus]/conf` folder. For each
 node, there will usually be two configuration sub-directories: one for the
 Ethereum-related things, and one for the consensus related things. For example,
 creating the configuration for two babble nodes yields the following files:
 
-`$ make conf CONSENSUS=babble NODES=2`
+`$ make conf CONSENSUS=babble NODES=2 POA=false`
 
 ```bash
 conf/babble/conf/
