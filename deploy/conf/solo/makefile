@@ -6,5 +6,7 @@ conf:
 	rm -rf conf
 	./../eth/scripts/build-eth-conf.sh $(NODES) $(DEST) $(PASS)
 
-.PHONY: conf
+compile: ;
+
+.PHONY: conf compile
 	

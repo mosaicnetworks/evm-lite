@@ -11,4 +11,10 @@ conf:
 	./../eth/scripts/build-eth-conf.sh $(NODES) $(DEST) $(PASS) $(VALIDATORS) $(POA)
 	./scripts/build-babble-conf.sh $(NODES) $(IPBASE) $(IPADD) $(DEST)
 	./scripts/edit-toml.sh $(NODES) $(IPBASE) $(IPADD)
-.PHONY: conf
+
+
+compile:
+	./scripts/compile_pregenesis.sh 	
+
+	
+.PHONY: conf compile

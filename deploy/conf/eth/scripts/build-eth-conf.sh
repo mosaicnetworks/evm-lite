@@ -61,6 +61,7 @@ if [ "$VALIDATORS" -gt "$N" ] ; then # Simple sanity check. We cannot have more 
   VALIDATORS=$N
 fi
 
+mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 l=$((N-1))
 v=$((VALIDATORS-1))
@@ -101,6 +102,10 @@ echo "}" >> $GFILE
 
 
 if [ $POA ] ; then
+    # Copy the POA contract into place. 	
+
+       cp $mydir/../../../smart-contracts/genesis_array.sol $DEST/genesis.sol
+
     # Generate the pregenesis file
     GFILE=$DEST/pregenesis.json
     echo "{" > $GFILE 

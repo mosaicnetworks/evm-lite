@@ -132,6 +132,15 @@ genesis.json file. The genesis file is used by evm-lite to initialize the state
 and prefund the accounts. The same keys are reused in Babble to participate in
 consensus. The evml.toml file contains parameters for Babble and evm-lite.
 
+## Compiling the genesis file
+
+If you have selected **POA=true** in when invoking make conf, pregenesis.json files are created. These files allow the specification of pre-authorised validators.
+
+```bash
+$ cd [evm-lite]/deploy
+$ make compile CONSENSUS=babble
+```
+
 ## DEPLOY
 
 ### Local
