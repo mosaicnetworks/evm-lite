@@ -14,7 +14,7 @@ var (
 	defaultTCPTimeout     = 1000 * time.Millisecond
 	defaultCacheSize      = 50000
 	defaultSyncLimit      = 1000
-	defaultEnableFastSync = true
+	defaultEnableFastSync = false
 	defaultMaxPool        = 2
 	defaultBabbleDir      = fmt.Sprintf("%s/babble", DefaultDataDir)
 	defaultPeersFile      = fmt.Sprintf("%s/peers.json", defaultBabbleDir)
@@ -45,7 +45,7 @@ type BabbleConfig struct {
 	SyncLimit int `mapstructure:"sync-limit"`
 
 	// Allow node to FastSync
-	EnableFastSync bool `mapstructure:"enable-fast-sync"`
+	EnableFastSync bool `mapstructure:"fast-sync"`
 
 	// Max number of connections in net pool
 	MaxPool int `mapstructure:"max-pool"`
