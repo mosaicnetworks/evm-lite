@@ -135,6 +135,14 @@ contract POA_Genesis {
 
 
 
+   /// @notice This is a constructor replacement for contracts placed directly in the genesis block. This is necessary because the constructor does not run in that instance.
+    function init () public payable checkAuthorisedModifier(msg.sender)
+    {
+	processGenesisWhitelist();
+    }
+
+
+
    /// @notice Modifier to check if a sender is on the white list.
     modifier checkAuthorisedModifier(address _address)
     {
@@ -157,6 +165,7 @@ contract POA_Genesis {
 
 
 
+   /// @notice Function exposed for Babble Join authority wraps checkAuthorised
    function checkAuthorisedPublicKey(bytes32  _publicKey) public view returns (bool)
    {
 

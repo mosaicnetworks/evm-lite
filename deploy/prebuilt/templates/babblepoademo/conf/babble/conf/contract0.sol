@@ -96,13 +96,13 @@ contract POA_Genesis {
  //GENERATED GENESIS BEGIN 
   
     address constant initWhitelist0 = 0x815A9d3C1b9b2Ec8f49F5730830004BD2F83b8b8;
-    bytes32 constant initWhitelistMoniker0 = "John";
+    bytes32 constant initWhitelistMoniker0 = "node0";
     address constant initWhitelist1 = 0x8c266894Ac9f23e4cF5300220dfe79896E7576fE;
-    bytes32 constant initWhitelistMoniker1 = "Paul";
+    bytes32 constant initWhitelistMoniker1 = "node1";
     address constant initWhitelist2 = 0x910e467DF064083407ceb8406840a20c2f25DCc2;
-    bytes32 constant initWhitelistMoniker2 = "George";
+    bytes32 constant initWhitelistMoniker2 = "node2";
     address constant initWhitelist3 = 0x01728D4D07838E7A5DF5d45435272a9592C5ea4d;
-    bytes32 constant initWhitelistMoniker3 = "Ringo"; 
+    bytes32 constant initWhitelistMoniker3 = "node3"; 
  
  
     function processGenesisWhitelist() private 
@@ -135,6 +135,14 @@ contract POA_Genesis {
 
 
 
+   /// @notice This is a constructor replacement for contracts placed directly in the genesis block. This is necessary because the constructor does not run in that instance.
+    function init () public payable checkAuthorisedModifier(msg.sender)
+    {
+	processGenesisWhitelist();
+    }
+
+
+
    /// @notice Modifier to check if a sender is on the white list.
     modifier checkAuthorisedModifier(address _address)
     {
@@ -157,6 +165,7 @@ contract POA_Genesis {
 
 
 
+   /// @notice Function exposed for Babble Join authority wraps checkAuthorised
    function checkAuthorisedPublicKey(bytes32  _publicKey) public view returns (bool)
    {
 
