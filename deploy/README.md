@@ -145,6 +145,8 @@ $ make compile CONSENSUS=babble
 
 ### Local
 
+**Terraform version 0.12 does not currently support Docker Containers. Use 0.11.x**
+
 Local testnets are formed of multiple Docker containers running on the host
 machine; they are convenient to quickly test evm-lite.
 

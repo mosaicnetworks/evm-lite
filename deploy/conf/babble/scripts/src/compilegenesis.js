@@ -182,7 +182,7 @@ function processContract(_output, _contract)
 		{
 
                          
-			 let rawsol = loadFileUTF(__dirname + "/../../conf/"+ _contract.filename);
+			 let rawsol = loadFileUTF(__dirname + "/../../conf/poa/"+ _contract.filename);
 			 if (rawsol) 
 			 {
              let newcode = generateSolidityHardCodings(_contract.preauthorised);
