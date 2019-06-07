@@ -104,10 +104,16 @@ echo "}" >> $GFILE
 if [ $POA ] ; then
     # Copy the POA contract into place. 	
 
-       cp $mydir/../../../smart-contracts/genesis_array.sol $DEST/genesis.sol
+
+	DESTPOA=$DEST/poa	
+	if [ ! -d "$DESTPOA" ] ; then
+	    mkdir "$DESTPOA"
+	fi
+
+       cp $mydir/../../../smart-contracts/genesis_array.sol $DESTPOA/genesis.sol
 
     # Generate the pregenesis file
-    GFILE=$DEST/pregenesis.json
+    GFILE=$DESTPOA/pregenesis.json
     echo "{" > $GFILE 
     
     printf "\t\"precompiler\":{\n" >> $GFILE

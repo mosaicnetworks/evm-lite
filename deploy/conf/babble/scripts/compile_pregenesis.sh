@@ -7,13 +7,13 @@ mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 #TODO for the moment the pregenesis file is a fixed name and location. 
 #     It could be parameterised later, but there is no pressing need.
 
-PREGENESIS=$(readlink -f "$mydir/../conf/pregenesis.json")
-TMPOUT=$(readlink -f "$mydir/../conf")
+PREGENESIS=$(readlink -f "$mydir/../conf/poa/pregenesis.json")
+TMPOUT=$(readlink -f "$mydir/../conf/poa")
 if [ ! -d "$TMPOUT" ] ; then
 	mkdir "$TMPOUT"
 fi
 
-# echo $PREGENESIS
+echo "Pregenesis file: $PREGENESIS"
 
 if [ ! -f "$PREGENESIS" ] ; then
 	>&2 echo "No Pregenesis file found. Aborting."
@@ -30,6 +30,9 @@ fi
 
 echo node $mydir/src/compilegenesis.js --precompfile $PREGENESIS  --output-dir $TMPOUT
 node $mydir/src/compilegenesis.js --precompfile $PREGENESIS  --output-dir $TMPOUT
+
+
+cp $TMPOUT/genesis.json $TMPOUT/../genesis.json
 
 for i in $mydir/../conf/node*/eth
 do
