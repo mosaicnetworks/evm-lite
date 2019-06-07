@@ -174,7 +174,7 @@ function processContract(_output, _contract, _populate_alloc, _populate_poa)
 	{
 		if (! _output.alloc) { _output.alloc = {} ; } 
 		
-		let tidiedaddress = tidyAddress(_contract.address); 
+		let tidiedaddress = tidyAddressUpper(_contract.address); 
 		
 		if (! _output.alloc[tidiedaddress] )   // make sure the address node exists in the alloc hierarchy
       {
@@ -251,7 +251,7 @@ function processPreGenesisFile(_pcFile, _populate_alloc, _populate_poa)
              
                if ( _populate_alloc && (contracts[i].authorising) )  // poa section is authorising by definition
                {		
-                   output.alloc[tidyAddress(contracts[i].address)].authorising = true ;
+                   output.alloc[tidyAddressUpper(contracts[i].address)].authorising = true ;
                }
 
                writeFile(contractfilename, contract);					
@@ -317,7 +317,7 @@ function processPreGenesisFile(_pcFile, _populate_alloc, _populate_poa)
 // in the poa section. As the code is quite involved, we set parameters here to control the 
 // output. 
 
-let populate_alloc = true;   // Populate alloc section
+let populate_alloc = false;   // Populate alloc section
 let populate_poa = true;     // Populate POA section
 
 
