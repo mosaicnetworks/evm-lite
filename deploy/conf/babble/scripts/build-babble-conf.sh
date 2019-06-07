@@ -18,9 +18,16 @@ IPBASE=${2:-node}
 IPADD=${3:-0}
 DEST=${4:-"$PWD/conf"}
 PORT=${5:-1337}
+VALIDATORS=${6:-4}
+
+# Simple sanity check, no more validators than nodes
+if [ "$N" -lt "$VALIDATORS" ] ; then
+	VALIDATORS="$N"
+fi
 
 
 l=$((N-1))
+v=$((VALIDATORS-1))
 
 # use 'evml keys inspect' to extract the raw keys from the Ethereum-style 
 # keystore files.
@@ -46,15 +53,22 @@ do
 done
 
 # create the peers.json file
-PFILE=$DEST/peers.json
+PFILE=$DEST/peers.full.json
+GFILE=$DEST/peers.genesis.json
 echo "[" > $PFILE 
+echo "[" > $GFILE 
+
 for i in $(seq 0 $l)
 do
 	dest=$DEST/node$i/babble
 	
 	com=","
+        com2=","
 	if [[ $i == $l ]]; then 
 		com=""
+	fi
+	if [[ $i == $v ]]; then 
+		com2=""
 	fi
 	
 	printf "\t{\n" >> $PFILE
@@ -62,13 +76,22 @@ do
 	printf "\t\t\"PubKeyHex\":\"0x$(cat $dest/key.pub)\"\n" >> $PFILE
 	printf "\t}%s\n"  $com >> $PFILE
 
+
+	if [ $i -le $v ]; then 	
+		printf "\t{\n" >> $GFILE
+		printf "\t\t\"NetAddr\":\"$(cat $dest/addr)\",\n" >> $GFILE
+		printf "\t\t\"PubKeyHex\":\"0x$(cat $dest/key.pub)\"\n" >> $GFILE
+		printf "\t}%s\n"  $com2 >> $GFILE
+	fi
 done
 echo "]" >> $PFILE
+echo "]" >> $GFILE
 
+cp $DEST/peers.genesis.json $DEST/peers.json
 for i in $(seq 0 $l) 
 do
 	dest=$DEST/node$i/babble
-	cp $DEST/peers.json $dest/
-	cp $DEST/peers.json $dest/peers.genesis.json
+	cp $DEST/peers.genesis.json $dest/
+	cp $DEST/peers.genesis.json $dest/peers.json
 done
 

@@ -275,7 +275,7 @@ function processPreGenesisFile(_pcFile, _populate_alloc, _populate_poa)
                 {
                     output.poa = {};
                     output.poa.address =  tidyAddressUpper(contracts[i].address);
-                    output.poa.abi = abijson;
+                    output.poa.abi = abicode;
                     output.poa.code = bytecode;
                 }
 						}

@@ -38,6 +38,7 @@ type State struct {
 
 	gasLimit           uint64
 	authorisingAccount string
+	authorisingAbi     string
 
 	signer      ethTypes.Signer
 	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
@@ -214,6 +215,10 @@ func (s *State) CreateGenesisAccounts() error {
 		Alloc bcommon.AccountMap
 	}
 
+	var poa struct {
+		Poa bcommon.PoaMap
+	}
+
 	if err := json.Unmarshal(contents, &genesis); err != nil {
 		return err
 	}
@@ -232,6 +237,35 @@ func (s *State) CreateGenesisAccounts() error {
 				s.authorisingAccount = addr
 			}
 		}
+	}
+
+	if err := json.Unmarshal(contents, &poa); err != nil {
+		return err
+	}
+
+	if string(poa.Poa.Address) != "" {
+		addr := poa.Poa.Address
+		balance := poa.Poa.Balance
+		abi := poa.Poa.Abi
+		code := poa.Poa.Code
+
+		s.logger.Debug("POA CreateGenesisAccounts")
+
+		address := common.HexToAddress(addr)
+		if s.Empty(address) {
+			s.logger.Debug("POA Create Account")
+
+			s.was.ethState.AddBalance(address, math.MustParseBig256(balance))
+			s.was.ethState.SetCode(address, common.Hex2Bytes(code))
+			//			for key, value := range account.Storage {
+			//				s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
+			//			}
+			s.logger.WithField("address", addr).Debug("Adding account")
+
+			s.authorisingAccount = addr
+			s.authorisingAbi = abi
+		}
+
 	}
 
 	if _, err = s.Commit(); err != nil {
@@ -312,6 +346,12 @@ func (s *State) GetGasLimit() uint64 {
 //the list of authorized peers
 func (s *State) GetAuthorisingAccount() string {
 	return s.authorisingAccount
+}
+
+//GetAuthorisingAbi returns the abi of the smart contract which handles
+//the list of authorized peers
+func (s *State) GetAuthorisingAbi() string {
+	return s.authorisingAbi
 }
 
 //CheckAuthorised queries the POA smart-contract to check if the address is

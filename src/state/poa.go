@@ -8,7 +8,7 @@ import (
 )
 
 const poaABI = "[{\"type\":\"function\",\"inputs\": [{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"checkAuthorised\",\"outputs\": [{\"name\":\"\",\"type\":\"bool\"}]}]"
-const poaFrom = "0x1337133713371337133713371337133713371337"
+const poaFrom = "0XABBAABBAABBAABBAABBAABBAABBAABBAABBAABBA"
 
 var (
 	// POAABI defines the ABI of the POA smart-contract as needed by a consensus

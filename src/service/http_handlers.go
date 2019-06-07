@@ -435,7 +435,7 @@ func htmlInfoHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 /*
 GET /contract
 returns: JSON
-Returns details of the poa smart contract
+Returns details of the poa smart contract .   *** DEPRECATED ***
 */
 func contractHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	m.logger.Debug("GET contract")
@@ -457,6 +457,32 @@ func contractHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 
+}
+
+/*
+GET /poa
+returns: JSON
+Returns details of the poa smart contract . Replaces /contract
+*/
+func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET poa")
+
+	var al JsonContract
+
+	al = JsonContract{
+		Address: common.HexToAddress(m.state.GetAuthorisingAccount()),
+		ABI:     m.state.GetAuthorisingAbi(),
+	}
+
+	js, err := json.Marshal(al)
+	if err != nil {
+		m.logger.WithError(err).Error("Marshaling JSON response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 //------------------------------------------------------------------------------
