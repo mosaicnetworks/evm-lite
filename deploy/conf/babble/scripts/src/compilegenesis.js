@@ -7,7 +7,7 @@ const shelljs = require('shelljs');
 
 
 program
-	.version('0.0.1', "-v, --version")
+	.version('0.0.2', "-v, --version")
    .option('-p, --precompfile <file>', 'pregenesis.json file')
    .option('-o, --output-dir <directory>', 'output directory')
    .parse(process.argv);
@@ -77,10 +77,15 @@ function writeFile(_file, _data)
 
 function tidyAddress(address)
 {
-  address = address.toLowerCase().replace('0x', '')
+  address = address.toLowerCase().replace('0x', '');
   return address;
 }
 
+function tidyAddressUpper(address)
+{
+  address = '0X' + address.toUpperCase().replace('0X', '');
+  return address;
+}
 
 
 function tidyAddressSol(address)
@@ -160,7 +165,7 @@ function generateSolidityHardCodings(_preAuthorised)
 
 
 
-function processContract(_output, _contract)
+function processContract(_output, _contract, _populate_alloc, _populate_poa)
 {
 	
  //  console.dir(_contract, { depth: 6, colors: true });
@@ -217,7 +222,7 @@ function processContract(_output, _contract)
 
 
 
-function processPreGenesisFile(_pcFile)
+function processPreGenesisFile(_pcFile, _populate_alloc, _populate_poa)
 {
 //     console.log(_pcFile);
     let rawprecomp = loadFile(_pcFile)
@@ -226,7 +231,9 @@ function processPreGenesisFile(_pcFile)
     let precomp = JSON.parse(rawprecomp);
     let output = JSON.parse(rawprecomp); // least bad way to clone the object.
     
-    
+
+
+
     
     if ( precomp.precompiler)
     {
@@ -236,13 +243,13 @@ function processPreGenesisFile(_pcFile)
     
     	if ( (precomp.precompiler.contracts) && ( Array.isArray(precomp.precompiler.contracts) ))
     	{
-          let contracts = precomp.precompiler.contracts;
+       let contracts = precomp.precompiler.contracts;
 			 for (var i=0; i<contracts.length ; i++)
 			 {
-					let contract = processContract(output, contracts[i]);
+					let contract = processContract(output, contracts[i], _populate_alloc, _populate_poa);
                let contractfilename = 'contract'+i+'.sol';
              
-               if (contracts[i].authorising)
+               if ( _populate_alloc && (contracts[i].authorising) )  // poa section is authorising by definition
                {		
                    output.alloc[tidyAddress(contracts[i].address)].authorising = true ;
                }
@@ -254,11 +261,23 @@ function processPreGenesisFile(_pcFile)
 
 					if (contracts[i].contractname)
 					{
-						let bytecode = loadFileUTF(path.join(program.outputDir, contracts[i].contractname+ '.bin-runtime'));
+            let bytecode = loadFileUTF(path.join(program.outputDir, contracts[i].contractname+ '.bin-runtime'));
+            let abicode = loadFileUTF(path.join(program.outputDir, contracts[i].contractname+ '.abi'));
+            let abijson = JSON.parse(abicode);
 
 						if (bytecode)    //TODO need to check address is set, but I'll miss my train`
 						{
-                      output.alloc[tidyAddress(contracts[i].address)].code = bytecode ; //  "0x"+bytecode;
+                if (_populate_alloc)
+                {  
+                    output.alloc[tidyAddressUpper(contracts[i].address)].code = bytecode ; //  "0X"+upper(bytecode);
+                }
+                if (_populate_poa)   // NB is it a feature that is multiple contracts are defined, only the latest is processed.
+                {
+                    output.poa = {};
+                    output.poa.address =  tidyAddressUpper(contracts[i].address);
+                    output.poa.abi = abijson;
+                    output.poa.code = bytecode;
+                }
 						}
 						else
 						{
@@ -283,7 +302,8 @@ function processPreGenesisFile(_pcFile)
     	console.log('Nothing to precompile'); 	
     }
 
-
+// If not populating the alloc section, we do not need the precompiler section
+   if (! _populate_alloc ) {delete(output.precompiler);}
 
  //     console.log('');
 
@@ -292,5 +312,14 @@ function processPreGenesisFile(_pcFile)
 }
 
 
-processPreGenesisFile(program.precompfile);
+
+// There is a migration from placing the contract in the alloc section to placing it 
+// in the poa section. As the code is quite involved, we set parameters here to control the 
+// output. 
+
+let populate_alloc = true;   // Populate alloc section
+let populate_poa = true;     // Populate POA section
+
+
+processPreGenesisFile(program.precompfile, populate_alloc, populate_poa);
 
