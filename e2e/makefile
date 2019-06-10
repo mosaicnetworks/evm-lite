@@ -11,7 +11,6 @@ deploy:
         ./scripts/rebuild_ipsdat.sh && \
 	./scripts/get_running_nodes.sh
 
-
 stop:
 	$(MAKE) -C ../deploy stop
 
