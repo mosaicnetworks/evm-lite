@@ -61,7 +61,7 @@ Provide the AWS access key in the `build/ami/secret.json` file:
 ## CONFIG
 
 ```bash
-$ make conf CONSENSUS=[solo] NODES=[1] IPBASE=[node] IPADD=[0] VALIDATORS=[validator] POA=[true|false]
+$ make conf CONSENSUS=[solo] NODES=[1] IPBASE=[node] IPADD=[0] VALIDATORS=[validator] POA=[true|false] CONSENSUSPORT=[1337]
 ```
 
 Create the configuration files for the network.
@@ -82,6 +82,8 @@ ex: If IPBASE=10.0.2. IPADD=10, and NODES=4, the resulting addresses will be:
 - POA: denotes whether to build a POA network or not
 
 - VALIDATORS: denotes the number of validators to add to the smart contract in the genesis block. It cannot exceed the NODES parameter.
+
+- CONSENSUSPORT: is passed to the consensus engine as a configuration parameter. It is only used by babble to set the port that Babble listens on.
 
 The configuration is written to the `conf/[consensus]/conf` folder. For each
 node, there will usually be two configuration sub-directories: one for the
@@ -180,7 +182,7 @@ First, build the evm-lite docker image (cf BUILD).
 ``` bash
 cd deploy
 # configure and start a testnet of 4 evm-lite nodes with Babble consensus
-make CONSENSUS=babble NODES=4
+make CONSENSUS=babble NODES=4 POA=false
 #configure and start a single evm-lite instance with Solo consensus
 make CONSENSUS=solo NODES=1
 #configure and start a testnet of 3 evm-lite nodes with Raft consensus

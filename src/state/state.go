@@ -235,6 +235,7 @@ func (s *State) CreateGenesisAccounts() error {
 
 			if account.Authorising {
 				s.authorisingAccount = addr
+				setPOAFROM(addr)
 			}
 		}
 	}
@@ -263,7 +264,9 @@ func (s *State) CreateGenesisAccounts() error {
 			s.logger.WithField("address", addr).Debug("Adding account")
 
 			s.authorisingAccount = addr
+			setPOAFROM(addr)
 			s.authorisingAbi = abi
+			setPOAABI(abi)
 		}
 
 	}

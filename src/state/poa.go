@@ -24,3 +24,11 @@ func init() {
 	POAABI, _ = abi.JSON(strings.NewReader(poaABI))
 	POAFROM = eth_common.HexToAddress(poaFrom)
 }
+
+func setPOAABI(_abi string) {
+	POAABI, _ = abi.JSON(strings.NewReader(_abi))
+}
+
+func setPOAFROM(address string) {
+	POAFROM = eth_common.HexToAddress(address)
+}
