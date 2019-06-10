@@ -5,7 +5,7 @@ deps:
 
 deploy:
 	$(MAKE) -C ../deploy check  && \
-	$(MAKE) -C ../deploy prebuilt PREBUILT=babblepoademo && \
+	$(MAKE) -C ../deploy prebuilt PREBUILT=poa && \
 	$(MAKE) -C ../deploy startnoerr CONSENSUS=babble NODES=10 && \
 	sleep 2 && \
         ./scripts/rebuild_ipsdat.sh && \

@@ -26,6 +26,7 @@ func NewEngine(config config.Config,
 		config.Eth.Cache,
 		config.Eth.Genesis)
 	if err != nil {
+
 		logger.Debug("engine.go:NewEngine() NewStart")
 		return nil, err
 	}
