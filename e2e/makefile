@@ -9,7 +9,9 @@ deploy:
 	$(MAKE) -C ../deploy startnoerr CONSENSUS=babble NODES=10 && \
 	sleep 2 && \
         ./scripts/rebuild_ipsdat.sh && \
-	./scripts/get_running_nodes.sh
+	./scripts/get_running_nodes.sh && \
+	./scripts/write_evmlc_config.sh node0 && \
+	./scripts/init_poa_contract.sh 
 
 
 stop:
