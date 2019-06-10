@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PORT=${1:-8000}
+INTERVAL=${2:-2}
 
 mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
@@ -10,4 +11,4 @@ mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 # Find nodes running babble
 # The search parameters may become soft coded in a future revision
-watch -n 1 $mydir/watchtick.sh
+watch -d -n ${INTERVAL} $mydir/watchtick.sh

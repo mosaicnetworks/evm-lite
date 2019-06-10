@@ -18,7 +18,7 @@ stop:
 	$(MAKE) -C ../deploy stop
 
 watch:
-	./scripts/watch.sh
+	./scripts/watch2.sh
 
 crowd-funding-demo:
 	./scripts/crowd-funding-demo.sh
