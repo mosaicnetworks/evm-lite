@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# obtain the current peers.json from a randomly selected running peer, and copy
+# it to the node's config folder. 
+
 mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 PEERSFILE=/tmp/peers.json.$$

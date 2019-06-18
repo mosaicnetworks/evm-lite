@@ -8,7 +8,6 @@ deploy:
 	$(MAKE) -C ../deploy prebuilt PREBUILT=babblepoademo && \
 	$(MAKE) -C ../deploy startnoerr CONSENSUS=babble NODES=10 && \
 	sleep 2 && \
-        ./scripts/rebuild_ipsdat.sh && \
 	./scripts/get_running_nodes.sh
 
 stop:
@@ -24,10 +23,8 @@ add-node:
 	./scripts/write_evmlc_config.sh node0 && \
 	./scripts/nominate_node.sh --from node0 --nominee $(NODE) && \
 	./scripts/all_vote_node.sh $(NODE) && \
-	./scripts/set_docker_peers.sh $(NODE) && \
-	./scripts/restart_docker_node.sh $(NODE) && \
-	./scripts/rebuild_ipsdat.sh && \
+	./scripts/set_peers.sh $(NODE) && \
+	./scripts/node_restart.sh $(NODE) && \
 	./scripts/get_running_nodes.sh 
-
 
 .PHONY: deps deploy stop watch crowd-funding-demo add-node
