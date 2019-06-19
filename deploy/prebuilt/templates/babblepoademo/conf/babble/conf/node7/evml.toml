@@ -1,6 +1,0 @@
-[babble]
-store = true
-heartbeat = "50ms"
-timeout = "200ms"
-enable-fast-sync = false
-listen = "node7:1337"

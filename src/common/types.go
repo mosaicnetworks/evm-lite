@@ -6,3 +6,10 @@ type AccountMap map[string]struct {
 	Balance     string
 	Authorising bool
 }
+
+type PoaMap struct {
+	Address string
+	Balance string
+	Abi     string
+	Code    string
+}

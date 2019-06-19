@@ -5,18 +5,20 @@ deps:
 
 deploy:
 	$(MAKE) -C ../deploy check  && \
-	$(MAKE) -C ../deploy prebuilt PREBUILT=babblepoademo && \
+	$(MAKE) -C ../deploy prebuilt PREBUILT=poa && \
 	$(MAKE) -C ../deploy startnoerr CONSENSUS=babble NODES=10 && \
 	sleep 2 && \
         ./scripts/rebuild_ipsdat.sh && \
-	./scripts/get_running_nodes.sh
+	./scripts/get_running_nodes.sh && \
+	./scripts/write_evmlc_config.sh node0 && \
+	./scripts/init_poa_contract.sh 
 
 
 stop:
 	$(MAKE) -C ../deploy stop
 
 watch:
-	./scripts/watch.sh
+	./scripts/watch2.sh
 
 crowd-funding-demo:
 	./scripts/crowd-funding-demo.sh

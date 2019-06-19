@@ -16,7 +16,8 @@ fi
 echo "Pregenesis file: $PREGENESIS"
 
 if [ ! -f "$PREGENESIS" ] ; then
-	echo "No Pregenesis file found. Aborting."
+	>&2 echo "No Pregenesis file found. Aborting."
+  echo "$PREGENESIS"
 	exit 1
 else
     echo "$PREGENESIS"
