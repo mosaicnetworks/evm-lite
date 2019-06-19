@@ -22,6 +22,6 @@ make start command parameters for this instance.
 
 Current instances are
 
-- **babblepoademo** - Babble 10 node instance with POA smart contract in the 
+- **poa** -           Babble 10 node instance with POA smart contract in the 
                       Genesis block, and only 4 pre-authorised validators. This
                       is used in the end-to-end tests in `e2e/`
