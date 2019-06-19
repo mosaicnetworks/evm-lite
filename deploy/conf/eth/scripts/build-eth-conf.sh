@@ -110,7 +110,7 @@ if [ $POA ] ; then
 	    mkdir "$DESTPOA"
 	fi
 
-       cp $mydir/../../../smart-contracts/genesis_array.sol $DESTPOA/genesis.sol
+       cp $mydir/../../../../e2e/smart-contracts/genesis_array.sol $DESTPOA/genesis.sol
 
     # Generate the pregenesis file
     GFILE=$DESTPOA/pregenesis.json

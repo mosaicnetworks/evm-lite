@@ -81,7 +81,8 @@ ex: If IPBASE=10.0.2. IPADD=10, and NODES=4, the resulting addresses will be:
 
 - POA: denotes whether to build a POA network or not
 
-- VALIDATORS: denotes the number of validators to add to the smart contract in the genesis block. It cannot exceed the NODES parameter.
+- VALIDATORS: denotes the number of validators to add to the smart contract in 
+  the genesis block. It cannot exceed the NODES parameter.
 
 - CONSENSUSPORT: is passed to the consensus engine as a configuration parameter. It is only used by babble to set the port that Babble listens on.
 
@@ -136,7 +137,9 @@ consensus. The evml.toml file contains parameters for Babble and evm-lite.
 
 ## Compiling the genesis file
 
-If you have selected **POA=true** in when invoking make conf, pregenesis.json files are created. These files allow the specification of pre-authorised validators.
+If you have selected **POA=true** in when invoking make conf, pregenesis.json 
+files are created. These files allow the specification of pre-authorised 
+validators.
 
 ```bash
 $ cd [evm-lite]/deploy

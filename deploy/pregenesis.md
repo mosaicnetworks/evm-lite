@@ -1,8 +1,10 @@
 # Embedding Smart Contracts in the Genesis Block
 
-There is a new compile process for creating the genesis.json file, which defines the Genesis Block. It can be invoked as follows:
+There is a new compile process for creating the genesis.json file, which defines 
+the Genesis Block. It can be invoked as follows:
 
-It should be noted that the constructor never fires as the contract is not placed in the block via the usual mechanism. 
+It should be noted that the constructor never fires as the contract is not 
+placed in the block via the usual mechanism. 
 
 ## pregenesis.json
 

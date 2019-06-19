@@ -41,22 +41,23 @@ fi
 mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 
-$mydir/check_docker_node_running.sh "$FROMNODE"
+$mydir/check_node_running.sh "$FROMNODE"
 if  [ $? -gt 0 ] ; then
 	>&2 echo "Aborting."
         exit 1
 fi
 
-$mydir/check_docker_node_exists.sh "$NOMINEENODE"
+$mydir/check_node_exists.sh "$NOMINEENODE"
 if  [ $? -gt 0 ] ; then
 	>&2 echo "Aborting."
         exit 1
 fi
 
-#TODO check that $NOMINEENODE is exited and that the node has not been nominated aleady and that the $FROMNODE is authorised. 
+# TODO check that $NOMINEENODE is exited and that the node has not been 
+# nominated already and that the $FROMNODE is authorised. 
 
-NOMADD=$(scripts/get_sleeping_node_address.sh $NOMINEENODE)
-FROMADD=$(scripts/get_sleeping_node_address.sh $FROMNODE)
+NOMADD=$($mydir/get_node_address.sh $NOMINEENODE)
+FROMADD=$($mydir/get_node_address.sh $FROMNODE)
 PASSWD=$(cat $mydir/../../deploy/conf/eth/pwd.txt)
 
 evmlc poa nominate --nominee 0x$NOMADD --from 0x$FROMADD --moniker $NOMINEENODE --pwd $PASSWD

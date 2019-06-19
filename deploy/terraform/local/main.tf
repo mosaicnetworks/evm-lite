@@ -24,10 +24,7 @@ resource "docker_container" "evm-lite" {
 
   image = "mosaicnetworks/evm-lite:${var.version}"
 
-  networks_advanced = {
-        name = "${docker_network.private_network.name}"
-   }
-
+  networks = ["${docker_network.private_network.name}"]
 
   # The conf files are mounted in a volume. evm-lite, executed by the user 
   # specified below, will read and write to this volume. So the user, needs

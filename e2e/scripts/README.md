@@ -16,14 +16,14 @@ preset to the initial 4 nodes and thus do not need to be amended.
 
 ```bash
 $ cd [evm-lite]/e2e
-$ scripts/set_docker_peers.sh node6
+$ scripts/set_peers.sh node6
 $ scripts/restart_docker_node.sh node6
 ```
 
-The above scripts get a list of running nodes via a docker ps command. It picks 
-a random node from the list, and queries the peers endpoint to get a current 
-list of peers. That list is then written to the docker container. The node is 
-then restarted and picks up the revised node configuration. 
+The above scripts obtain the current validator-set from a randomly selected peer
+among the running docker instances, and use it to start the new node. When the 
+node is restarted, it picks up the revised node configuration, and attempts to
+join the validator-set. 
 
 ## Our Script Toolkit
 
@@ -32,9 +32,8 @@ This scripts calls all active nodes to vote for the given node.
 $ all_vote_node.sh node5
 ```
 
-This script detects the current docker nodes and picks one at random to request 
-a peers list from. The script takes a single argument of the output file to 
-write the peers to. 
+This script obtains the current peers.json from a randomly selected running peer
+and copies it to the file provided as an argument.
 
 ```bash
 $ get_current_peers.sh /tmp/peers.json
@@ -43,24 +42,19 @@ $ get_current_peers.sh /tmp/peers.json
 Script to return the IP address of a container. It is derived from the docker 
 container, not the ips.dat file.
 ```bash
-$ get_ip_of_container.sh node0
+$ get_node_ip.sh node0
 ```
 
-Returns the ethereum address associated with the validator of a node. 
+Returns the ethereum address associated with the validator of a node. It pulls 
+the data from key.json in the docker container.
 ```bash
 $ get_node_address.sh node4
 ```
 
-Returns a list of running nodes and their IP addresses - using the mapping from 
-ips.dat
+Returns a list of running nodes and their IP addresses, derived directly from 
+the docker containers, not the ips.dat file.
 ```bash
 $ get_running_nodes.sh
-```
-
-Gets the ethereum address for the validator for a sleeping node. It pulls the 
-data from key.json in the docker container.
-```bash
-$ get_sleeping_node_address.sh node0
 ```
 
 Kills a docker node by killing the evml process. 
@@ -73,24 +67,17 @@ Makes node0 nominate node9. Wrapper for evmlc.
 $ nominate_node.sh node0 node9
 ```
 
-This script retrieves a list of nodes currently active, gets their IP address, 
-and rewrites to ips.dat. This is intended to address issues with nodes changing 
-their ip as they are stopped and restarted. 
-```bash
-$ rebuild_ipsdat.sh
-```
-
 Start a docker node.
 ```bash
-$ restart_docker_node.sh node8
+$ node_restart.sh node8
 ```
 
 Gets the current peers file from a live node and copies it to however many nodes 
-are specified on the command line. This is intended to allow an exited node be 
-started with a new peer set. The genesis peers are all set in the initial node 
-creation. 
+are specified on the command line. This is intended to allow an exited node to 
+be started with a new peer set. The genesis peers are all set in the initial 
+node creation. 
 ```bash
-$ set_docker_peers.sh node5 node6
+$ set_peers.sh node5 node6
 ```
 
 This script makes node0 vote for node3. Change the 3rd parameter to false to 
@@ -122,9 +109,9 @@ $ docker exec node0 grep address /home/1000/.evm-lite/eth/genesis.json
 
 ```
 
-The first address is the contract address, abba recurring. The following items 
-are baked into the contract. The address whose credentials are stored within a 
-running node can be displayed with the command below:
+The first address is the POA contract address, abba recurring. The following 
+items are baked into the contract. The address whose credentials are stored 
+within a running node can be displayed with the command below:
 
 ```bash
 $ ./scripts/get_node_address.sh node0
@@ -165,11 +152,9 @@ $ scripts/vote_node.sh node2 node4 true
 # It is now unanimous and node 4 is added to the whitelist
 
 # First we set the peers to the current values for node 4
-$ scripts/set_docker_peers.sh node4
+$ scripts/set_peers.sh node4
 # Then we restart the node
-$ scripts/restart_docker_node.sh node4
-# Then we regenerate ips.dat
-$ scripts/rebuild_ipsdat.sh
+$ scripts/node_restart.sh node4
 ```
 
 There is a briefer version using all_vote_node.sh to wrap the individual voting 
@@ -186,11 +171,9 @@ $ scripts/all_vote_node.sh node4
 # It is now unanimous and node 4 is added to the whitelist
 
 # First we set the peers to the current values for node 4
-$ scripts/set_docker_peers.sh node4
+$ scripts/set_peers.sh node4
 # Then we restart the node
-$ scripts/restart_docker_node.sh node4
-# Then we regenerate ips.dat
-$ scripts/rebuild_ipsdat.sh
+$ scripts/node_restart.sh node4
 ```
 
 ## Removing a Node
