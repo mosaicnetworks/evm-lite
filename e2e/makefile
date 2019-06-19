@@ -10,8 +10,8 @@ deploy:
 	sleep 2 && \
         ./scripts/rebuild_ipsdat.sh && \
 	./scripts/get_running_nodes.sh && \
-	./scripts/write_evmlc_config.sh node0 && \
-	./scripts/init_poa_contract.sh 
+	./scripts/write_evmlc_config.sh node0 
+# && \./scripts/init_poa_contract.sh node0
 
 stop:
 	$(MAKE) -C ../deploy stop
