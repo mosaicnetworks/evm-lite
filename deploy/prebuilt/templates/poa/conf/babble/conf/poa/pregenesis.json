@@ -6,7 +6,6 @@
 				 "filename": "genesis.sol",
 				 "authorising": "true",
 				 "contractname": "POA_Genesis",
-				 "balance": "1337000000000000000099",
 				 "preauthorised": [
 					 { "address": "0x54F6e2C29BefaAF55C688E00FFe7353Ca0A489d5", "moniker": "node0"}
 					 ,{ "address": "0x6141b87cF003e9DF9056e28BcB1f6bc5F3025AC3", "moniker": "node1"}

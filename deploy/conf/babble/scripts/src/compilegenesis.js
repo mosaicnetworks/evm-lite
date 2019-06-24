@@ -176,13 +176,14 @@ function processContract(_output, _contract, _populate_alloc, _populate_poa)
 		
 		let tidiedaddress = tidyAddressUpper(_contract.address); 
 		
-		if (! _output.alloc[tidiedaddress] )   // make sure the address node exists in the alloc hierarchy
-      {
-			_output.alloc[tidiedaddress] = {};
-		}  	
+      if (_populate_alloc) {
+			if (! _output.alloc[tidiedaddress] )   // make sure the address node exists in the alloc hierarchy
+	      {
+				_output.alloc[tidiedaddress] = {};
+			}  	
 
-		if (_contract.balance) { _output.alloc[tidiedaddress].balance = _contract.balance;}
-
+			if (_contract.balance) { _output.alloc[tidiedaddress].balance = _contract.balance;}
+      }
 		if (_contract.filename)
 		{
 
