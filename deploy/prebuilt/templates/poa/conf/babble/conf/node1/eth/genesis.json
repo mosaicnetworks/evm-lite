@@ -39,9 +39,6 @@
       "0x75D9B5B854F4644e77D5076AeE845cD687fE8CA8": {
          "balance": "1337000000000000000009",
          "moniker": "node9"
-      },
-      "0XABBAABBAABBAABBAABBAABBAABBAABBAABBAABBA": {
-         "balance": "1337000000000000000099"
       }
    },
    "poa": {
