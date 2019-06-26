@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	defaultNodeAddr       = ":1337"
+	defaultNodeAddr       = "127.0.0.1:1337"
 	defaultBabbleAPIAddr  = ":8000"
 	defaultHeartbeat      = 500 * time.Millisecond
 	defaultTCPTimeout     = 1000 * time.Millisecond
