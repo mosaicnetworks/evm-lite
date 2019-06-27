@@ -1,5 +1,10 @@
 package common
 
+type Genesis struct {
+	Alloc AccountMap
+	Poa   PoaMap
+}
+
 type AccountMap map[string]struct {
 	Code        string
 	Storage     map[string]string

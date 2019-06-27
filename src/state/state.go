@@ -36,9 +36,7 @@ type State struct {
 	was      *WriteAheadState
 	txPool   *TxPool
 
-	gasLimit           uint64
-	authorisingAccount string
-	authorisingAbi     string
+	gasLimit uint64
 
 	signer      ethTypes.Signer
 	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
@@ -78,8 +76,8 @@ func NewState(logger *logrus.Logger, dbFile string, dbCache int, genesisFile str
 
 //------------------------------------------------------------------------------
 
-//InitState initializes the statedb object, the write-ahead state, the
-//transaction-pool, and creates genesis accounts.
+// InitState initializes the statedb object, the write-ahead state, the
+// transaction-pool, and creates genesis accounts.
 func (s *State) InitState() error {
 
 	s.gasLimit = gasLimit
@@ -112,7 +110,7 @@ func (s *State) InitState() error {
 		s.gasLimit,
 		s.logger)
 
-	//Initialize genesis accounts with balance, code, and state
+	// Initialize genesis accounts with balance, code, and state
 	err = s.CreateGenesisAccounts()
 	if err != nil {
 		return err
@@ -121,31 +119,31 @@ func (s *State) InitState() error {
 	return err
 }
 
-//Commit persists all pending state changes (in the WAS) to the DB, and resets
-//the WAS and TxPool
+// Commit persists all pending state changes (in the WAS) to the DB, and resets
+// the WAS and TxPool
 func (s *State) Commit() (common.Hash, error) {
-	//commit all state changes to the database
+	// commit all state changes to the database
 	root, err := s.was.Commit()
 	if err != nil {
 		s.logger.WithError(err).Error("Committing WAS")
 		return root, err
 	}
 
-	//Reset main ethState
+	// Reset main ethState
 	if err := s.ethState.Reset(root); err != nil {
 		s.logger.WithError(err).Error("Resetting main StateDB")
 		return root, err
 	}
 	s.logger.WithField("root", root.Hex()).Debug("Committed")
 
-	//Reset WAS
+	// Reset WAS
 	if err := s.was.Reset(root); err != nil {
 		s.logger.WithError(err).Error("Resetting WAS")
 		return root, err
 	}
 	s.logger.Debug("Reset WAS")
 
-	//Reset TxPool
+	// Reset TxPool
 	if err := s.txPool.Reset(root); err != nil {
 		s.logger.WithError(err).Error("Resetting TxPool")
 		return root, err
@@ -157,15 +155,15 @@ func (s *State) Commit() (common.Hash, error) {
 
 //------------------------------------------------------------------------------
 
-//Call executes a readonly transaction on the statedb. It is called by the
-//service handlers
+// Call executes a readonly transaction on the statedb. It is called by the
+// service handlers
 func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	s.logger.Debug("Call")
 
 	context := NewContext(callMsg.From(), 0, callMsg.GasPrice())
 
-	//We use a copy of the ethState because even call transactions increment the
-	//sender's nonce
+	// We use a copy of the ethState because even call transactions increment
+	// the sender's nonce
 	vmenv := vm.NewEVM(context, s.was.ethState.Copy(), &s.chainConfig, s.vmConfig)
 
 	// Apply the transaction to the current state (included in the env)
@@ -178,16 +176,16 @@ func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	return res, err
 }
 
-//CheckTx attempt to apply a transaction to the TxPool's statedb. It is called
-//by the Service handlers to check if a transaction is valid before submitting
-//it to the consensus system. This also updates the sender's Nonce in the
-//TxPool's statedb.
+// CheckTx attempt to apply a transaction to the TxPool's statedb. It is called
+// by the Service handlers to check if a transaction is valid before submitting
+// it to the consensus system. This also updates the sender's Nonce in the
+// TxPool's statedb.
 func (s *State) CheckTx(tx *ethTypes.Transaction) error {
 	return s.txPool.CheckTx(tx)
 }
 
-//ApplyTransaction decodes a transaction and applies it to the WAS. It is meant
-//to be called by the consensus system to apply transactions sequentially.
+// ApplyTransaction decodes a transaction and applies it to the WAS. It is meant
+// to be called by the consensus system to apply transactions sequentially.
 func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.Hash) error {
 
 	var t ethTypes.Transaction
@@ -200,6 +198,8 @@ func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.H
 	return s.was.ApplyTransaction(t, txIndex, blockHash)
 }
 
+// CreateGenesisAccounts reads the genesis.json file and creates the regular
+// pre-funded accounts, as well as the POA smart-contract account.
 func (s *State) CreateGenesisAccounts() error {
 
 	if _, err := os.Stat(s.genesisFile); os.IsNotExist(err) {
@@ -211,18 +211,13 @@ func (s *State) CreateGenesisAccounts() error {
 		return err
 	}
 
-	var genesis struct {
-		Alloc bcommon.AccountMap
-	}
-
-	var poa struct {
-		Poa bcommon.PoaMap
-	}
+	var genesis bcommon.Genesis
 
 	if err := json.Unmarshal(contents, &genesis); err != nil {
 		return err
 	}
 
+	// Regular pre-funded accounts
 	for addr, account := range genesis.Alloc {
 		address := common.HexToAddress(addr)
 		if s.Empty(address) {
@@ -232,43 +227,19 @@ func (s *State) CreateGenesisAccounts() error {
 				s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
 			}
 			s.logger.WithField("address", addr).Debug("Adding account")
-
-			if account.Authorising {
-				s.authorisingAccount = addr
-				setPOAFROM(addr)
-			}
 		}
 	}
 
-	if err := json.Unmarshal(contents, &poa); err != nil {
-		return err
-	}
-
-	if string(poa.Poa.Address) != "" {
-		addr := poa.Poa.Address
-		balance := poa.Poa.Balance
-		abi := poa.Poa.Abi
-		code := poa.Poa.Code
-
-		s.logger.Debug("POA CreateGenesisAccounts")
-
-		address := common.HexToAddress(addr)
+	// POA smart-contract account
+	if string(genesis.Poa.Address) != "" {
+		address := common.HexToAddress(genesis.Poa.Address)
 		if s.Empty(address) {
-			s.logger.Debug("POA Create Account")
-
-			s.was.ethState.AddBalance(address, math.MustParseBig256(balance))
-			s.was.ethState.SetCode(address, common.Hex2Bytes(code))
-			//			for key, value := range account.Storage {
-			//				s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
-			//			}
-			s.logger.WithField("address", addr).Debug("Adding account")
-
-			s.authorisingAccount = addr
-			setPOAFROM(addr)
-			s.authorisingAbi = abi
-			setPOAABI(abi)
+			s.was.ethState.AddBalance(address, math.MustParseBig256(genesis.Poa.Balance))
+			s.was.ethState.SetCode(address, common.Hex2Bytes(genesis.Poa.Code))
+			setPOAADDR(genesis.Poa.Address)
+			setPOAABI(genesis.Poa.Abi)
+			s.logger.WithField("address", genesis.Poa.Address).Debug("Adding POA smart-contract account")
 		}
-
 	}
 
 	if _, err = s.Commit(); err != nil {
@@ -279,34 +250,34 @@ func (s *State) CreateGenesisAccounts() error {
 
 }
 
-//Empty reports whether the account is non-existant or empty
+// Empty reports whether the account is non-existant or empty
 func (s *State) Empty(addr common.Address) bool {
 	res := s.ethState.Empty(addr)
 	s.logger.Debugf("%s Empty? %v", addr.Hex(), res)
 	return res
 }
 
-//GetBalance returns an account's balance from the main ethState
+// GetBalance returns an account's balance from the main ethState
 func (s *State) GetBalance(addr common.Address) *big.Int {
 	return s.ethState.GetBalance(addr)
 }
 
-//GetNonce returns an account's nonce from the main ethState
+// GetNonce returns an account's nonce from the main ethState
 func (s *State) GetNonce(addr common.Address) uint64 {
 	return s.ethState.GetNonce(addr)
 }
 
-//GetCode returns an account's bytecode from the main ethState
+// GetCode returns an account's bytecode from the main ethState
 func (s *State) GetCode(addr common.Address) []byte {
 	return s.ethState.GetCode(addr)
 }
 
-//GetPoolNonce returns an account's nonce from the txpool's ethState
+// GetPoolNonce returns an account's nonce from the txpool's ethState
 func (s *State) GetPoolNonce(addr common.Address) uint64 {
 	return s.txPool.ethState.GetNonce(addr)
 }
 
-//GetTransaction fetches transactions by hash directly from the DB.
+// GetTransaction fetches transactions by hash directly from the DB.
 func (s *State) GetTransaction(hash common.Hash) (*ethTypes.Transaction, error) {
 	// Retrieve the transaction itself from the database
 	data, err := s.db.Get(hash.Bytes())
@@ -323,8 +294,8 @@ func (s *State) GetTransaction(hash common.Hash) (*ethTypes.Transaction, error) 
 	return &tx, nil
 }
 
-//GetReceipt fetches transaction receipts by transaction hash directly from the
-//DB
+// GetReceipt fetches transaction receipts by transaction hash directly from the
+// DB
 func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
 	data, err := s.db.Get(append(receiptsPrefix, txHash.Bytes()...))
 	if err != nil {
@@ -340,27 +311,26 @@ func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
 	return (*ethTypes.Receipt)(&receipt), nil
 }
 
-//GetGasLimit returns the gas limit set between commit calls
+// GetGasLimit returns the gas limit set between commit calls
 func (s *State) GetGasLimit() uint64 {
 	return s.gasLimit
 }
 
-//GetAuthorisingAccount returns the address of the smart contract which handles
-//the list of authorized peers
+// GetAuthorisingAccount returns the address of the smart contract which handles
+// the list of authorized peers
 func (s *State) GetAuthorisingAccount() string {
-	return s.authorisingAccount
+	return POAADDR.String()
 }
 
-//GetAuthorisingAbi returns the abi of the smart contract which handles
-//the list of authorized peers
+// GetAuthorisingAbi returns the abi of the smart contract which handles
+// the list of authorized peers
 func (s *State) GetAuthorisingAbi() string {
-	return s.authorisingAbi
+	return POAABISTRING
 }
 
-//CheckAuthorised queries the POA smart-contract to check if the address is
-//authorised
+// CheckAuthorised queries the POA smart-contract to check if the address is
+// authorised
 func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
-	contractAddress := common.HexToAddress(s.GetAuthorisingAccount())
 
 	callData, err := POAABI.Pack("checkAuthorised", addr)
 	if err != nil {
@@ -370,8 +340,8 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 	// Apply an ethereum call message (no state update) to query the
 	// smart-contract. Since there's no nonce check and the gas price is set to
 	// zero, an arbitrary address can be used as the source of the tx.
-	ethMsg := ethTypes.NewMessage(POAFROM,
-		&contractAddress,
+	ethMsg := ethTypes.NewMessage(POAADDR,
+		&POAADDR,
 		uint64(1),
 		big.NewInt(0),
 		s.GetGasLimit(),
@@ -382,7 +352,7 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 	s.logger.WithFields(logrus.Fields{
 		"addr":     addr.Hex(),
 		"callData": hex.EncodeToString(callData),
-		"contract": contractAddress.Hex(),
+		"contract": POAADDR.String(),
 	}).Debug("checkAuthorised")
 
 	res, err := s.Call(ethMsg)
