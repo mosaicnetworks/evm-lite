@@ -202,18 +202,11 @@ func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.H
 // pre-funded accounts, as well as the POA smart-contract account.
 func (s *State) CreateGenesisAccounts() error {
 
-	if _, err := os.Stat(s.genesisFile); os.IsNotExist(err) {
-		return nil
-	}
-
-	contents, err := ioutil.ReadFile(s.genesisFile)
+	genesis, err := s.GetGenesis()
 	if err != nil {
-		return err
-	}
-
-	var genesis bcommon.Genesis
-
-	if err := json.Unmarshal(contents, &genesis); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -326,6 +319,26 @@ func (s *State) GetAuthorisingAccount() string {
 // the list of authorized peers
 func (s *State) GetAuthorisingAbi() string {
 	return POAABISTRING
+}
+
+// GetGenesis reads and unmarshals the genesis.json file
+func (s *State) GetGenesis() (bcommon.Genesis, error) {
+	if _, err := os.Stat(s.genesisFile); err != nil {
+		return bcommon.Genesis{}, err
+	}
+
+	contents, err := ioutil.ReadFile(s.genesisFile)
+	if err != nil {
+		return bcommon.Genesis{}, err
+	}
+
+	var genesis bcommon.Genesis
+
+	if err := json.Unmarshal(contents, &genesis); err != nil {
+		return bcommon.Genesis{}, err
+	}
+
+	return genesis, nil
 }
 
 // CheckAuthorised queries the POA smart-contract to check if the address is

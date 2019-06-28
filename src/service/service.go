@@ -106,6 +106,7 @@ func (m *Service) serveAPI() {
 	r.HandleFunc("/html/info", m.makeHandler(htmlInfoHandler)).Methods("GET")
 	r.HandleFunc("/contract", m.makeHandler(contractHandler)).Methods("GET")
 	r.HandleFunc("/poa", m.makeHandler(poaHandler)).Methods("GET")
+	r.HandleFunc("/genesis", m.makeHandler(genesisHandler)).Methods("GET")
 
 	http.Handle("/", &CORSServer{r})
 	http.ListenAndServe(m.apiAddr, nil)

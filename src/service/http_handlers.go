@@ -485,6 +485,33 @@ func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	w.Write(js)
 }
 
+/*
+GET /genesis
+returns: JSON Genesis
+
+This endpoint returns the content of the genesis.json file.
+*/
+func genesisHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET genesis")
+
+	genesis, err := m.state.GetGenesis()
+	if err != nil {
+		m.logger.WithError(err).Error("Getting Genesis")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(genesis)
+	if err != nil {
+		m.logger.WithError(err).Error("Marshaling JSON response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
 //------------------------------------------------------------------------------
 func prepareCallMessage(args SendTxArgs, ks *keystore.KeyStore) (*ethTypes.Message, error) {
 	var err error
