@@ -113,7 +113,7 @@ func (m *Service) serveAPI() {
 
 	serverMuxEVM.Handle("/", &CORSServer{r})
 
-	m.logger.Debugln("Added EVM-Lite Listener at ", m.apiAddr)
+	m.logger.WithField("apiAddr", m.apiAddr).Debug("EVM-Lite Service serving")
 	http.ListenAndServe(m.apiAddr, serverMuxEVM)
 }
 
