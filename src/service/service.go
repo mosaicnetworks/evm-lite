@@ -95,6 +95,9 @@ func (m *Service) unlockAccounts() error {
 }
 
 func (m *Service) serveAPI() {
+
+	serverMuxEVM := http.NewServeMux()
+
 	r := mux.NewRouter()
 	r.HandleFunc("/account/{address}", m.makeHandler(accountHandler)).Methods("GET")
 	r.HandleFunc("/accounts", m.makeHandler(accountsHandler)).Methods("GET")
@@ -108,8 +111,8 @@ func (m *Service) serveAPI() {
 	r.HandleFunc("/poa", m.makeHandler(poaHandler)).Methods("GET")
 	r.HandleFunc("/genesis", m.makeHandler(genesisHandler)).Methods("GET")
 
-	http.Handle("/", &CORSServer{r})
-	http.ListenAndServe(m.apiAddr, nil)
+	serverMuxEVM.Handle("/", &CORSServer{r})
+	http.ListenAndServe(m.apiAddr, serverMuxEVM)
 }
 
 type CORSServer struct {
