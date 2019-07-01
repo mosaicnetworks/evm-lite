@@ -112,6 +112,8 @@ func (m *Service) serveAPI() {
 	r.HandleFunc("/genesis", m.makeHandler(genesisHandler)).Methods("GET")
 
 	serverMuxEVM.Handle("/", &CORSServer{r})
+
+	m.logger.Debugln("Added EVM-Lite Listener at ", m.apiAddr)
 	http.ListenAndServe(m.apiAddr, serverMuxEVM)
 }
 
