@@ -21,7 +21,8 @@ func AddBabbleFlags(cmd *cobra.Command) {
 	cmd.Flags().Int("babble.sync-limit", config.Babble.SyncLimit, "Max number of Events per sync")
 	cmd.Flags().Bool("babble.enable-fast-sync", config.Babble.EnableFastSync, "Enable FastSync")
 	cmd.Flags().Int("babble.max-pool", config.Babble.MaxPool, "Max number of pool connections")
-	cmd.Flags().Bool("babble.store", config.Babble.Store, "use persistent store")
+	cmd.Flags().Bool("babble.store", config.Babble.Store, "Use persistent store")
+	cmd.Flags().Bool("babble.bootstrap", config.Babble.Bootstrap, "Bootstrap from Babble database")
 	viper.BindPFlags(cmd.Flags())
 }
 

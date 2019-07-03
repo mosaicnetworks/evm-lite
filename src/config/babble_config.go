@@ -52,6 +52,9 @@ type BabbleConfig struct {
 
 	// Database type; badger or inmeum
 	Store bool `mapstructure:"store"`
+
+	// Bootstrap from database
+	Bootstrap bool `mapstructure:"bootstrap"`
 }
 
 // DefaultBabbleConfig returns the default configuration for a Babble node
@@ -91,5 +94,6 @@ func (c *BabbleConfig) ToRealBabbleConfig() *_babble.BabbleConfig {
 	babbleConfig.NodeConfig.CacheSize = c.CacheSize
 	babbleConfig.NodeConfig.SyncLimit = c.SyncLimit
 	babbleConfig.NodeConfig.EnableFastSync = c.EnableFastSync
+	babbleConfig.NodeConfig.Bootstrap = c.Bootstrap
 	return babbleConfig
 }

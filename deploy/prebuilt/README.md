@@ -5,7 +5,7 @@ place. Only files that need to be overwritten are included.
 
 To use cd to the **/deploy** directory and run:
 ```bash
-make prebuilt PREBUILT=babblepoa
+make prebuilt PREBUILT=poa
 ``` 
 
 There is a new folder prebuilt under the deploy directory. Within that folder is 
