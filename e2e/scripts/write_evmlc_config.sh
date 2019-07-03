@@ -10,6 +10,8 @@ HOSTIP=$(bash $mydir/get_node_ip.sh $NODEID  )
 DEFAULTADDRESS=$(bash $mydir/get_node_address.sh $NODEID | sed -e's/"address"://g;s/"//g')
 KEYSTORE=$(readlink -f $mydir/../../deploy/conf/babble/conf/$NODEID/eth/keystore)
 
+cp $KEYSTORE/* ~/.evmlc/keystore/
+
 {
 echo "[connection]"
 echo "host = \"$HOSTIP\""
@@ -20,6 +22,4 @@ echo "from = \"$DEFAULTADDRESS\""
 echo "gas = 10000000.0"
 echo "gasPrice = 0.0"
 echo ""
-echo "[storage]"
-echo "keystore = \"$KEYSTORE\""
 } > ~/.evmlc/config.toml

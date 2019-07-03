@@ -4,7 +4,7 @@
 # api endpoint
 
 PEERSOUT=$1
-PORT=8080
+PORT=8000 # babble service port
 
 mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
