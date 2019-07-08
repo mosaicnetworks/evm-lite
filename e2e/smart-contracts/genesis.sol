@@ -356,7 +356,7 @@ contract POA_Genesis {
 
 // Testing section - Functions in this section all have a dev_ prefix and should not be referenced
 // They will not be in the production release.
-    function dev_getCurrentNomineeVotes(address _address) public view returns (uint yes, uint no)
+    function getCurrentNomineeVotes(address _address) public view returns (uint yes, uint no)
     {
 	    if (! isNominee(_address)) {return (yes, no);}
         return (nomineeList[_address].yesVotes,nomineeList[_address].noVotes);
