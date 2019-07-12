@@ -7,7 +7,7 @@ USAGE
 Each consensus has its own subcommand ``evml [consensus]``\ , and its own
 configuration flags.
 
-.. code-block::
+::
 
    EVM-Lite node
 
@@ -53,7 +53,8 @@ The application writes data and reads configuration from the directory specified
 by the --datadir flag. The directory structure must respect the following
 stucture:
 
-.. code-block::
+
+::
 
    host:~/.evm-lite$ tree
    ├── babble
@@ -94,7 +95,7 @@ list of encrypted private keys in the keystore directory. With these private
 keys, evm-lite will be able to sign transactions on behalf of the accounts
 associated with the keys.  
 
-.. code-block::
+::
 
    host:~/.evm-lite/eth/keystore$ tree
    .

@@ -218,7 +218,7 @@ These credentials must be created from the AWS console before using these
 scripts. Once created and retrieved from AWS, the credentials must be provided in
 the ``/aws/secret.tfvars`` file:
 
-.. code-block::
+::
 
    //AWS API ACCESS KEY
    access_key = "..."
@@ -227,6 +227,7 @@ the ``/aws/secret.tfvars`` file:
    //RSA KEY FOR SSH
    key_name = "..."
    key_path = "..."
+
 
 The scripts will create an AWS subnet in the ``10.0.2.0/24`` range and assign it a
 security group defining which ports should remain open or closed for machines

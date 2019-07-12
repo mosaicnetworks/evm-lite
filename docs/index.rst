@@ -8,10 +8,10 @@
 Welcome to EVM-Lite's documentation!
 ====================================
 
-.. image:: assets/babblelogo.png
-   :height: 453px
-   :width: 640px
-   :align: left
+.. image:: assets/evm-lite.svg
+   :height: 400px
+   :width: 400px
+   :align: center
 
 EVM-Lite
 --------
