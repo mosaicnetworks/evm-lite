@@ -11,43 +11,41 @@
 # flag). The output of this script, executed with default parameters, will look 
 # something like this:
 #
-#	conf/
-#	├── evml.toml
+#	conf/solo/conf
 #	├── genesis.json
 #	├── keystore
-#	│   ├── UTC--2018-09-15T13-58-07.652863115Z--664f52f5866d0bea946fcb5cec67f18b93b574c0
-#	│   ├── UTC--2018-09-15T13-58-09.640035569Z--c1a67fac13e90b93f28fce79a34eea63a9cfebfc
-#	│   ├── UTC--2018-09-15T13-58-11.693951535Z--5917d40005da07924796a396d2e522da49490afd
-#	│   └── UTC--2018-09-15T13-58-13.749396512Z--98a6b9400d294bb5a787583affd72b28faf2273f
+#	│   ├── node0-key.json
+#	│   ├── node1-key.json
+#	│   ├── node2-key.json
+#	│   └── node3-key.json
 #	├── node0
-#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
-#	│       │   └── UTC--2018-09-15T13-58-07.652863115Z--664f52f5866d0bea946fcb5cec67f18b93b574c0
+#	│       │   └── key.json
 #	│       └── pwd.txt
 #	├── node1
-#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
-#	│       │   └── UTC--2018-09-15T13-58-09.640035569Z--c1a67fac13e90b93f28fce79a34eea63a9cfebfc
+#	│       │   └── key.json
 #	│       └── pwd.txt
 #	├── node2
-#	│   ├── evml.toml
 #	│   └── eth
 #	│       ├── genesis.json
 #	│       ├── keystore
-#	│       │   └── UTC--2018-09-15T13-58-11.693951535Z--5917d40005da07924796a396d2e522da49490afd
+#	│       │   └── key.json
 #	│       └── pwd.txt
 #	└── node3
-#	    ├── evml.toml
 #	    └── eth
 #	        ├── genesis.json
 #	        ├── keystore
-#	        │   └── UTC--2018-09-15T13-58-13.749396512Z--98a6b9400d294bb5a787583affd72b28faf2273f
+#	        │   └── key.json
 #	        └── pwd.txt
 
+
+#         Invocation line in conf/babble/makefile
+#         ./../eth/scripts/build-eth-conf.sh $(NODES) $(DEST) $(PASS) $(VALIDATORS) $(POA)
 
 
 set -e
@@ -55,21 +53,32 @@ set -e
 N=${1:-4} # number of nodes
 DEST=${2:-"$(pwd)/../conf"} # output directory
 PASS=${3:-"$(pwd)/../pwd.txt"} # password file for Ethereum accounts
+VALIDATORS=${4:-4} # number of validators on genesis whitelist
+POA=${5:-true} # is this a POA network?
+
+
+if [ "$VALIDATORS" -gt "$N" ] ; then # Simple sanity check. We cannot have more nodes than validators
+  VALIDATORS=$N
+fi
+
+mydir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 l=$((N-1))
+v=$((VALIDATORS-1))
 
 for i in $(seq 0 $l) 
 do
 	dest=$DEST/node$i/eth
 	mkdir -p $dest
-    # use a Docker container to run the geth command that creates accounts. This
-	# saves us the trouble of installing geth locally
+    # Use a Docker container to run the 'evml keys' command that creates 
+	# accounts. This saves us the trouble of installing evml locally.
+	# The file is written directly into the mounted directory.
     docker run --rm \
-		-u `id -u $USER` \
+		-u $(id -u) \
 		-v $dest:/datadir \
 		-v $PASS:/pwd.txt \
-		ethereum/client-go -verbosity=1 --datadir=/datadir --password=/pwd.txt account new  | \
-    		awk '{gsub("[{}]", "\""); print $2}'  >> $dest/addr
+		mosaicnetworks/evm-lite:latest keys --passfile=/pwd.txt generate /datadir/keystore/key.json  | \
+    		awk '/Address/ {print $2}'  >> $dest/addr
 done
 
 # Generate the genesis file
@@ -82,12 +91,75 @@ do
 	if [[ $i == $l ]]; then 
 		com=""
 	fi
-	printf "\t\t$(cat $DEST/node$i/eth/addr): {\n" >> $GFILE
-    printf "\t\t\t\"balance\": \"1337000000000000000000\"\n" >> $GFILE
+	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
+    printf "\t\t\t\"balance\": \"133700000000000000000$i\",\n" >> $GFILE
+    printf "\t\t\t\"moniker\": \"node$i\"\n" >> $GFILE
     printf "\t\t}%s\n" $com >> $GFILE
 done
 printf "\t}\n" >> $GFILE
 echo "}" >> $GFILE
+
+
+
+if [ $POA ] ; then
+    # Copy the POA contract into place. 	
+
+
+	DESTPOA=$DEST/poa	
+	if [ ! -d "$DESTPOA" ] ; then
+	    mkdir "$DESTPOA"
+	fi
+
+       cp $mydir/../../../../e2e/smart-contracts/genesis_array.sol $DESTPOA/genesis.sol
+
+    # Generate the pregenesis file
+    GFILE=$DESTPOA/pregenesis.json
+    echo "{" > $GFILE 
+    
+    printf "\t\"precompiler\":{\n" >> $GFILE
+    printf "\t\t \"contracts\": [\n" >> $GFILE
+    printf "\t\t\t {\n" >> $GFILE
+    printf "\t\t\t\t \"address\": \"0XABBAABBAABBAABBAABBAABBAABBAABBAABBAABBA\",\n" >> $GFILE
+    printf "\t\t\t\t \"filename\": \"genesis.sol\",\n" >> $GFILE
+    printf "\t\t\t\t \"authorising\": \"true\",\n" >> $GFILE
+    printf "\t\t\t\t \"contractname\": \"POA_Genesis\",\n" >> $GFILE
+    printf "\t\t\t\t \"balance\": \"1337000000000000000099\",\n" >> $GFILE
+    printf "\t\t\t\t \"preauthorised\": [\n" >> $GFILE
+    
+    
+    comma=""
+    
+    for i in $(seq 0 $v)
+    do
+       printf "\t\t\t\t\t $comma{ \"address\": \"$(cat $DEST/node$i/eth/addr)\", \"moniker\": \"node$i\"}\n" >> $GFILE
+       comma=","
+    done
+    
+    
+    printf "\t\t\t\t ]\n" >> $GFILE
+    printf "\t\t\t }\n" >> $GFILE
+    printf "\t\t ]\n" >> $GFILE
+    printf "\t },\n" >> $GFILE
+    
+    
+    
+    printf "\t\"alloc\": {\n" >> $GFILE
+    for i in $(seq 0 $l)
+    do
+    	com=","
+    	if [[ $i == $l ]]; then 
+    		com=""
+    	fi
+    	printf "\t\t\"$(cat $DEST/node$i/eth/addr)\": {\n" >> $GFILE
+        printf "\t\t\t\"balance\": \"133700000000000000000$i\",\n" >> $GFILE
+        printf "\t\t\t\"moniker\": \"node$i\"\n" >> $GFILE
+        printf "\t\t}%s\n" $com >> $GFILE
+    done
+    printf "\t}\n" >> $GFILE
+    echo "}" >> $GFILE
+fi    
+    
+
 
 gKeystore=$DEST/keystore
 mkdir -p $gKeystore
@@ -98,7 +170,7 @@ do
 	dest=$DEST/node$i
 	cp $DEST/genesis.json $dest/eth
 	cp $PASS $dest/eth
-	cp -r $dest/eth/keystore/* $gKeystore
+	cp -r $dest/eth/keystore/key.json $gKeystore/node$i-key.json
     rm $dest/eth/addr
 done
 

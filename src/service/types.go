@@ -11,6 +11,7 @@ type JsonAccount struct {
 	Address string   `json:"address"`
 	Balance *big.Int `json:"balance"`
 	Nonce   uint64   `json:"nonce"`
+	Code    string   `json:"bytecode"`
 }
 
 type JsonAccountList struct {
@@ -47,4 +48,13 @@ type JsonReceipt struct {
 	Logs              []*ethTypes.Log `json:"logs"`
 	LogsBloom         ethTypes.Bloom  `json:"logsBloom"`
 	Status            uint64          `json:"status"`
+}
+
+type JsonContract struct {
+	Address common.Address `json:"address"`
+	ABI     string         `json:"abi"`
+}
+
+type JsonContractList struct {
+	Contracts []JsonContract `json:"contracts"`
 }

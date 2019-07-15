@@ -1,8 +1,6 @@
 package state
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethState "github.com/ethereum/go-ethereum/core/state"
@@ -59,6 +57,7 @@ func NewWriteAheadState(db ethdb.Database,
 		chainConfig: chainConfig,
 		vmConfig:    vmConfig,
 		gasLimit:    gasLimit,
+		gp:          new(core.GasPool).AddGas(gasLimit),
 		logger:      logger,
 	}, nil
 }
@@ -89,15 +88,7 @@ func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex in
 		return err
 	}
 
-	context := vm.Context{
-		CanTransfer: core.CanTransfer,
-		Transfer:    core.Transfer,
-		GetHash:     func(uint64) common.Hash { return blockHash },
-		Origin:      msg.From(),
-		GasLimit:    msg.Gas(),
-		GasPrice:    msg.GasPrice(),
-		BlockNumber: big.NewInt(0), // The vm has a dependency on this..
-	}
+	context := NewContext(msg.From(), msg.Gas(), msg.GasPrice())
 
 	//Prepare the ethState with transaction Hash so that it can be used in emitted
 	//logs
@@ -151,10 +142,6 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 	//Apparenty Geth does something smarter here... but cant figure it out
 	was.ethState.Database().TrieDB().Commit(root, true)
 
-	if err := was.writeRoot(root); err != nil {
-		was.logger.WithError(err).Error("Writing root")
-		return common.Hash{}, err
-	}
 	if err := was.writeTransactions(); err != nil {
 		was.logger.WithError(err).Error("Writing txs")
 		return common.Hash{}, err
@@ -164,10 +151,6 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 		return common.Hash{}, err
 	}
 	return root, nil
-}
-
-func (was *WriteAheadState) writeRoot(root common.Hash) error {
-	return was.db.Put(rootKey, root.Bytes())
 }
 
 func (was *WriteAheadState) writeTransactions() error {

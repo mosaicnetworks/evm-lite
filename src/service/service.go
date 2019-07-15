@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/gorilla/mux"
-	"github.com/mosaicnetworks/evm-lite/src/common"
 	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
 )
@@ -23,23 +21,19 @@ type Service struct {
 	sync.Mutex
 	state       *state.State
 	submitCh    chan []byte
-	genesisFile string
 	keystoreDir string
 	apiAddr     string
 	keyStore    *keystore.KeyStore
 	pwdFile     string
+	getInfo     infoCallback
 	logger      *logrus.Logger
-
-	//XXX
-	getInfo infoCallback
 }
 
-func NewService(genesisFile, keystoreDir, apiAddr, pwdFile string,
+func NewService(keystoreDir, apiAddr, pwdFile string,
 	state *state.State,
 	submitCh chan []byte,
 	logger *logrus.Logger) *Service {
 	return &Service{
-		genesisFile: genesisFile,
 		keystoreDir: keystoreDir,
 		apiAddr:     apiAddr,
 		pwdFile:     pwdFile,
@@ -53,18 +47,14 @@ func (m *Service) Run() {
 
 	m.checkErr(m.unlockAccounts())
 
-	m.checkErr(m.createGenesisAccounts())
-
 	m.logger.Info("serving api...")
 	m.serveAPI()
 }
 
-//XXX
 func (m *Service) GetSubmitCh() chan []byte {
 	return m.submitCh
 }
 
-//XXX
 func (m *Service) SetInfoCallback(f infoCallback) {
 	m.getInfo = f
 }
@@ -104,31 +94,10 @@ func (m *Service) unlockAccounts() error {
 	return nil
 }
 
-func (m *Service) createGenesisAccounts() error {
-	if _, err := os.Stat(m.genesisFile); os.IsNotExist(err) {
-		return nil
-	}
-
-	contents, err := ioutil.ReadFile(m.genesisFile)
-	if err != nil {
-		return err
-	}
-
-	var genesis struct {
-		Alloc common.AccountMap
-	}
-
-	if err := json.Unmarshal(contents, &genesis); err != nil {
-		return err
-	}
-
-	if err := m.state.CreateAccounts(genesis.Alloc); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (m *Service) serveAPI() {
+
+	serverMuxEVM := http.NewServeMux()
+
 	r := mux.NewRouter()
 	r.HandleFunc("/account/{address}", m.makeHandler(accountHandler)).Methods("GET")
 	r.HandleFunc("/accounts", m.makeHandler(accountsHandler)).Methods("GET")
@@ -138,8 +107,14 @@ func (m *Service) serveAPI() {
 	r.HandleFunc("/tx/{tx_hash}", m.makeHandler(transactionReceiptHandler)).Methods("GET")
 	r.HandleFunc("/info", m.makeHandler(infoHandler)).Methods("GET")
 	r.HandleFunc("/html/info", m.makeHandler(htmlInfoHandler)).Methods("GET")
-	http.Handle("/", &CORSServer{r})
-	http.ListenAndServe(m.apiAddr, nil)
+	r.HandleFunc("/contract", m.makeHandler(contractHandler)).Methods("GET")
+	r.HandleFunc("/poa", m.makeHandler(poaHandler)).Methods("GET")
+	r.HandleFunc("/genesis", m.makeHandler(genesisHandler)).Methods("GET")
+
+	serverMuxEVM.Handle("/", &CORSServer{r})
+
+	m.logger.WithField("apiAddr", m.apiAddr).Debug("EVM-Lite Service serving")
+	http.ListenAndServe(m.apiAddr, serverMuxEVM)
 }
 
 type CORSServer struct {

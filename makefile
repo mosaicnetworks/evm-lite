@@ -7,8 +7,9 @@ vendor:
 # install compiles and places the binary in GOPATH/bin
 install:
 	go install \
-		--ldflags "-X github.com/mosaicnetworks/evm-lite/src/version.GitCommit=`git rev-parse HEAD`" \
+		--ldflags "-X github.com/mosaicnetworks/evm-lite/src/version.GitCommit=`git rev-parse HEAD` -X github.com/mosaicnetworks/evm-lite/src/version.GitBranch=`git symbolic-ref --short HEAD`" \
 		./cmd/evml
+
 test:
 	glide novendor | xargs go test
 

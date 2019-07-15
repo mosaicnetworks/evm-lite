@@ -1,7 +1,8 @@
 package babble
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	ethCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/mosaicnetworks/babble/src/hashgraph"
 	"github.com/mosaicnetworks/babble/src/proxy"
 	"github.com/mosaicnetworks/evm-lite/src/service"
@@ -41,12 +42,15 @@ func (p *InmemProxy) SubmitCh() chan []byte {
 	return p.submitCh
 }
 
-// CommitBlock commits Block to the State and expects the resulting state hash
+// CommitBlock applies the block's transactions to the state and commits. It
+// also checks the block's internal transactions against the POA smart-contract
+// to check if joining peers are authorised to become validators in Babble. It
+// returns the resulting state-hash and internal transaction receips.
 func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, error) {
 	p.logger.Debug("CommitBlock")
 
 	blockHashBytes, err := block.Hash()
-	blockHash := common.BytesToHash(blockHashBytes)
+	blockHash := ethCommon.BytesToHash(blockHashBytes)
 
 	for i, tx := range block.Transactions() {
 		if err := p.state.ApplyTransaction(tx, i, blockHash); err != nil {
@@ -59,11 +63,52 @@ func (p *InmemProxy) CommitBlock(block hashgraph.Block) (proxy.CommitResponse, e
 		return proxy.CommitResponse{}, err
 	}
 
+	receipts := p.processInternalTransactions(block.InternalTransactions())
+
 	res := proxy.CommitResponse{
-		StateHash: hash.Bytes(),
+		StateHash:                   hash.Bytes(),
+		InternalTransactionReceipts: receipts,
 	}
 
 	return res, nil
+}
+
+// processInternalTransactions decides if InternalTransactions should be
+// accepted. For PEER_ADD transactions, it checks the if the peer is authorised
+// in the POA smart-contract. All PEER_REMOVE transactions are accepted
+func (p *InmemProxy) processInternalTransactions(internalTransactions []hashgraph.InternalTransaction) []hashgraph.InternalTransactionReceipt {
+	receipts := []hashgraph.InternalTransactionReceipt{}
+
+	for _, tx := range internalTransactions {
+		switch tx.Body.Type {
+		case hashgraph.PEER_ADD:
+			pk, err := crypto.UnmarshalPubkey(tx.Body.Peer.PubKeyBytes())
+			if err != nil {
+				p.logger.Warningf("couldn't unmarshal pubkey bytes: %v", err)
+			}
+
+			addr := crypto.PubkeyToAddress(*pk)
+
+			ok, err := p.state.CheckAuthorised(addr)
+
+			if err != nil {
+				p.logger.WithError(err).Error("Error in checkAuthorised")
+				receipts = append(receipts, tx.AsRefused())
+			} else {
+				if ok {
+					p.logger.Debug("Accepted peer")
+					receipts = append(receipts, tx.AsAccepted())
+				} else {
+					p.logger.Error("Rejected peer")
+					receipts = append(receipts, tx.AsRefused())
+				}
+			}
+		case hashgraph.PEER_REMOVE:
+			receipts = append(receipts, tx.AsAccepted())
+		}
+	}
+
+	return receipts
 }
 
 //TODO - Implement these two functions

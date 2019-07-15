@@ -1,12 +1,10 @@
 package state
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -41,9 +39,10 @@ type Test struct {
 func NewTest(dataDir string, logger *logrus.Logger, t *testing.T) *Test {
 	pwdFile := filepath.Join(dataDir, "pwd.txt")
 	dbFile := filepath.Join(dataDir, "chaindata")
+	genesisFile := filepath.Join(dataDir, "genesis.json")
 	cache := 128
 
-	state, err := NewState(logger, dbFile, cache)
+	state, err := NewState(logger, dbFile, cache, genesisFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,38 +100,12 @@ func (test *Test) unlockAccounts() error {
 	return nil
 }
 
-func (test *Test) createGenesisAccounts() error {
-	genesisFile := filepath.Join(test.dataDir, "genesis.json")
-
-	contents, err := ioutil.ReadFile(genesisFile)
-	if err != nil {
-		return err
-	}
-
-	var genesis struct {
-		Alloc bcommon.AccountMap
-	}
-
-	if err := json.Unmarshal(contents, &genesis); err != nil {
-		return err
-	}
-
-	if err := test.state.CreateAccounts(genesis.Alloc); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (test *Test) Init() error {
 	if err := test.initKeyStore(); err != nil {
 		return err
 	}
 
 	if err := test.unlockAccounts(); err != nil {
-		return err
-	}
-
-	if err := test.createGenesisAccounts(); err != nil {
 		return err
 	}
 
@@ -442,50 +415,53 @@ func TestCreateContract(t *testing.T) {
 
 }
 
-func TestDB(t *testing.T) {
+/*
 
+This test verifies if CheckAuthorised works. The only requirement for the POA
+contract is to expose a checkAuthorized(address) method that returns a bool. So
+we are using the following dummy POA contract:
+
+	pragma solidity 0.5.7;
+
+	contract Test {
+		function checkAuthorised(address _address) public pure returns (bool) {
+			if(_address == address(0x89acCD6b63d6eE73550eca0Cba16C2027c13FDa6)) {
+			return true;
+			} else {
+			return false;
+			}
+		}
+	}
+
+The corresponding bytecode is provided in the test_data/eth/genesis.json file.
+The smart-contract is automatically deployed by the state object when it is
+initialised.
+
+*/
+func TestPOA(t *testing.T) {
 	os.RemoveAll("test_data/eth/chaindata")
 	defer os.RemoveAll("test_data/eth/chaindata")
 
-	// Initialise a fresh instance and commit stuff to the db
-	test := NewTest("test_data/eth", bcommon.NewTestLogger(t), t)
-	if err := test.Init(); err != nil {
+	testLogger := bcommon.NewTestLogger(t)
+
+	test := NewTest("test_data/eth", testLogger, t)
+	//defer test.state.db.Close()
+
+	ok, err := test.state.CheckAuthorised(common.HexToAddress("0x89acCD6b63d6eE73550eca0Cba16C2027c13FDa6"))
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	from := test.keyStore.Accounts()[0]
+	if !ok {
+		t.Fatal("CheckAuthorised(0x89acCD6b63d6eE73550eca0Cba16C2027c13FDa6) should return true")
+	}
 
-	contract := dummyContract()
-
-	test.deployContract(from, contract, t)
-
-	code := test.state.ethState.GetCode(contract.address)
-	t.Logf("code: %s", common.ToHex(code))
-
-	contract.parseABI(t)
-
-	// Execute state-altering testAsync method
-	callDummyContractTestAsync(test, from, contract, t)
-
-	// Close the database
-	test.state.db.Close()
-
-	// Initialise another instance from the existing db
-	test2 := NewTest("test_data/eth", bcommon.NewTestLogger(t), t)
-	if err := test2.Init(); err != nil {
+	ok, err = test.state.CheckAuthorised(common.HexToAddress("3e735ec89371214b3f1fb2a59e3957f4ac4eaa03"))
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Check that state is the same
-
-	// Check that contract code is there
-	code2 := test2.state.ethState.GetCode(contract.address)
-	t.Logf("code2: %s", common.ToHex(code2))
-	if !reflect.DeepEqual(code2, code) {
-		t.Fatalf("contract code should be equal")
+	if ok {
+		t.Fatal("CheckAuthorised(3e735ec89371214b3f1fb2a59e3957f4ac4eaa03) should return false")
 	}
-
-	// Check contract memory
-	callDummyContractTest(test2, from, contract, big.NewInt(110), t)
-
 }

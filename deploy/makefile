@@ -1,12 +1,15 @@
 ENV = local # local or aws
-VERSION = latest # evm-lite Docker Image
-USER = 1000 # user that run evml inside the docker containers. (try 501 in MacOS)
+VERSION = 0.2.0 # evm-lite Docker Image
 CONSENSUS = solo # solo, babble, or raft
 NODES = 1
+VALIDATORS = 1
+POA = true
 IPBASE = node # use 10.0.2. for aws 
 IPADD = 0 # use 10 for aws
+PREBUILT = "" # prebuilt configurations
+CONSENSUSPORT = 1337
 
-up: conf start
+up: conf compile start
 
 build-docker-image:
 	$(MAKE) -C build docker
@@ -14,14 +17,34 @@ build-docker-image:
 build-ami:
 	$(MAKE) -C build ami
 
-conf:
-	$(MAKE) -C conf/$(CONSENSUS) conf NODES=$(NODES) IPBASE=$(IPBASE) IPADD=$(IPADD)
+check: 
+	scripts/check_docker_running.sh	
 
-start: 
-	$(MAKE) -C terraform/$(ENV) apply NODES=$(NODES) CONSENSUS=$(CONSENSUS) VERSION=$(VERSION) USER=$(USER)
+conf:
+	$(MAKE) -C conf/$(CONSENSUS) conf NODES=$(NODES) IPBASE=$(IPBASE) IPADD=$(IPADD) VALIDATORS=$(VALIDATORS) POA=$(POA) CONSENSUSPORT=$(CONSENSUSPORT)
+
+compile:
+	$(MAKE) -C conf/$(CONSENSUS) compile
+
+prebuilt:
+	$(MAKE) -C prebuilt prebuilt PREBUILT="$(PREBUILT)"
+
+start: check startnocheck
+
+startnocheck: 
+	$(MAKE) -C terraform/$(ENV) apply NODES=$(NODES) CONSENSUS=$(CONSENSUS) VERSION=$(VERSION)
+
+startnoerr: 
+	-$(MAKE) -C terraform/$(ENV) apply NODES=$(NODES) CONSENSUS=$(CONSENSUS) VERSION=$(VERSION)
 
 stop:
 	$(MAKE) -C terraform/$(ENV) destroy
 
-.PHONY: up build-docker build-ami conf start stop
-	
+checktools: solc-exists npm-exists docker-exists
+solc-exists: ; @which solc > /dev/null
+npm-exists: ; @which npm > /dev/null
+docker-exists: ; @which docker > /dev/null
+
+
+
+.PHONY: up build-docker build-ami check conf prebuilt start startnoerr startnocheck stop checktools solc-exists npm-exists docker-exists compile

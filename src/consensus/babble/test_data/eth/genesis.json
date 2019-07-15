@@ -1,0 +1,7 @@
+{
+   "poa": {
+		"address": "0XABBAABBAABBAABBAABBAABBAABBAABBAABBAABBA",
+		"abi":  "[{\"type\":\"function\",\"inputs\": [{\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"checkAuthorised\",\"outputs\": [{\"name\":\"\",\"type\":\"bool\"}]}]",
+		"code": "6080604052348015600f57600080fd5b506004361060285760003560e01c80631a3e994514602d575b600080fd5b606c60048036036020811015604157600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506086565b604051808215151515815260200191505060405180910390f35b60007389accd6b63d6ee73550eca0cba16c2027c13fda673ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff16141560d7576001905060dc565b600090505b91905056fea165627a7a72305820879fffcdc2f60f9180edc849d0a2fc0b069efee448d22fd4625b19714c484f010029"
+	}
+}

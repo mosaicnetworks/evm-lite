@@ -23,13 +23,15 @@ func NewEngine(config config.Config,
 
 	state, err := state.NewState(logger,
 		config.Eth.DbFile,
-		config.Eth.Cache)
+		config.Eth.Cache,
+		config.Eth.Genesis)
 	if err != nil {
+
+		logger.Debug("engine.go:NewEngine() NewStart")
 		return nil, err
 	}
 
-	service := service.NewService(config.Eth.Genesis,
-		config.Eth.Keystore,
+	service := service.NewService(config.Eth.Keystore,
 		config.Eth.EthAPIAddr,
 		config.Eth.PwdFile,
 		state,
@@ -37,6 +39,7 @@ func NewEngine(config config.Config,
 		logger)
 
 	if err := consensus.Init(state, service); err != nil {
+		logger.Debug("engine.go:NewEngine() Consensus Init")
 		return nil, err
 	}
 

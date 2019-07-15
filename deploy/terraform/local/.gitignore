@@ -1,3 +1,3 @@
 .terraform
-ips.dat
 *tfstate*
+ips.dat
