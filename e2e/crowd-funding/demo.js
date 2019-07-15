@@ -104,8 +104,7 @@ const init = async () => {
 		.sort();
 	const port = argv.port;
 
-	// TODO: rename argv.keystore to datadir ?
-	const keystore = new Keystore(path.join(argv.keystore, 'keystore'));
+	const keystore = new Keystore(argv.keystore);
 
 	const passwordPath = argv.pwd;
 	const password = readPasswordFile(passwordPath);
