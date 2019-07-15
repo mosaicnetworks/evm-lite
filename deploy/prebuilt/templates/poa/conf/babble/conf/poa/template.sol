@@ -3,12 +3,9 @@ pragma solidity >=0.4.22;
 /// @title Proof of Authority Whitelist Proof of Concept
 /// @author Jon Knight
 /// @author Mosaic Networks
-/// @notice This is a proof of concept and is not production ready
-
+/// @notice Copyright Mosaic Networks 2019, released under the MIT license
 
 contract POA_Genesis {
-
-
 /// @notice Event emitted when the vote was reached a decision
 /// @param _nominee The address of the nominee
 /// @param _yesVotes The total number of yes votes cast for the nominee to date
@@ -18,11 +15,8 @@ contract POA_Genesis {
         address indexed _nominee,
         uint  _yesVotes,
         uint _noVotes,
-      bool indexed _accepted
+        bool indexed _accepted
     );
-
-
-
 
 /// @notice Event emitted when a nominee vote is cast
 /// @param _nominee The address of the nominee
@@ -32,10 +26,10 @@ contract POA_Genesis {
 /// @param _accepted The vote, true for accept, false for rejected
     event NomineeVoteCast(
         address indexed _nominee,
-      address indexed _voter,
+        address indexed _voter,
         uint  _yesVotes,
         uint _noVotes,
-      bool indexed _accepted
+        bool indexed _accepted
     );
 
 
@@ -47,7 +41,7 @@ contract POA_Genesis {
 /// @param _proposer The address of the person who proposed the nominee
     event NomineeProposed(
         address indexed _nominee,
-      address indexed _proposer
+        address indexed _proposer
     );
 
 
@@ -82,18 +76,19 @@ contract POA_Genesis {
       address[] noArray;
    }
 
-
    mapping (address => WhitelistPerson) public whiteList;
    uint whiteListCount;
    address[] whiteListArray;
-
    mapping (address => NomineeElection) nomineeList;
    address[] nomineeArray;
-   
    mapping (address => bytes32) monikerList;
 
 
 //GENERATED GENESIS BEGIN
+
+    // This code should be removed as part of the monetcli network compile  /monetcli wizard process. 
+    // The code within here is included so that the unamended contract is viable. 
+
     address constant initWhitelist1 = 0x1234567890123456789012345678901234567890;
     address constant initWhitelist2 = 0x2345678901234567890123456789012345678901;
     address constant initWhitelist0 = 0x3456789012345678901234567890123456789012;
@@ -119,6 +114,7 @@ contract POA_Genesis {
         return (  ( initWhitelist1 == _address ) ||  ( initWhitelist2 == _address ));
     }
 
+    // Code down to here should be replaced. 
 
 //GENERATED GENESIS END
 
@@ -129,18 +125,14 @@ contract POA_Genesis {
     constructor(bytes32 _moniker) public {
         addToWhitelist(address(uint160(msg.sender)), _moniker);
         processGenesisWhitelist();
-
     }
-
-
 
 
    /// @notice This is a constructor replacement for contracts placed directly in the genesis block. This is necessary because the constructor does not run in that instance.
     function init () public payable checkAuthorisedModifier(msg.sender)
     {
-	processGenesisWhitelist();
+    	processGenesisWhitelist();
     }
-
 
 
    /// @notice Modifier to check if a sender is on the white list.
@@ -158,24 +150,19 @@ contract POA_Genesis {
 
    /// @notice Function exposed for Babble Join authority
    function checkAuthorised(address _address) public view returns (bool)
-   {  // needs check on whitelist to allow original validators to be booted. 
+   {  // needs check on whitelist to allow original validators to be booted.
 
-       return ((isWhitelisted(_address))|| ((whiteListCount == 0)&&(isGenesisWhitelisted(_address)))  );
+       return ((isWhitelisted(_address)) || ((whiteListCount == 0)&&(isGenesisWhitelisted(_address)))  );
    }
-
-
 
    /// @notice Function exposed for Babble Join authority wraps checkAuthorised
    function checkAuthorisedPublicKey(bytes32  _publicKey) public view returns (bool)
    {
-
       return checkAuthorised(address(uint160(uint256(keccak256(abi.encodePacked(_publicKey))))));
 
 //    This version works in Solidity 0.4.x, but the extra intermediate steps are required in 0.5.x
 //      return checkAuthorised(address(keccak256(abi.encodePacked(_publicKey))));
-
    }
-
 
    /// @notice wrapper function to check if an address is on the nominee list
    /// @param _address the address to be checked
@@ -185,7 +172,6 @@ contract POA_Genesis {
         return (nomineeList[_address].nominee != address(0));
     }
 
-
    /// @notice wrapper function to check if an address is on the white list
    /// @param _address the address to be checked
    /// @return a boolean value, indicating if _address is on the white list
@@ -193,9 +179,6 @@ contract POA_Genesis {
     {
         return (whiteList[_address].person != address(0));
     }
-
-
-
 
 
     /// @notice private function to add user directly to the whitelist. Used to process the Genesis Whitelist.
@@ -213,10 +196,6 @@ contract POA_Genesis {
     }
 
 
-
-
-
-
    /// @notice Add a new entry to the nominee list
    /// @param _nomineeAddress the address of the nominee
    /// @param _moniker the moniker of the new nominee as displayed during the voting process
@@ -229,7 +208,6 @@ contract POA_Genesis {
         emit NomineeProposed(_nomineeAddress,  msg.sender);
         emit MonikerAnnounce(_nomineeAddress, _moniker);
     }
-
 
 
     ///@notice Cast a vote for a nominator. Can only be run by people on the whitelist.
@@ -251,15 +229,14 @@ contract POA_Genesis {
                 // Vote is valid. So lets cast the Vote
                 nomineeList[_nomineeAddress].vote[msg.sender] = NomineeVote({voter: msg.sender, accept: _accepted });
 
-
                 // Amend Totals
                 if (_accepted)
                 {
                     nomineeList[_nomineeAddress].yesVotes++;
-                    nomineeList[_nomineeAddress].yesArray.push(msg.sender);   
+                    nomineeList[_nomineeAddress].yesArray.push(msg.sender);
                 } else {
                     nomineeList[_nomineeAddress].noVotes++;
-                    nomineeList[_nomineeAddress].noArray.push(msg.sender);   
+                    nomineeList[_nomineeAddress].noArray.push(msg.sender);
                 }
 
                 emit NomineeVoteCast(_nomineeAddress, msg.sender,nomineeList[_nomineeAddress].yesVotes,
@@ -274,19 +251,12 @@ contract POA_Genesis {
             decided = true;
         }
 
-
         // If decided, check if on whitelist
         if (decided) {
             voteresult = isWhitelisted(_nomineeAddress);
         }
-
         return (decided, voteresult);
-
     }
-
-
-
-// This function encapsulates the logic as to whether a vote is complete
 
     ///@notice This function encapsulates the logic for determining if there are enough votes for a definitive decision
     ///@param _nomineeAddress The address of the NomineeElection
@@ -325,9 +295,6 @@ contract POA_Genesis {
     }
 
 
-// Adds the user to the white list.
-
-
     ///@notice This private function adds the accepted nominee to the whitelist.
     ///@param _nomineeAddress The address of the nominee being added to the whitelist
     function acceptNominee(address _nomineeAddress) private
@@ -343,26 +310,23 @@ contract POA_Genesis {
     }
 
 
-// Remove person from white list. Not currently used, but will be needed.
     ///@notice This private function adds the removes a user from the whitelist. Not currently used.
     ///@param _address The address of the nominee being removed to the whitelist
-
     function deWhiteList(address _address) private
     {
-
         if(isWhitelisted(_address))
         {
             delete(whiteList[_address]);
             whiteListCount--;
 
-				for (uint i = 0; i<whiteListArray.length; i++) {
-					if (whiteListArray[i] == _address)
-					{  // Replace item to be removed with the last item. Then remove last item.
-						whiteListArray[i] == whiteListArray[whiteListArray.length - 1];
-						delete whiteListArray[whiteListArray.length - 1];
-                  break;
-					}
-				}
+            for (uint i = 0; i<whiteListArray.length; i++) {
+                if (whiteListArray[i] == _address)
+                {  // Replace item to be removed with the last item. Then remove last item.
+                    whiteListArray[i] == whiteListArray[whiteListArray.length - 1];
+                    delete whiteListArray[whiteListArray.length - 1];
+                break;
+                }
+            }
         }
     }
 
@@ -448,10 +412,8 @@ contract POA_Genesis {
 
 	function getYesVoterFromIdx(address _nomineeAddress, uint _idx)  public view returns (address voter)
 	{
-		
 		require (_idx < nomineeList[_nomineeAddress].yesArray.length, "Requested address is out of range.");
 		return (nomineeList[_nomineeAddress].yesArray[_idx]);
-
 	}
 
 
@@ -462,66 +424,19 @@ contract POA_Genesis {
 
 	function getNoVoterFromIdx(address _nomineeAddress, uint _idx) public view returns (address voter)
 	{
-		
 		require (_idx < nomineeList[_nomineeAddress].noArray.length, "Requested address is out of range.");
 		return (nomineeList[_nomineeAddress].noArray[_idx]);
-
 	}
-
-
-
-
-
-
 
 	function getMoniker(address _address) public view returns (bytes32 moniker)
 	{
 		return (monikerList[_address]);
 	}
 
-
-
-// Testing section - Functions in this section all have a dev_ prefix and should not be referenced
-// They will not be in the production release.
-    function dev_getCurrentNomineeVotes(address _address) public view returns (uint yes, uint no)
+        function getCurrentNomineeVotes(address _address) public view returns (uint yes, uint no)
     {
        if (! isNominee(_address)) {return (yes, no);}
         return (nomineeList[_address].yesVotes,nomineeList[_address].noVotes);
     }
 
-    function dev_getWhitelistCount() public view returns (uint)
-    {
-         return(whiteListCount);
-    }
-
-    function dev_isWhitelisted(address _address) public view returns (bool)
-    {
-        return(isWhitelisted(_address));
-    }
-
-
-    function dev_isGenesisWhitelisted(address _address) public pure returns (bool)
-    {
-
-        return(isGenesisWhitelisted(_address));
-    }
-
-
-    function dev_getGenesisWhitelist0() public pure returns (address)
-    {
-          return( initWhitelist0);
-
-    }
-
-    function dev_getSender() public view returns (address)
-    {
-          return( msg.sender);
-
-    }
-
-    function dev_27() public pure returns(uint)
-    {
-        return(27);
-    }
 }
-
