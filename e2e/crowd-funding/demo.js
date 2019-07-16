@@ -1,8 +1,11 @@
+// evm-lite-js imports
+const { EVMLC, Account, Contract } = require('evm-lite-core');
+const { Keystore } = require('evm-lite-keystore');
+
 const util = require('util');
+const path = require('path');
 const fs = require('fs');
-const JSONbig = require('json-bigint');
 const argv = require('minimist')(process.argv.slice(2));
-const evmlc = require('evm-lite-lib');
 const solc = require('solc');
 const prompt = require('prompt');
 
@@ -17,40 +20,40 @@ const FgWhite = '\x1b[37m';
 const log = (color, text) => {
 	console.log(color + text + '\x1b[0m');
 };
+
 const online = true;
 
 const schema = {
-    properties: {
-      enters: {
-        description: 'PRESS ENTER TO CONTINUE',
-        ask: function() {
-                         if (!online){console.log("Skipping prompt");}
-          return online;
-        }
-      }
-    }
-  };
-
+	properties: {
+		enters: {
+			description: 'PRESS ENTER TO CONTINUE',
+			ask: function() {
+				if (!online) {
+					console.log('Skipping prompt');
+				}
+				return online;
+			}
+		}
+	}
+};
 
 const step = message => {
-        log(FgWhite, '\n' + message);
-        return new Promise(resolve => {
-                prompt.get(schema, function(err, res) {
-                        resolve();
-                });
-        });
+	log(FgWhite, '\n' + message);
+	return new Promise(resolve => {
+		prompt.get(schema, function(err, res) {
+			resolve();
+		});
+	});
 };
 
 const hardstep = message => {
-        log(FgWhite, '\n' + message);
-        return new Promise(resolve => {
-                prompt.get('PRESS ENTER TO CONTINUE', function(err, res) {
-                        resolve();
-                });
-        });
+	log(FgWhite, '\n' + message);
+	return new Promise(resolve => {
+		prompt.get('PRESS ENTER TO CONTINUE', function(err, res) {
+			resolve();
+		});
+	});
 };
-
-
 
 const explain = message => {
 	log(FgCyan, util.format('\nEXPLANATION:\n%s', message));
@@ -68,16 +71,24 @@ const sleep = function(time) {
  * Demo starts here.
  */
 
+/** DEFAULT CONFIG VALUES */
+const DEFAULT_GAS = 100000000;
+const DEFAULT_GASPRICE = 0;
+
 function Node(name, host, port) {
 	this.name = name;
-	this.api = new evmlc.EVMLC(host, port, {
-		from: '',
-		gas: 1000000,
-		gasPrice: 0
-	});
+
+	this.api = new EVMLC(host, port);
+
 	this.account = {};
 }
 
+// Util functions
+const readPasswordFile = path => {
+	return fs.readFileSync(path, { encoding: 'utf8' });
+};
+
+// State functions
 const allAccounts = [];
 const allNodes = [];
 
@@ -92,16 +103,19 @@ const init = async () => {
 		.split(',')
 		.sort();
 	const port = argv.port;
-	const keystore = new evmlc.Keystore(argv.keystore, 'keystore');
+
+	const keystore = new Keystore(argv.keystore);
+
 	const passwordPath = argv.pwd;
 	const password = readPasswordFile(passwordPath);
 
 	contractPath = argv.contract;
 
 	console.log('Sorted IPs: ', ips);
+	console.log('Port: ', port);
 	console.log('Keystore Path: ', keystore.path);
-	console.log('Password File Path: ', passwordPath);
-	console.log('Contract File Path: ', contractPath);
+	console.log('Password Path: ', passwordPath);
+	console.log('Contract Path: ', contractPath);
 
 	for (i = 0; i < ips.length; i++) {
 		node = new Node(util.format('node%d', i + 1), ips[i], port);
@@ -116,22 +130,46 @@ const init = async () => {
 	};
 };
 
-const readPasswordFile = path => {
-	return fs.readFileSync(path, { encoding: 'utf8' });
-};
-
 const decryptAccounts = async ({ keystore, password }) => {
 	console.group('Decrypt Accounts');
 	console.log('Password: ', password);
 
-        const baseAccounts = await keystore.list(allNodes[0].api);
+	const keyfiles = await keystore.list();
 
-	for (const baseAccount of baseAccounts) {
-		account = await keystore.decrypt(baseAccount.address, password);
-		account.balance = baseAccount.balance;
+	for (const keyfile of keyfiles) {
+		let account;
 
-		console.log('Decrypted: ', `${account.address}(${account.balance})`);
-		allAccounts.push(account);
+		try {
+			account = await Keystore.decrypt(keyfile, password);
+		} catch (e) {
+			console.error(
+				`Decryption Failed: ${keyfile.address} (${password})`
+			);
+		}
+
+		try {
+			if (account) {
+				const base = await allNodes[0].api.getAccount(account.address);
+
+				account.balance = base.balance;
+				account.nonce = base.nonce;
+			}
+		} catch (e) {
+			// pass
+		}
+
+		if (account) {
+			let balance = 0;
+
+			if (typeof account.balance === 'object') {
+				balance = account.balance.toFormat(0);
+			} else {
+				balance = account.balance;
+			}
+
+			console.log('Decrypted: ', `${account.address} (${balance || 0})`);
+			allAccounts.push(account);
+		}
 	}
 
 	for (i = 0; i < allNodes.length; i++) {
@@ -146,27 +184,46 @@ const displayAllBalances = async () => {
 	console.group('Current Account Balances');
 
 	for (const node of allNodes) {
-		baseAccount = await node.api.accounts.getAccount(node.account.address);
-		console.log(`${node.name}: `, '\n', baseAccount, '\n');
+		const baseAccount = await node.api.getAccount(node.account.address);
+		const account = {
+			...baseAccount
+		};
+
+		let balance = 0;
+
+		if (typeof account.balance === 'object') {
+			balance = account.balance.toFormat(0);
+		} else {
+			balance = account.balance;
+		}
+
+		account.balance = balance;
+
+		console.log(`${node.name}: `, '\n', account, '\n');
 	}
 	console.groupEnd();
 };
 
 const transferRaw = async (from, to, value) => {
-	console.group('Transfer Signed Locally');
+	console.group('Locally Signed Transfer');
 
-	const transaction = await from.api.accounts.prepareTransfer(
+	const transaction = Account.prepareTransfer(
+		from.account.address,
 		to.account.address,
-		value
+		value,
+		DEFAULT_GAS,
+		DEFAULT_GASPRICE
 	);
-	console.log('Transaction: ', transaction.parse(), '\n');
 
-	await transaction.submit(from.account, { timeout: 3 });
+	console.log('Transaction: ', transaction, '\n');
 
-	console.log('Receipt: ', await transaction.receipt);
+	const receipt = await from.api.sendTransaction(transaction, from.account);
+	console.log('Receipt: ', receipt);
+
+	console.groupEnd();
 };
 
-const compiledSmartContract = async () => {
+const compileContract = async () => {
 	const input = fs.readFileSync(contractPath, {
 		encoding: 'utf8'
 	});
@@ -174,47 +231,67 @@ const compiledSmartContract = async () => {
 	const bytecode = output.contracts[`:CrowdFunding`].bytecode;
 	const abi = output.contracts[`:CrowdFunding`].interface;
 
-	const contract = await allNodes[0].api.contracts.load(JSON.parse(abi), {
-		data: bytecode
-	});
-
-	return contract;
+	console.log('ABI: ', abi, '\n');
+	return Contract.create(JSON.parse(abi), bytecode);
 };
 
 class CrowdFunding {
-	constructor(contract, account) {
+	constructor(contract, node) {
 		this.contract = contract;
-		this.account = account;
+		this.node = node;
 	}
 
 	async deploy(value) {
-		await this.contract.deploy([value], { timeout: 3 }, this.account);
-		console.log('Receipt:', this.contract.receipt);
+		const tx = this.contract.deployTransaction(
+			[value],
+			this.node.account.address,
+			DEFAULT_GAS,
+			DEFAULT_GASPRICE
+		);
+
+		const receipt = await this.node.api.sendTransaction(
+			tx,
+			this.node.account
+		);
+		console.log('Receipt:', receipt);
+
+		this.contract.setAddressAndAddFunctions(receipt.contractAddress);
+
 		return this;
 	}
 
 	async contribute(value) {
-		const transaction = await this.contract.methods.contribute();
-		transaction.value(value);
+		const tx = this.contract.methods.contribute({
+			from: this.node.account.address,
+			value,
+			gas: DEFAULT_GAS,
+			gasPrice: DEFAULT_GASPRICE
+		});
 
-		console.log('Transaction: ', transaction.parse(), '\n');
-		await transaction.submit(this.account, { timeout: 3 });
+		console.log('Transaction: ', tx, '\n');
 
-		const receipt = await transaction.receipt;
-		const logs = this.contract.parseLogs(receipt.logs);
+		const receipt = await this.node.api.sendTransaction(
+			tx,
+			this.node.account
+		);
 
-		for (const log of logs) {
+		for (const log of receipt.logs) {
 			console.log(
 				log.event || 'No Event Name',
 				JSON.stringify(log.args, null, 2)
 			);
 		}
-		return transaction;
+
+		return tx;
 	}
 
 	async checkGoalReached() {
-		const transaction = await this.contract.methods.checkGoalReached();
-		const response = await transaction.submit(this.account, { timeout: 3 });
+		const tx = this.contract.methods.checkGoalReached({
+			gas: DEFAULT_GAS,
+			gasPrice: DEFAULT_GASPRICE
+		});
+
+		const response = await this.node.api.callTransaction(tx);
 
 		const parsedResponse = {
 			goalReached: response[0],
@@ -229,28 +306,33 @@ class CrowdFunding {
 	}
 
 	async settle() {
-		const transaction = await this.contract.methods.settle();
+		const tx = this.contract.methods.settle({
+			from: this.node.account.address,
+			gas: DEFAULT_GAS,
+			gasPrice: DEFAULT_GASPRICE
+		});
 
-		console.log('Transaction: ', transaction.parse(), '\n');
-		await transaction.submit(this.account, { timeout: 3 });
+		console.log('Transaction: ', tx, '\n');
 
-		const receipt = await transaction.receipt;
-		const logs = this.contract.parseLogs(receipt.logs);
+		const receipt = await this.node.api.sendTransaction(
+			tx,
+			this.node.account
+		);
 
-		for (const log of logs) {
+		for (const log of receipt.logs) {
 			console.log(
 				log.event || 'No Event Name',
 				JSON.stringify(log.args, null, 2)
 			);
 		}
 
-		return transaction;
+		return tx;
 	}
 }
 
 init()
 	.then(object => decryptAccounts(object))
-	.then(() => step('STEP 1) Get ETH Accounts'))
+	.then(() => step('STEP 1) Get Accounts'))
 	.then(() => {
 		space();
 		return displayAllBalances();
@@ -258,10 +340,10 @@ init()
 	.then(() =>
 		explain(
 			'Each node controls one account which allows it to send and receive Ether. \n' +
-			'The private keys reside locally and directly on the evm-light nodes. In a \n' +
-			'production setting, access to the nodes would be restricted to the people  \n' +
-			'allowed to sign messages with the private key. We also keep a local copy \n' +
-			'of all the private keys to demonstrate client-side signing.'
+				'The private keys reside locally and directly on the evm-light nodes. In a \n' +
+				'production setting, access to the nodes would be restricted to the people  \n' +
+				'allowed to sign messages with the private key. We also keep a local copy \n' +
+				'of all the private keys to demonstrate client-side signing.'
 		)
 	)
 	.then(() => step('STEP 2) Send 500 wei (10^-18 ether) from node1 to node2'))
@@ -272,12 +354,12 @@ init()
 	.then(() =>
 		explain(
 			'We created an EVM transaction to send 500 wei from node1 to node2. The \n' +
-			'transaction was signed localy with node1 \'s private key and sent through node1. \n' +
-			'The client-facing service running in EVM-Lite relayed the transaction to Babble \n' +
-			'for consensus ordering. Babble gossiped the raw transaction to the other Babble \n' +
-			'nodes which ran it through the consensus algorithm before committing it back to \n' +
-			'EVM-Lite as part of Block. So each node received and processed the transaction. \n' +
-			'They each applied the same changes to their local copy of the ledger.\n'
+				"transaction was signed localy with node1 's private key and sent through node1. \n" +
+				'The client-facing service running in EVM-Lite relayed the transaction to Babble \n' +
+				'for consensus ordering. Babble gossiped the raw transaction to the other Babble \n' +
+				'nodes which ran it through the consensus algorithm before committing it back to \n' +
+				'EVM-Lite as part of Block. So each node received and processed the transaction. \n' +
+				'They each applied the same changes to their local copy of the ledger.\n'
 		)
 	)
 	.then(() => step('STEP 3) Check balances again'))
@@ -295,20 +377,20 @@ init()
 	)
 	.then(() => {
 		space();
-		return compiledSmartContract('PATH_TO_CONTRACT_HERE');
+		return compileContract();
 	})
 	.then(async contract => {
-		crowdFunding = new CrowdFunding(contract, allNodes[0].account);
+		crowdFunding = new CrowdFunding(contract, allNodes[0]);
 		await crowdFunding.deploy(1000);
 	})
 	.then(() =>
 		explain(
 			'Here we compiled and deployed the CrowdFunding SmartContract. \n' +
-			'The contract was written in the high-level Solidity language which compiles \n' +
-			'down to EVM bytecode. To deploy the SmartContract we created an EVM transaction \n' +
-			"with a 'data' field containing the bytecode. After going through consensus, the \n" +
-			'transaction is applied on every node, so every participant will run a copy of \n' +
-			'the same code with the same data.'
+				'The contract was written in the high-level Solidity language which compiles \n' +
+				'down to EVM bytecode. To deploy the SmartContract we created an EVM transaction \n' +
+				"with a 'data' field containing the bytecode. After going through consensus, the \n" +
+				'transaction is applied on every node, so every participant will run a copy of \n' +
+				'the same code with the same data.'
 		)
 	)
 	.then(() => step('STEP 5) Contribute 499 wei from node 1'))
@@ -319,10 +401,10 @@ init()
 	.then(() =>
 		explain(
 			"We created an EVM transaction to call the 'contribute' method of the SmartContract. \n" +
-			"The 'value' field of the transaction is the amount that the caller is actually \n" +
-			'going to contribute. The operation would fail if the account did not have enough Ether. \n' +
-			'As an exercise you can check that the transaction was run through every Babble \n' +
-			"node and that node2's balance has changed."
+				"The 'value' field of the transaction is the amount that the caller is actually \n" +
+				'going to contribute. The operation would fail if the account did not have enough Ether. \n' +
+				'As an exercise you can check that the transaction was run through every Babble \n' +
+				"node and that node2's balance has changed."
 		)
 	)
 	.then(() => step('STEP 6) Check goal reached'))
@@ -333,7 +415,7 @@ init()
 	.then(() =>
 		explain(
 			'Here we called another method of the SmartContract to check if the funding goal \n' +
-			'was met. Since only 499 of 1000 were received, the answer is no.'
+				'was met. Since only 499 of 1000 were received, the answer is no.'
 		)
 	)
 	.then(() => step('STEP 7) Contribute 501 wei from node 1 again'))
