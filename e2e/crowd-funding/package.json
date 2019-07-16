@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"description": "A Crowd Funding demo for EVM-Lite.",
 	"main": "demo.js",
+	"scripts": {
+		"demo": "node demo --ips 127.0.0.1,127.0.0.1 --port 8080 --keystore /Users/danu/.evmlc/keystore --pwd ./pwd.txt --contract ../smart-contracts/CrowdFunding.sol"
+	},
 	"dependencies": {
 		"evm-lite-core": "^1.0.0-alpha.11",
 		"evm-lite-datadir": "^1.0.0-alpha.11",

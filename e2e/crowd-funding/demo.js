@@ -112,9 +112,10 @@ const init = async () => {
 	contractPath = argv.contract;
 
 	console.log('Sorted IPs: ', ips);
+	console.log('Port: ', port);
 	console.log('Keystore Path: ', keystore.path);
-	console.log('Password File Path: ', passwordPath);
-	console.log('Contract File Path: ', contractPath);
+	console.log('Password Path: ', passwordPath);
+	console.log('Contract Path: ', contractPath);
 
 	for (i = 0; i < ips.length; i++) {
 		node = new Node(util.format('node%d', i + 1), ips[i], port);
@@ -138,15 +139,35 @@ const decryptAccounts = async ({ keystore, password }) => {
 	for (const keyfile of keyfiles) {
 		let account;
 
-		// TODO: fetch account balance, nonce and bytecode maybe?
 		try {
 			account = await Keystore.decrypt(keyfile, password);
 		} catch (e) {
-			console.log(`Could not decrypt: ${keyfile.address} (${password})`);
+			console.error(
+				`Decryption Failed: ${keyfile.address} (${password})`
+			);
+		}
+
+		try {
+			if (account) {
+				const base = await allNodes[0].api.getAccount(account.address);
+
+				account.balance = base.balance;
+				account.nonce = base.nonce;
+			}
+		} catch (e) {
+			// pass
 		}
 
 		if (account) {
-			console.log('Decrypted: ', `${account.address}`);
+			let balance = 0;
+
+			if (typeof account.balance === 'object') {
+				balance = account.balance.toFormat(0);
+			} else {
+				balance = account.balance;
+			}
+
+			console.log('Decrypted: ', `${account.address} (${balance || 0})`);
 			allAccounts.push(account);
 		}
 	}
@@ -163,8 +184,22 @@ const displayAllBalances = async () => {
 	console.group('Current Account Balances');
 
 	for (const node of allNodes) {
-		baseAccount = await node.api.getAccount(node.account.address);
-		console.log(`${node.name}: `, '\n', baseAccount, '\n');
+		const baseAccount = await node.api.getAccount(node.account.address);
+		const account = {
+			...baseAccount
+		};
+
+		let balance = 0;
+
+		if (typeof account.balance === 'object') {
+			balance = account.balance.toFormat(0);
+		} else {
+			balance = account.balance;
+		}
+
+		account.balance = balance;
+
+		console.log(`${node.name}: `, '\n', account, '\n');
 	}
 	console.groupEnd();
 };
@@ -196,7 +231,7 @@ const compileContract = async () => {
 	const bytecode = output.contracts[`:CrowdFunding`].bytecode;
 	const abi = output.contracts[`:CrowdFunding`].interface;
 
-	console.log(abi);
+	console.log('ABI: ', abi, '\n');
 	return Contract.create(JSON.parse(abi), bytecode);
 };
 
@@ -342,7 +377,7 @@ init()
 	)
 	.then(() => {
 		space();
-		return compileContract(contractPath);
+		return compileContract();
 	})
 	.then(async contract => {
 		crowdFunding = new CrowdFunding(contract, allNodes[0]);
