@@ -86,14 +86,14 @@ contract POA_Genesis {
 
 //GENERATED GENESIS BEGIN 
   
-    address constant initWhitelist0 = 0x54F6e2C29BefaAF55C688E00FFe7353Ca0A489d5;
-    bytes32 constant initWhitelistMoniker0 = "node0";
-    address constant initWhitelist1 = 0x6141b87cF003e9DF9056e28BcB1f6bc5F3025AC3;
-    bytes32 constant initWhitelistMoniker1 = "node1";
-    address constant initWhitelist2 = 0xa25Fa063730474A63a679b3Ba2F43f8cFa8c7247;
-    bytes32 constant initWhitelistMoniker2 = "node2";
-    address constant initWhitelist3 = 0xAfD223f95B9D0D477cB86b7200227263209f8e05;
-    bytes32 constant initWhitelistMoniker3 = "node3"; 
+    address constant initWhitelist0 = 0xAfD223f95B9D0D477cB86b7200227263209f8e05;
+    bytes32 constant initWhitelistMoniker0 = "node3";
+    address constant initWhitelist1 = 0x54F6e2C29BefaAF55C688E00FFe7353Ca0A489d5;
+    bytes32 constant initWhitelistMoniker1 = "node0";
+    address constant initWhitelist2 = 0x6141b87cF003e9DF9056e28BcB1f6bc5F3025AC3;
+    bytes32 constant initWhitelistMoniker2 = "node1";
+    address constant initWhitelist3 = 0xa25Fa063730474A63a679b3Ba2F43f8cFa8c7247;
+    bytes32 constant initWhitelistMoniker3 = "node2"; 
  
  
     function processGenesisWhitelist() private 
@@ -317,8 +317,9 @@ contract POA_Genesis {
             for (uint i = 0; i<whiteListArray.length; i++) {
                 if (whiteListArray[i] == _address)
                 {  // Replace item to be removed with the last item. Then remove last item.
-                    whiteListArray[i] == whiteListArray[whiteListArray.length - 1];
+                    whiteListArray[i] = whiteListArray[whiteListArray.length - 1];
                     delete whiteListArray[whiteListArray.length - 1];
+                    whiteListArray.length--;
                 break;
                 }
             }
@@ -346,8 +347,9 @@ contract POA_Genesis {
 			for (uint i = 0; i<nomineeArray.length; i++) {
 				if (nomineeArray[i] == _nomineeAddress)
 				{  // Replace item to be removed with the last item. Then remove last item.
-					nomineeArray[i] == nomineeArray[nomineeArray.length - 1];
+					nomineeArray[i] = nomineeArray[nomineeArray.length - 1];
 					delete nomineeArray[nomineeArray.length - 1];
+                    nomineeArray.length--;
                   break;
 				}
 			}
