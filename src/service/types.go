@@ -12,7 +12,7 @@ type JsonAccount struct {
 	Balance *big.Int `json:"balance"`
 	Nonce   uint64   `json:"nonce"`
 	Code    string   `json:"bytecode"`
-}
+
 
 type JsonAccountList struct {
 	Accounts []JsonAccount `json:"accounts"`

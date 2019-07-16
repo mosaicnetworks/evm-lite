@@ -260,10 +260,12 @@ func (s *State) GetNonce(addr common.Address) uint64 {
 	return s.ethState.GetNonce(addr)
 }
 
+
 // GetCode returns an account's bytecode from the main ethState
 func (s *State) GetCode(addr common.Address) []byte {
 	return s.ethState.GetCode(addr)
 }
+
 
 // GetPoolNonce returns an account's nonce from the txpool's ethState
 func (s *State) GetPoolNonce(addr common.Address) uint64 {

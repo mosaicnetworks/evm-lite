@@ -140,7 +140,7 @@ func callHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
-	res := JsonCallRes{Data: common.ToHex(data)}
+	res := JsonCallRes{Data: hexutil.Encode(data)}
 	js, err := json.Marshal(res)
 	if err != nil {
 		m.logger.WithError(err).Error("Marshaling JSON response")
