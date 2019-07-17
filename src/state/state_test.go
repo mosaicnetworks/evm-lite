@@ -42,7 +42,7 @@ func NewTest(dataDir string, logger *logrus.Logger, t *testing.T) *Test {
 	genesisFile := filepath.Join(dataDir, "genesis.json")
 	cache := 128
 
-	state, err := NewState(logger, dbFile, cache, genesisFile)
+	state, err := NewState(dbFile, cache, genesisFile, logger)
 	if err != nil {
 		t.Fatal(err)
 	}

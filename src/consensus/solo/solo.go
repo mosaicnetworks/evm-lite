@@ -10,10 +10,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-/*
-Solo implements the Consensus interface.
-It relays messages directly from the State to the Service.
-*/
+// Solo implements the Consensus interface, and is used for testing only. It
+// relays messages directly from the State to the Service.
 type Solo struct {
 	txIndex int
 	state   *state.State
@@ -43,8 +41,7 @@ func (s *Solo) Init(state *state.State, service *service.Service) error {
 	return nil
 }
 
-// Run pipes the Service's submitCh to the States's ProcessBlock function. It
-// wraps individual transactions into Babble Blocks
+// Run pipes the Service's submitCh to the States's ProcessBlock function.
 func (s *Solo) Run() error {
 	submitCh := s.service.GetSubmitCh()
 	for {

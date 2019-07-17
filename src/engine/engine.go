@@ -19,21 +19,22 @@ type Engine struct {
 func NewEngine(config config.Config,
 	consensus consensus.Consensus,
 	logger *logrus.Logger) (*Engine, error) {
+
 	submitCh := make(chan []byte)
 
-	state, err := state.NewState(logger,
-		config.Eth.DbFile,
-		config.Eth.Cache,
-		config.Eth.Genesis)
-	if err != nil {
+	state, err := state.NewState(
+		config.DbFile,
+		config.Cache,
+		config.Genesis,
+		logger)
 
+	if err != nil {
 		logger.Debug("engine.go:NewEngine() NewStart")
 		return nil, err
 	}
 
-	service := service.NewService(config.Eth.Keystore,
-		config.Eth.EthAPIAddr,
-		config.Eth.PwdFile,
+	service := service.NewService(
+		config.EthAPIAddr,
 		state,
 		submitCh,
 		logger)
@@ -54,8 +55,8 @@ func NewEngine(config config.Config,
 	return engine, nil
 }
 
-// Run starts the engine's Service asynchronously and starts the Consensus system
-// synchronously
+// Run starts the engine's Service asynchronously and starts the Consensus
+// system synchronously
 func (e *Engine) Run() error {
 
 	go e.service.Run()

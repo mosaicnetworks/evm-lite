@@ -10,70 +10,75 @@ import (
 
 var (
 	// Base
-	defaultLogLevel = "debug"
-	DefaultDataDir  = defaultHomeDir()
+	defaultLogLevel     = "debug"
+	defaultDataDir      = defaultHomeDir()
+	defaultEthAPIAddr   = ":8080"
+	defaultCache        = 128
+	defaultEthDir       = fmt.Sprintf("%s/eth", defaultDataDir)
+	defaultKeystoreFile = fmt.Sprintf("%s/keystore", defaultEthDir)
+	defaultGenesisFile  = fmt.Sprintf("%s/genesis.json", defaultEthDir)
+	defaultPwdFile      = fmt.Sprintf("%s/pwd.txt", defaultEthDir)
+	defaultDbFile       = fmt.Sprintf("%s/chaindata", defaultEthDir)
 )
 
 // Config contains de configuration for an EVM-Lite node
 type Config struct {
-
-	// Top level options use an anonymous struct
-	BaseConfig `mapstructure:",squash"`
-
-	// Options for EVM and State
-	Eth *EthConfig `mapstructure:"eth"`
-
-	// Options for Babble consensus
-	Babble *BabbleConfig `mapstructure:"babble"`
-
-	// Options for Raft consensus
-	Raft *RaftConfig `mapstructure:"raft"`
-}
-
-// DefaultConfig returns the default configuration for an EVM-Lite node
-func DefaultConfig() *Config {
-	return &Config{
-		BaseConfig: DefaultBaseConfig(),
-		Eth:        DefaultEthConfig(),
-		Babble:     DefaultBabbleConfig(),
-		Raft:       DefaultRaftConfig(),
-	}
-}
-
-// SetDataDir updates the root data directory as well as the various lower config
-// for eth and consensus
-func (c *Config) SetDataDir(datadir string) {
-	c.BaseConfig.DataDir = datadir
-	if c.Eth != nil {
-		c.Eth.SetDataDir(fmt.Sprintf("%s/eth", datadir))
-	}
-	if c.Babble != nil {
-		c.Babble.SetDataDir(fmt.Sprintf("%s/babble", datadir))
-	}
-	if c.Raft != nil {
-		c.Raft.SetDataDir(fmt.Sprintf("%s/raft", datadir))
-	}
-}
-
-/*******************************************************************************
-BASE CONFIG
-*******************************************************************************/
-
-// BaseConfig contains the top level configuration for an EVM-Babble node
-type BaseConfig struct {
-
 	// Top-level directory of evm-babble data
 	DataDir string `mapstructure:"datadir"`
 
 	// Debug, info, warn, error, fatal, panic
 	LogLevel string `mapstructure:"log"`
+
+	// Genesis file
+	Genesis string `mapstructure:"genesis"`
+
+	// Location of ethereum account keys
+	Keystore string `mapstructure:"keystore"`
+
+	// File containing passwords to unlock ethereum accounts
+	PwdFile string `mapstructure:"pwd"`
+
+	// File containing the levelDB database
+	DbFile string `mapstructure:"db"`
+
+	// Address of HTTP API Service
+	EthAPIAddr string `mapstructure:"listen"`
+
+	// Megabytes of memory allocated to internal caching (min 16MB / database
+	// forced)
+	Cache int `mapstructure:"cache"`
 }
 
-// DefaultBaseConfig returns the default top-level configuration for EVM-Babble
-func DefaultBaseConfig() BaseConfig {
-	return BaseConfig{
-		DataDir:  DefaultDataDir,
-		LogLevel: defaultLogLevel,
+// DefaultConfig returns the default configuration for an EVM-Lite node
+func DefaultConfig() *Config {
+	return &Config{
+		DataDir:    defaultDataDir,
+		LogLevel:   defaultLogLevel,
+		Genesis:    defaultGenesisFile,
+		Keystore:   defaultKeystoreFile,
+		PwdFile:    defaultPwdFile,
+		DbFile:     defaultDbFile,
+		EthAPIAddr: defaultEthAPIAddr,
+		Cache:      defaultCache,
+	}
+}
+
+// SetDataDir updates the root data directory and trickles down to the eth
+// directories if they are currently set to the default values.
+func (c *Config) SetDataDir(datadir string) {
+	c.DataDir = datadir
+
+	if c.Genesis == defaultGenesisFile {
+		c.Genesis = fmt.Sprintf("%s/eth/genesis.json", datadir)
+	}
+	if c.Keystore == defaultKeystoreFile {
+		c.Keystore = fmt.Sprintf("%s/eth/keystore", datadir)
+	}
+	if c.PwdFile == defaultPwdFile {
+		c.PwdFile = fmt.Sprintf("%s/eth/pwd.txt", datadir)
+	}
+	if c.DbFile == defaultDbFile {
+		c.DbFile = fmt.Sprintf("%s/eth/chaindata", datadir)
 	}
 }
 
