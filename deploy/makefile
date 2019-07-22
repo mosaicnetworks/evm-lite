@@ -1,5 +1,5 @@
 ENV = local # local or aws
-VERSION = 0.2.0 # evm-lite Docker Image
+VERSION = 0.2.1 # evm-lite Docker Image
 CONSENSUS = solo # solo, babble, or raft
 NODES = 1
 VALIDATORS = 1

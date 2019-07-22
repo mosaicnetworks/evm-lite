@@ -8,6 +8,11 @@ IMPROVEMENTS:
 
 BUG FIXES: 
 
+## v0.2.1 (July 22, 2019)
+
+BUG FIXES: 
+- service: Force O gasPrice on readonly transactions (issue 5 of monetd)
+
 ## v0.2.0 (July 22, 2019)
 
 SECURITY:

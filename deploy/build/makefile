@@ -1,4 +1,4 @@
-EVM_LITE_VERSION=0.2.0
+EVM_LITE_VERSION=0.2.1
 GIT_COMMIT=$(shell git rev-parse --short HEAD)
 
 all: docker ami 
