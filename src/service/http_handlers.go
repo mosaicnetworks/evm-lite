@@ -522,13 +522,14 @@ func prepareCallMessage(args SendTxArgs, ks *keystore.KeyStore) (*ethTypes.Messa
 
 	//Todo set default from
 
-	//Create Call Message
+	// Create Call Message
+	// Set gasPrice and value to 0 because this is a readonly operation
 	msg := ethTypes.NewMessage(args.From,
 		args.To,
 		0,
-		args.Value,
+		big.NewInt(0),
 		args.Gas,
-		args.GasPrice,
+		big.NewInt(0),
 		common.FromHex(args.Data),
 		false)
 
