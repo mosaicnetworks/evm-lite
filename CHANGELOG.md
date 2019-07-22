@@ -5,6 +5,16 @@ SECURITY:
 FEATURES:
 
 IMPROVEMENTS:
+
+BUG FIXES: 
+
+## v0.2.0 (July 22, 2019)
+
+SECURITY:
+
+FEATURES:
+
+IMPROVEMENTS:
 - demo: Use evm-lite-lib package in demo scripts.
 - state: Move genesis account creation from service to state. 
 
