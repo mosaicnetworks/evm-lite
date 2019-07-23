@@ -160,7 +160,7 @@ func (s *State) Commit() (common.Hash, error) {
 func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	s.logger.Debug("Call")
 
-	context := NewContext(callMsg.From(), 0, callMsg.GasPrice())
+	context := NewContext(callMsg.From(), 0, big.NewInt(0))
 
 	// We use a copy of the ethState because even call transactions increment
 	// the sender's nonce

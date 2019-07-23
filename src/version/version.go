@@ -4,14 +4,14 @@ package version
 const Maj = "0"
 
 //Min is Minor Version Number
-const Min = "3"
+const Min = "2"
 
 //Fix is the Patch Version
-const Fix = "0"
+const Fix = "1"
 
 var (
 	//Version contains the full version string
-	Version = "0.3.0"
+	Version = "0.2.1"
 
 	// GitCommit is set with --ldflags "-X main.gitCommit=$(git rev-parse HEAD)"
 	GitCommit string
