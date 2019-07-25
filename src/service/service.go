@@ -5,7 +5,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/gorilla/mux"
 	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
 )
@@ -36,7 +35,7 @@ func NewService(apiAddr string,
 }
 
 func (m *Service) Run() {
-	m.logger.Info("serving api...")
+	m.logger.WithField("bind_address", m.apiAddr).Debug("Starting EVM-Lite API service")
 	m.serveAPI()
 }
 
@@ -48,23 +47,25 @@ func (m *Service) SetInfoCallback(f infoCallback) {
 	m.getInfo = f
 }
 
+// Serve registers the API handlers with the DefaultServerMux of the http
+// package. It calls ListenAndServe but does not process errors returned by it.
+// This is because we do not want to throw an error when the consensus system is
+// used in-mem and wants to expose its API on the same endpoint (address:port)
+// EVM-Lite.
 func (m *Service) serveAPI() {
+	// Add handlers to DefaultServerMux
+	http.HandleFunc("/account/", m.makeHandler(accountHandler))
+	http.HandleFunc("/call", m.makeHandler(callHandler))
+	http.HandleFunc("/rawtx", m.makeHandler(rawTransactionHandler))
+	http.HandleFunc("/tx/", m.makeHandler(transactionReceiptHandler))
+	http.HandleFunc("/info", m.makeHandler(infoHandler))
+	http.HandleFunc("/poa", m.makeHandler(poaHandler))
+	http.HandleFunc("/genesis", m.makeHandler(genesisHandler))
 
-	serverMuxEVM := http.NewServeMux()
-
-	r := mux.NewRouter()
-	r.HandleFunc("/account/{address}", m.makeHandler(accountHandler)).Methods("GET")
-	r.HandleFunc("/call", m.makeHandler(callHandler)).Methods("POST")
-	r.HandleFunc("/rawtx", m.makeHandler(rawTransactionHandler)).Methods("POST")
-	r.HandleFunc("/tx/{tx_hash}", m.makeHandler(transactionReceiptHandler)).Methods("GET")
-	r.HandleFunc("/info", m.makeHandler(infoHandler)).Methods("GET")
-	r.HandleFunc("/poa", m.makeHandler(poaHandler)).Methods("GET")
-	r.HandleFunc("/genesis", m.makeHandler(genesisHandler)).Methods("GET")
-
-	serverMuxEVM.Handle("/", r)
-
-	m.logger.WithField("apiAddr", m.apiAddr).Debug("EVM-Lite Service serving")
-	http.ListenAndServe(m.apiAddr, serverMuxEVM)
+	// It is possible that another server, started in the same process, is
+	// simultaneously using the DefaultServerMux. In which case, the handlers
+	// will be accessible from both servers.
+	http.ListenAndServe(m.apiAddr, nil)
 }
 
 func (m *Service) makeHandler(fn func(http.ResponseWriter, *http.Request, *Service)) http.HandlerFunc {

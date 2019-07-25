@@ -8,6 +8,7 @@ SECURITY:
 - service: removed CORS
 
 FEATURES:
+- service: handlers registered to http.DefaultServerMux
 
 IMPROVEMENTS:
 
