@@ -48,10 +48,10 @@ func (m *Service) SetInfoCallback(f infoCallback) {
 }
 
 // Serve registers the API handlers with the DefaultServerMux of the http
-// package. It calls ListenAndServe but does not process errors returned by it.
-// This is because we do not want to throw an error when the consensus system is
-// used in-mem and wants to expose its API on the same endpoint (address:port)
-// EVM-Lite.
+// package, and calls ListenAndServe. It is possible that another module in the
+// application (ex: the consensus system) has registered other handlers with the
+// DefaultServeMux. In this case, those handlers will also be process by this
+// server.
 func (m *Service) serveAPI() {
 	// Add handlers to DefaultServerMux
 	http.HandleFunc("/account/", m.makeHandler(accountHandler))
@@ -62,10 +62,11 @@ func (m *Service) serveAPI() {
 	http.HandleFunc("/poa", m.makeHandler(poaHandler))
 	http.HandleFunc("/genesis", m.makeHandler(genesisHandler))
 
-	// It is possible that another server, started in the same process, is
-	// simultaneously using the DefaultServerMux. In which case, the handlers
-	// will be accessible from both servers.
-	http.ListenAndServe(m.apiAddr, nil)
+	// The call to ListenAndServe is a blocking operation
+	err := http.ListenAndServe(m.apiAddr, nil)
+	if err != nil {
+		m.logger.Error(err)
+	}
 }
 
 func (m *Service) makeHandler(fn func(http.ResponseWriter, *http.Request, *Service)) http.HandlerFunc {
