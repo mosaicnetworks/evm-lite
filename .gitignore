@@ -3,3 +3,4 @@ build
 glide.lock
 vendor
 *debug.test*
+deploy/terraform/local/ips.dat
