@@ -60,7 +60,7 @@ POST /call
 data: JSON SendTxArgs
 returns: JSON JsonCallRes
 
-This endpoints allows calling SmartContract code for READONLY operations. These
+This endpoint allows calling SmartContract code for READONLY operations. These
 calls will NOT modify the EVM state.
 
 The data does NOT need to be signed.
@@ -275,7 +275,7 @@ func infoHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 
 /*
 GET /poa
-returns: JSON
+returns: JsonContract
 Returns details of the poa smart contract . Replaces /contract
 */
 func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
