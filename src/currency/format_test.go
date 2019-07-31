@@ -68,3 +68,23 @@ func TestExpandAndSeparateCurrencyString(t *testing.T) {
 		}
 	}
 }
+
+func TestFormatCurrencyString(t *testing.T) {
+
+	var tests = []testRecord{
+		testRecord{input: "1000", output: "1K"},
+		testRecord{input: "10000", output: "10K"},
+		testRecord{input: "20000000", output: "20M"},
+		testRecord{input: "1234", output: "1.234K"},
+		testRecord{input: "1234000000000000000000000000", output: "1234Y"},
+	}
+
+	for _, test := range tests {
+		ret := currency.FormatCurrencyString(test.input)
+		if ret != test.output {
+			t.Errorf("\nWrong Answer: %s\nGot: %s\nExpected: %s\n", test.input, ret, test.output)
+		} else {
+			t.Logf("%s => %s", test.input, test.output)
+		}
+	}
+}

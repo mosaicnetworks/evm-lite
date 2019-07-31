@@ -29,6 +29,7 @@ import (
 const tokenLetters = "KMGTPEZY"
 
 var thouSeparator = ","
+var decSeparator = "."
 
 //ExpandCurrencyString takes a string with a token suffix and expands it with
 //the appropriate number of zeroes. The input string may contain a decimal
@@ -39,6 +40,8 @@ func ExpandCurrencyString(input string) string {
 
 	// trim whitespace as it would mess with the place counting further on
 	cleanInput := strings.TrimSpace(input)
+
+	//TODO check for and strip thouSeparator
 
 	// token is the last character in the string
 	token := cleanInput[len(cleanInput)-1:]
@@ -59,7 +62,7 @@ func ExpandCurrencyString(input string) string {
 	cleanInput = cleanInput[:last] // trim token from string.
 
 	// Check for a decimal point
-	idx := strings.Index(cleanInput, ".")
+	idx := strings.Index(cleanInput, decSeparator)
 	if idx >= 0 {
 		// Reduce out zero count (tokenPower), by the number of characters
 		// after the decimal point. Remove dot from the string
@@ -95,4 +98,40 @@ func ExpandAndSeparateCurrencyString(input string) string {
 	}
 
 	return expanded
+}
+
+// FormatCurrencyString ...
+func FormatCurrencyString(input string) string {
+
+	// clean input. Guarantees no whitespace or tokens.
+	cleanInput := ExpandCurrencyString(input)
+
+	//If we have less than a thousand there is nothing to do
+	if len(cleanInput) < 4 {
+		return cleanInput
+	}
+
+	strpos := (len(cleanInput) / 3)
+	if strpos > len(tokenLetters) {
+		strpos = len(tokenLetters)
+	}
+
+	tokenLetter := string([]byte{tokenLetters[strpos-1]})
+
+	zeroplaces := strpos * 3
+
+	for cleanInput[len(cleanInput)-1:] == "0" && zeroplaces > 0 {
+		last := len(cleanInput) - 1
+		cleanInput = cleanInput[:last]
+		zeroplaces--
+	}
+
+	if zeroplaces < 1 {
+		return cleanInput + tokenLetter
+	}
+
+	idx := len(cleanInput) - zeroplaces
+
+	return cleanInput[:idx] + decSeparator + cleanInput[idx:] + tokenLetter
+
 }
