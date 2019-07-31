@@ -21,6 +21,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	bcommon "github.com/mosaicnetworks/evm-lite/src/common"
+	"github.com/mosaicnetworks/evm-lite/src/currency"
 )
 
 var (
@@ -214,7 +215,7 @@ func (s *State) CreateGenesisAccounts() error {
 	for addr, account := range genesis.Alloc {
 		address := common.HexToAddress(addr)
 		if s.Empty(address) {
-			s.was.ethState.AddBalance(address, math.MustParseBig256(account.Balance))
+			s.was.ethState.AddBalance(address, math.MustParseBig256(currency.ExpandCurrencyString(account.Balance)))
 			s.was.ethState.SetCode(address, common.Hex2Bytes(account.Code))
 			for key, value := range account.Storage {
 				s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
@@ -227,7 +228,7 @@ func (s *State) CreateGenesisAccounts() error {
 	if string(genesis.Poa.Address) != "" {
 		address := common.HexToAddress(genesis.Poa.Address)
 		if s.Empty(address) {
-			s.was.ethState.AddBalance(address, math.MustParseBig256(genesis.Poa.Balance))
+			s.was.ethState.AddBalance(address, math.MustParseBig256(currency.ExpandCurrencyString(genesis.Poa.Balance)))
 			s.was.ethState.SetCode(address, common.Hex2Bytes(genesis.Poa.Code))
 			setPOAADDR(genesis.Poa.Address)
 			setPOAABI(genesis.Poa.Abi)
