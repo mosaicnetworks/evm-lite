@@ -1,10 +1,9 @@
 # EVM-LITE
 
+[![CircleCI](https://circleci.com/gh/mosaicnetworks/evm-lite.svg?style=svg)](https://circleci.com/gh/mosaicnetworks/evm-lite)
 [![Documentation Status](https://readthedocs.org/projects/evm-lite/badge/?version=latest)](https://evm-lite.readthedocs.io/en/latest/?badge=latest)
 [![Go Report](https://goreportcard.com/badge/github.com/mosaicnetworks/evm-lite)](https://goreportcard.com/report/github.com/mosaicnetworks/evm-lite)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-
 
 ## A lean Ethereum node with interchangeable consensus.
 

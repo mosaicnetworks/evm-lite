@@ -1,0 +1,20 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/mosaicnetworks/evm-lite
+    docker:
+      - image: mosaicnetworks/glider:0.0.3
+    steps:
+      - checkout
+      - restore_cache:
+          key: v0-glide-cache-{{ checksum "glide.yaml" }}
+      - run:
+          name: Install Go dependencies
+          command: glide install
+      - save_cache:
+          key: v0-glide-cache-{{ checksum "glide.yaml" }}
+          paths:
+            - /home/circleci/.glide
+      - run:
+          name: Run unit tests
+          command: make test
