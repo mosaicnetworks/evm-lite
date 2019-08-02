@@ -5,7 +5,7 @@ vendor:
 	glide install
 
 test:
-	glide novendor | xargs go test -count=1 -tags=unit
+	CGO_ENABLED=1 glide novendor | xargs go test -count=1 -tags=unit
 
 flagtest:
 	glide novendor | xargs go test -count=1 -run TestFlagEmpty
