@@ -5,6 +5,9 @@ vendor:
 	glide install
 
 test:
-	glide novendor | xargs go test
+	glide novendor | xargs go test -count=1 -tags=unit
+
+flagtest:
+	glide novendor | xargs go test -count=1 -run TestFlagEmpty
 
 .PHONY: vendor test
