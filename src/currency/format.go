@@ -41,6 +41,10 @@ func ExpandCurrencyString(input string) string {
 	// trim whitespace as it would mess with the place counting further on
 	cleanInput := strings.TrimSpace(input)
 
+	if cleanInput == "" {
+		return ""
+	}
+
 	//TODO check for and strip thouSeparator
 
 	// token is the last character in the string
