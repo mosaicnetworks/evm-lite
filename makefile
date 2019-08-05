@@ -10,4 +10,4 @@ test:
 flagtest:
 	glide novendor | xargs go test -count=1 -run TestFlagEmpty
 
-.PHONY: vendor test
+.PHONY: vendor test flagtest
