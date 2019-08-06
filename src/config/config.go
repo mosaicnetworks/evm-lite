@@ -6,6 +6,9 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+
+	"github.com/sirupsen/logrus"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 var (
@@ -47,6 +50,8 @@ type Config struct {
 	// Megabytes of memory allocated to internal caching (min 16MB / database
 	// forced)
 	Cache int `mapstructure:"cache"`
+
+	logger *logrus.Logger
 }
 
 // DefaultConfig returns the default configuration for an EVM-Lite node
@@ -79,6 +84,36 @@ func (c *Config) SetDataDir(datadir string) {
 	}
 	if c.DbFile == defaultDbFile {
 		c.DbFile = fmt.Sprintf("%s/eth/chaindata", datadir)
+	}
+}
+
+// Logger returns a formatted logrus Entry that supports nested prefixes.
+func (c *Config) Logger() *logrus.Entry {
+	if c.logger == nil {
+		c.logger = logrus.New()
+		c.logger.Level = LogLevel(c.LogLevel)
+		c.logger.Formatter = new(prefixed.TextFormatter)
+	}
+	return c.logger.WithField("prefix", "evm-lite")
+}
+
+// LogLevel ...
+func LogLevel(l string) logrus.Level {
+	switch l {
+	case "debug":
+		return logrus.DebugLevel
+	case "info":
+		return logrus.InfoLevel
+	case "warn":
+		return logrus.WarnLevel
+	case "error":
+		return logrus.ErrorLevel
+	case "fatal":
+		return logrus.FatalLevel
+	case "panic":
+		return logrus.PanicLevel
+	default:
+		return logrus.DebugLevel
 	}
 }
 

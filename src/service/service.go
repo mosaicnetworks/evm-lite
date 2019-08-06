@@ -19,13 +19,13 @@ type Service struct {
 	submitCh chan []byte
 	apiAddr  string
 	getInfo  infoCallback
-	logger   *logrus.Logger
+	logger   *logrus.Entry
 }
 
 func NewService(apiAddr string,
 	state *state.State,
 	submitCh chan []byte,
-	logger *logrus.Logger) *Service {
+	logger *logrus.Entry) *Service {
 
 	return &Service{
 		apiAddr:  apiAddr,

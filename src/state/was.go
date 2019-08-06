@@ -34,7 +34,7 @@ type WriteAheadState struct {
 	totalUsedGas uint64
 	gp           *core.GasPool
 
-	logger *logrus.Logger
+	logger *logrus.Entry
 }
 
 func NewWriteAheadState(db ethdb.Database,
@@ -43,7 +43,7 @@ func NewWriteAheadState(db ethdb.Database,
 	chainConfig params.ChainConfig,
 	vmConfig vm.Config,
 	gasLimit uint64,
-	logger *logrus.Logger) (*WriteAheadState, error) {
+	logger *logrus.Entry) (*WriteAheadState, error) {
 
 	ethState, err := ethState.New(root, ethState.NewDatabase(db))
 	if err != nil {

@@ -45,10 +45,10 @@ type State struct {
 
 	genesisFile string
 
-	logger *logrus.Logger
+	logger *logrus.Entry
 }
 
-func NewState(dbFile string, dbCache int, genesisFile string, logger *logrus.Logger) (*State, error) {
+func NewState(dbFile string, dbCache int, genesisFile string, logger *logrus.Entry) (*State, error) {
 	handles, err := getFdLimit()
 	if err != nil {
 		return nil, err

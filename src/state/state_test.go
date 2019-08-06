@@ -33,10 +33,10 @@ type Test struct {
 
 	keyStore *keystore.KeyStore
 	state    *State
-	logger   *logrus.Logger
+	logger   *logrus.Entry
 }
 
-func NewTest(dataDir string, logger *logrus.Logger, t *testing.T) *Test {
+func NewTest(dataDir string, logger *logrus.Entry, t *testing.T) *Test {
 	pwdFile := filepath.Join(dataDir, "pwd.txt")
 	dbFile := filepath.Join(dataDir, "chaindata")
 	genesisFile := filepath.Join(dataDir, "genesis.json")
@@ -194,7 +194,7 @@ func TestTransfer(t *testing.T) {
 	os.RemoveAll("test_data/eth/chaindata")
 	defer os.RemoveAll("test_data/eth/chaindata")
 
-	test := NewTest("test_data/eth", bcommon.NewTestLogger(t), t)
+	test := NewTest("test_data/eth", bcommon.NewTestEntry(t), t)
 	defer test.state.db.Close()
 
 	err := test.Init()
@@ -387,7 +387,7 @@ func TestCreateContract(t *testing.T) {
 	os.RemoveAll("test_data/eth/chaindata")
 	defer os.RemoveAll("test_data/eth/chaindata")
 
-	test := NewTest("test_data/eth", bcommon.NewTestLogger(t), t)
+	test := NewTest("test_data/eth", bcommon.NewTestEntry(t), t)
 	defer test.state.db.Close()
 
 	err := test.Init()
@@ -442,7 +442,7 @@ func TestPOA(t *testing.T) {
 	os.RemoveAll("test_data/eth/chaindata")
 	defer os.RemoveAll("test_data/eth/chaindata")
 
-	testLogger := bcommon.NewTestLogger(t)
+	testLogger := bcommon.NewTestEntry(t)
 
 	test := NewTest("test_data/eth", testLogger, t)
 	//defer test.state.db.Close()

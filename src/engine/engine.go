@@ -26,7 +26,7 @@ func NewEngine(config config.Config,
 		config.DbFile,
 		config.Cache,
 		config.Genesis,
-		logger)
+		config.Logger().WithField("component", "state"))
 
 	if err != nil {
 		logger.Debug("engine.go:NewEngine() state.NewState")
@@ -37,7 +37,7 @@ func NewEngine(config config.Config,
 		config.EthAPIAddr,
 		state,
 		submitCh,
-		logger)
+		config.Logger().WithField("component", "service"))
 
 	if err := consensus.Init(state, service); err != nil {
 		logger.Debug("engine.go:NewEngine() Consensus.Init")
