@@ -131,6 +131,12 @@ func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex in
 }
 
 func (was *WriteAheadState) Commit() (common.Hash, error) {
+	was.logger.WithFields(logrus.Fields{
+		"txs":      was.txIndex,
+		"receipts": len(was.receipts),
+		"logs":     len(was.allLogs),
+	}).Info("Commit")
+
 	// Commit all state changes to the database
 	root, err := was.ethState.Commit(true)
 	if err != nil {

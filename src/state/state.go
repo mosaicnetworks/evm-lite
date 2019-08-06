@@ -177,7 +177,7 @@ func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	return res, err
 }
 
-// CheckTx attempt to apply a transaction to the TxPool's statedb. It is called
+// CheckTx attempts to apply a transaction to the TxPool's statedb. It is called
 // by the Service handlers to check if a transaction is valid before submitting
 // it to the consensus system. This also updates the sender's Nonce in the
 // TxPool's statedb.

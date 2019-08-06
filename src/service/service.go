@@ -35,7 +35,7 @@ func NewService(apiAddr string,
 }
 
 func (m *Service) Run() {
-	m.logger.WithField("bind_address", m.apiAddr).Debug("Starting EVM-Lite API service")
+	m.logger.WithField("bind_address", m.apiAddr).Info("API")
 	m.serveAPI()
 }
 
