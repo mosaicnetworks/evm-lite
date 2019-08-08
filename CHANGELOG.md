@@ -1,12 +1,18 @@
 ## UNRELEASED
 
+Refactor. EVM-Lite becomes a library
+
 SECURITY:
+- service: removed keystore
+- service: removed /tx endpoint for unsigned txs
+- service: removed CORS
 
 FEATURES:
+- service: handlers registered to http.DefaultServerMux
 
 IMPROVEMENTS:
 
-BUG FIXES: 
+BUG FIXES:
 
 ## v0.2.1 (July 22, 2019)
 
@@ -22,6 +28,7 @@ FEATURES:
 IMPROVEMENTS:
 - demo: Use evm-lite-lib package in demo scripts.
 - state: Move genesis account creation from service to state. 
+- state: PoA smart-contract bindings.
 
 BUG FIXES:
 - state: Initialize from empty state instead of latest trie root. This enables

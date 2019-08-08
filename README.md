@@ -1,15 +1,14 @@
 # EVM-LITE
 
 [![CircleCI](https://circleci.com/gh/mosaicnetworks/evm-lite.svg?style=svg)](https://circleci.com/gh/mosaicnetworks/evm-lite)
-[![Documentation Status](https://readthedocs.org/projects/evm-lite/badge/?version=latest)](https://evm-lite.readthedocs.io/en/latest/?badge=latest)
 [![Go Report](https://goreportcard.com/badge/github.com/mosaicnetworks/evm-lite)](https://goreportcard.com/report/github.com/mosaicnetworks/evm-lite)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## A lean Ethereum node with interchangeable consensus.
 
 We took the [Go-Ethereum](https://github.com/ethereum/go-ethereum)
-implementation (Geth) and extracted the EVM and Trie components to create a
-lean and modular version with interchangeable consensus.
+implementation (Geth) and extracted the EVM and Trie components to create a lean
+and modular version with interchangeable consensus.
 
 The EVM is a virtual machine specifically designed to run untrusted code on a
 network of computers. Every transaction applied to the EVM modifies the State
@@ -32,7 +31,7 @@ including [Babble](https://github.com/mosaicnetworks/babble) .
 |          |    |  | Service     |         | State       |  |
 |  Client  <-----> |             | <------ |             |  |
 |          |    |  | -API        |         | -EVM        |  |
-+----------+    |  | -Keystore   |         | -Trie       |  |
++----------+    |  |             |         | -Trie       |  |
                 |  |             |         | -Database   |  |
                 |  +-------------+         +-------------+  |
                 |         |                       ^         |     
@@ -50,105 +49,16 @@ including [Babble](https://github.com/mosaicnetworks/babble) .
 
 ```
 
-## Consensus Implementations:
+## Usage
 
-- **SOLO**: No Consensus. Transactions are relayed directly from Service to
-  State.
+EVM-Lite is a Go library, which is meant to be used in conjunction with a 
+consensus system like Babble, Tendermint, Raft, etc.
 
-- **[BABBLE](https://github.com/mosaicnetworks/babble)**: Inmemory Babble node.
-  EVM-Lite does not support Babble's FastSync and Dynamic Membership protocols
-  yet, so it is important to set the `--store` flag, and a high `--sync-limit` 
-  value. 
-
-- **[RAFT](https://github.com/hashicorp/raft)**: Hashicorp implementation of
-  Raft (limited).
-
-more to come...
-
-## USAGE
-
-There are two sub-commands: `keys` and `run`.
-
-```
-EVM-Lite
-
-Usage:
-  evml [command]
-
-Available Commands:
-  help        Help about any command
-  keys        An Ethereum key manager
-  run         Run a node
-  version     Show version info
-
-Flags:
-  -h, --help   help for evml
-
-Use "evml [command] --help" for more information about a command.
-```
-
-Each consensus has its own sub-sub-command `evml run [consensus]`, and its own
-configuration flags.
-
-```
-Run a node
-
-Usage:
-  evml run [command]
-
-Available Commands:
-  babble      Run the evm-lite node with Babble consensus
-  raft        Run the evm-lite node with Raft consensus
-  solo        Run the evm-lite node with Solo consensus (no consensus)
-
-Flags:
-  -d, --datadir string        Top-level directory for configuration and data (default "/home/martin/.evm-lite")
-      --eth.cache int         Megabytes of memory allocated to internal caching (min 16MB / database forced) (default 128)
-      --eth.db string         Eth database file (default "/home/martin/.evm-lite/eth/chaindata")
-      --eth.genesis string    Location of genesis file (default "/home/martin/.evm-lite/eth/genesis.json")
-      --eth.keystore string   Location of Ethereum account keys (default "/home/martin/.evm-lite/eth/keystore")
-      --eth.listen string     Address of HTTP API service (default ":8080")
-      --eth.pwd string        Password file to unlock accounts (default "/home/martin/.evm-lite/eth/pwd.txt")
-  -h, --help                  help for run
-      --log string            debug, info, warn, error, fatal, panic (default "debug")
-
-Use "evml run [command] --help" for more information about a command.
-
-```
-
-Options can also be specified in a `evml.toml` file in the `datadir`.
-
-ex (evml.toml):
-``` toml
-log=info
-[eth]
-db = "/eth.db"
-[babble]
-listen="127.0.0.1:1337"
-```
+This repo contains **Solo**, a bare-bones implementation of the consensus 
+interface, which is used for testing or launching a standalone node. It relays
+transactions directly from Service to State.
 
 ## Configuration
-
-The application writes data and reads configuration from the directory specified
-by the --datadir flag. The directory structure must respect the following
-stucture:
-
-```
-host:~/.evm-lite$ tree
-├── babble
-│   ├── peers.json
-│   └── priv_key.pem
-├── eth
-│   ├── genesis.json
-│   ├── keystore
-│   │   └── UTC--2018-10-14T11-12-24.412349157Z--633139fa62d5c27f454259ba59fc34773bd19457
-│   └── pwd.txt
-└── evml.toml
-```
-
-The above example shows a `babble` folder, but the general idea is that
-consensus  configuration goes in a separate folder from the Ethereum
-configuration.
 
 The Ethereum genesis file defines Ethereum accounts and is stripped of all the 
 Ethereum POW stuff. This file is useful to predefine a set of accounts that own 
@@ -167,86 +77,61 @@ Example Ethereum genesis.json defining two account:
    }
 }
 ```
-
-It is possible to enable evm-lite to control certain accounts by providing a
-list of encrypted private keys in the keystore directory. With these private
-keys, evm-lite will be able to sign transactions on behalf of the accounts
-associated with the keys.  
-
-```
-host:~/.evm-lite/eth/keystore$ tree
-.
-├── UTC--2016-02-01T16-52-27.910165812Z--629007eb99ff5c3539ada8a5800847eacfc25727
-├── UTC--2016-02-01T16-52-28.021010343Z--e32e14de8b81d8d3aedacb1868619c74a68feab0
-```
-
-These keys are protected by a password. Use the `eth.pwd` flag to specify the
-location of the password file.
-
-**Needless to say you should not reuse these addresses and private keys**
-
-## Database
-
-EVM-Lite will use a LevelDB database to persist state objects. The file of the  
-database can be specified with the `eth.db` flag which defaults to
-`<datadir>/eth/chaindata`.  
-
 ## API
-The Service exposes an API at the address specified by the --eth.listen flag for
-clients to interact with Ethereum.  
 
-### Get controlled accounts
+The Service exposes an HTTP API.  
 
-This endpoint returns all the accounts that are controlled by the evm-lite
-instance. These are the accounts whose private keys are present in the keystore.
+### Get Account
 
-example:
-```bash
-host:~$ curl http://[api_addr]/accounts -s | json_pp
-{
-   "accounts" : [
-      {
-         "address" : "0x629007eb99ff5c3539ada8a5800847eacfc25727",
-         "balance" : 1337000000000000000000,
-         "nonce": 0
-      },
-      {
-         "address" : "0xe32e14de8b81d8d3aedacb1868619c74a68feab0",
-         "balance" : 1337000000000000000000,
-         "nonce": 0
-      }
-   ]
-}
-```
-### Get any account
-
-This method retrieves the information about any account, not just the ones whose 
-keys are included in the keystore.  
+Retrieve information about any account.  
 
 ```bash
 host:~$ curl http://[api_addr]/account/0x629007eb99ff5c3539ada8a5800847eacfc25727 -s | json_pp
 {
-    "address":"0x629007eb99ff5c3539ada8a5800847eacfc25727",
-    "balance":1337000000000000000000,
-    "nonce":0
+    "address": "0xa10aae5609643848fF1Bceb76172652261dB1d6c",
+    "balance": 1234567890000000000000,
+    "nonce": 0,
+    "bytecode": ""
 }
 ```
 
-### Send transactions from controlled accounts
+### Call
 
-Send a transaction from an account controlled by the evm-lite instance. The
-transaction will be signed by the service since the corresponding private key is
-present in the keystore.
+Call a smart-contract READONLY function. These calls will NOT modify the EVM
+state, and the data does NOT need to be signed.
 
-example: Send Ether between accounts  
 ```bash
-host:~$ curl -X POST http://[api_addr]/tx -d '{"from":"0x629007eb99ff5c3539ada8a5800847eacfc25727","to":"0xe32e14de8b81d8d3aedacb1868619c74a68feab0","value":6666}' -s | json_pp
+curl http://localhost:8080/call \
+    -d '{"constant":true,"to":"0xabbaabbaabbaabbaabbaabbaabbaabbaabbaabba","value":0,"data":"0x8f82b8c4","gas":1000000,"gasPrice":0,"chainId":1}' \
+    -H "Content-Type: application/json" \
+    -X POST -s | json_pp
+    {
+      "data": "0x0000000000000000000000000000000000000000000000000000000000000001"
+    }
+```
+
+### Submit Transaction
+
+Send a SIGNED, NON-READONLY transaction. The client is left to compose a
+transaction, sign it and RLP encode it. The resulting bytes, represented as a
+Hex string, are passed to this method to be forwarded to the EVM. This is an
+ASYNCHRONOUS operation and the effect on the State should be verified by
+fetching the transaction's receipt.
+
+example:
+```bash
+host:~$ curl -X POST http://[api_addr]/rawtx -d '0xf8628080830f424094564686380e267d1572ee409368e1d42081562a8e8201f48026a022b4f68bfbd4f4c309524ebdbf4bac858e0ad65fd06108c934b45a6da88b92f7a046433c388997fd7b02eb7128f4d2401ef2d10d574c42edf15875a43ee51a1993' -s | json_pp
 {
-   "txHash" : "0xeeeed34877502baa305442e3a72df094cfbb0b928a7c53447745ff35d50020bf"
+    "txHash":"0x5496489c606d74ad7435568393fa2c4619e64497267f80864109277631aa849d"
 }
 ```
 
-### Get Transaction receipt
+### Get Transaction Receipt
+
+Get a transaction receipt. When a transaction is applied to the EVM, a receipt
+is saved to record if/how the transaction affected the state. This contains
+such information as the address of a newly created contract, how much gas was
+use, and the EVM Logs produced by the execution of the transaction.
 
 example:
 ```bash
@@ -265,22 +150,7 @@ host:~$ curl http://[api_addr]/tx/0xeeeed34877502baa305442e3a72df094cfbb0b928a7c
 
 ```
 
-### Send raw signed transactions
-
-Most of the time, one will require to send transactions from accounts that are
-not  controlled by the evm-lite instance. The transaction will be assembled,
-signed  and encoded on the client side. The resulting raw signed transaction
-bytes can be submitted to evm-lite through the `/rawtx` endpoint.  
-
-example:
-```bash
-host:~$ curl -X POST http://[api_addr]/rawtx -d '0xf8628080830f424094564686380e267d1572ee409368e1d42081562a8e8201f48026a022b4f68bfbd4f4c309524ebdbf4bac858e0ad65fd06108c934b45a6da88b92f7a046433c388997fd7b02eb7128f4d2401ef2d10d574c42edf15875a43ee51a1993' -s | json_pp
-{
-    "txHash":"0x5496489c606d74ad7435568393fa2c4619e64497267f80864109277631aa849d"
-}
-```
-
-## Get consensus info
+## Info
 
 The `/info` endpoint exposes a map of information provided by the consensus
 system.
@@ -324,20 +194,3 @@ We use glide to manage dependencies:
 ```
 This will download all dependencies and put them in the **vendor** folder; it
 could take a few minutes.
-
-CONSENSUS
-
-To add a new consensus system:
-
-- implement the consensus interface (consensus/consensus.go)
-- add a property to the the global configuration object (config/config.go)
-- create the corresponding CLI subcommand in cmd/evml/commands/
-- register that command to the root command
-
-## DEPLOY
-
-We provide a set of scripts to automate the deployment of testnets. This
-requires [terraform](https://www.terraform.io/) and
-[docker](https://www.docker.com/).
-
-Support for AWS is also available (cf. deploy/)

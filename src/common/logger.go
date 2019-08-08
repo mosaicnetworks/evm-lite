@@ -6,9 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// This can be used as the destination for a logger and it'll
-// map them into calls to testing.T.Log, so that you only see
-// the logging for failed tests.
+// This can be used as the destination for a logger and it'll map them into
+// calls to testing.T.Log, so that you only see the logging for failed tests.
 type testLoggerAdapter struct {
 	t      *testing.T
 	prefix string
@@ -27,9 +26,9 @@ func (a *testLoggerAdapter) Write(d []byte) (int, error) {
 	return len(d), nil
 }
 
-func NewTestLogger(t *testing.T) *logrus.Logger {
+func NewTestEntry(t *testing.T) *logrus.Entry {
 	logger := logrus.New()
 	logger.Out = &testLoggerAdapter{t: t}
 	logger.Level = logrus.DebugLevel
-	return logger
+	return logrus.NewEntry(logger)
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	bcommon "github.com/mosaicnetworks/evm-lite/src/common"
+	"github.com/mosaicnetworks/evm-lite/src/currency"
 )
 
 var (
@@ -44,10 +45,10 @@ type State struct {
 
 	genesisFile string
 
-	logger *logrus.Logger
+	logger *logrus.Entry
 }
 
-func NewState(logger *logrus.Logger, dbFile string, dbCache int, genesisFile string) (*State, error) {
+func NewState(dbFile string, dbCache int, genesisFile string, logger *logrus.Entry) (*State, error) {
 	handles, err := getFdLimit()
 	if err != nil {
 		return nil, err
@@ -176,7 +177,7 @@ func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	return res, err
 }
 
-// CheckTx attempt to apply a transaction to the TxPool's statedb. It is called
+// CheckTx attempts to apply a transaction to the TxPool's statedb. It is called
 // by the Service handlers to check if a transaction is valid before submitting
 // it to the consensus system. This also updates the sender's Nonce in the
 // TxPool's statedb.
@@ -214,7 +215,7 @@ func (s *State) CreateGenesisAccounts() error {
 	for addr, account := range genesis.Alloc {
 		address := common.HexToAddress(addr)
 		if s.Empty(address) {
-			s.was.ethState.AddBalance(address, math.MustParseBig256(account.Balance))
+			s.was.ethState.AddBalance(address, math.MustParseBig256(currency.ExpandCurrencyString(account.Balance)))
 			s.was.ethState.SetCode(address, common.Hex2Bytes(account.Code))
 			for key, value := range account.Storage {
 				s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
@@ -227,7 +228,7 @@ func (s *State) CreateGenesisAccounts() error {
 	if string(genesis.Poa.Address) != "" {
 		address := common.HexToAddress(genesis.Poa.Address)
 		if s.Empty(address) {
-			s.was.ethState.AddBalance(address, math.MustParseBig256(genesis.Poa.Balance))
+			s.was.ethState.AddBalance(address, math.MustParseBig256(currency.ExpandCurrencyString(genesis.Poa.Balance)))
 			s.was.ethState.SetCode(address, common.Hex2Bytes(genesis.Poa.Code))
 			setPOAADDR(genesis.Poa.Address)
 			setPOAABI(genesis.Poa.Abi)

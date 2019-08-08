@@ -4,13 +4,10 @@ BUILD_TAGS?=evml
 vendor:
 	glide install
 
-# install compiles and places the binary in GOPATH/bin
-install:
-	go install \
-		--ldflags "-X github.com/mosaicnetworks/evm-lite/src/version.GitCommit=`git rev-parse HEAD` -X github.com/mosaicnetworks/evm-lite/src/version.GitBranch=`git symbolic-ref --short HEAD`" \
-		./cmd/evml
-
 test:
-	glide novendor | xargs go test
+	glide novendor | xargs go test -count=1 -tags=unit
 
-.PHONY: vendor install test
+flagtest:
+	glide novendor | xargs go test -count=1 -run TestFlagEmpty
+
+.PHONY: vendor test flagtest

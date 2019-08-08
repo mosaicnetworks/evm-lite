@@ -20,7 +20,7 @@ type TxPool struct {
 	totalUsedGas uint64
 	gp           *core.GasPool
 
-	logger *logrus.Logger
+	logger *logrus.Entry
 }
 
 func NewTxPool(ethState *ethState.StateDB,
@@ -28,7 +28,7 @@ func NewTxPool(ethState *ethState.StateDB,
 	chainConfig params.ChainConfig,
 	vmConfig vm.Config,
 	gasLimit uint64,
-	logger *logrus.Logger) *TxPool {
+	logger *logrus.Entry) *TxPool {
 
 	return &TxPool{
 		ethState:    ethState,

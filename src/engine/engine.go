@@ -5,7 +5,6 @@ import (
 	"github.com/mosaicnetworks/evm-lite/src/consensus"
 	"github.com/mosaicnetworks/evm-lite/src/service"
 	"github.com/mosaicnetworks/evm-lite/src/state"
-	"github.com/sirupsen/logrus"
 )
 
 // Engine is the actor that coordinates State, Service and Consensus
@@ -16,30 +15,31 @@ type Engine struct {
 }
 
 // NewEngine instantiates a new Engine with coupled State, Service, and Consensus
-func NewEngine(config config.Config,
-	consensus consensus.Consensus,
-	logger *logrus.Logger) (*Engine, error) {
+func NewEngine(config config.Config, consensus consensus.Consensus) (*Engine, error) {
+
+	logger := config.Logger()
+
 	submitCh := make(chan []byte)
 
-	state, err := state.NewState(logger,
-		config.Eth.DbFile,
-		config.Eth.Cache,
-		config.Eth.Genesis)
-	if err != nil {
+	state, err := state.NewState(
+		config.DbFile,
+		config.Cache,
+		config.Genesis,
+		logger.WithField("component", "state"))
 
-		logger.Debug("engine.go:NewEngine() NewStart")
+	if err != nil {
+		logger.WithError(err).Error("engine.go:NewEngine() state.NewState")
 		return nil, err
 	}
 
-	service := service.NewService(config.Eth.Keystore,
-		config.Eth.EthAPIAddr,
-		config.Eth.PwdFile,
+	service := service.NewService(
+		config.EthAPIAddr,
 		state,
 		submitCh,
-		logger)
+		logger.WithField("component", "service"))
 
 	if err := consensus.Init(state, service); err != nil {
-		logger.Debug("engine.go:NewEngine() Consensus Init")
+		logger.WithError(err).Error("engine.go:NewEngine() Consensus.Init")
 		return nil, err
 	}
 
@@ -54,8 +54,8 @@ func NewEngine(config config.Config,
 	return engine, nil
 }
 
-// Run starts the engine's Service asynchronously and starts the Consensus system
-// synchronously
+// Run starts the engine's Service asynchronously and starts the Consensus
+// system synchronously
 func (e *Engine) Run() error {
 
 	go e.service.Run()
