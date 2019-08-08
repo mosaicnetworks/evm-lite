@@ -1,4 +1,4 @@
-## UNRELEASED
+## v0.3.0 (August 8, 2019)
 
 Refactor. EVM-Lite becomes a library
 
@@ -9,10 +9,6 @@ SECURITY:
 
 FEATURES:
 - service: handlers registered to http.DefaultServerMux
-
-IMPROVEMENTS:
-
-BUG FIXES:
 
 ## v0.2.1 (July 22, 2019)
 
