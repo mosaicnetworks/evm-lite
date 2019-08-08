@@ -385,13 +385,18 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 
 }
 
-// CreateNewReceiptPromise crates a new receipt promise
-func (s *State) CreateNewReceiptPromise(hash common.Hash) *ReceiptPromise {
+// CreateReceiptPromise crates a new receipt promise
+func (s *State) CreateReceiptPromise(hash common.Hash) *ReceiptPromise {
 	p := NewReceiptPromise(hash)
 
 	s.was.receiptPromises[hash] = p
 
 	return p
+}
+
+// GetReceiptPromiseMap returns the promise mapping
+func (s *State) GetReceiptPromiseMap() map[common.Hash]*ReceiptPromise {
+	return s.was.receiptPromises
 }
 
 //------------------------------------------------------------------------------

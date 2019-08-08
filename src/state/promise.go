@@ -14,7 +14,7 @@ type ReceiptPromise struct {
 	RespCh *chan common.JsonReceipt
 }
 
-// NewReceiptPromise is a factory method for a JoinPromise
+// NewReceiptPromise is a factory method for a ReceiptPromise
 func NewReceiptPromise(hash ethCommon.Hash) *ReceiptPromise {
 	channel := make(chan common.JsonReceipt)
 

@@ -164,14 +164,12 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
-	// Danu
-	p := m.state.CreateNewReceiptPromise(t.Hash())
+	p := m.state.CreateReceiptPromise(t.Hash())
 
 	m.logger.Debug("submitting tx")
 	m.submitCh <- rawTxBytes
 	m.logger.Debug("submitted tx")
 
-	// Danu
 	select {
 	case receipt := <-*p.RespCh:
 		js, err := json.Marshal(receipt)
@@ -183,6 +181,9 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
+
+		// delete the promise
+		delete(m.state.GetReceiptPromiseMap(), receipt.TransactionHash)
 	}
 }
 
