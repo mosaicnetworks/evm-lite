@@ -39,7 +39,6 @@ type WriteAheadState struct {
 
 	logger *logrus.Entry
 
-	// danu
 	receiptPromises map[common.Hash]*ReceiptPromise
 }
 
@@ -65,7 +64,7 @@ func NewWriteAheadState(db ethdb.Database,
 		gasLimit:        gasLimit,
 		gp:              new(core.GasPool).AddGas(gasLimit),
 		logger:          logger,
-		receiptPromises: make(map[common.Hash]*ReceiptPromise), // Danu
+		receiptPromises: make(map[common.Hash]*ReceiptPromise),
 	}, nil
 }
 
