@@ -4,6 +4,9 @@ BUILD_TAGS?=evml
 vendor:
 	glide install
 
+installcli:
+	go install ./cmd/evml/
+
 test:
 	glide novendor | xargs go test -count=1 -tags=unit
 

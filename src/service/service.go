@@ -15,6 +15,7 @@ type infoCallback func() (map[string]string, error)
 
 type Service struct {
 	sync.Mutex
+
 	state    *state.State
 	submitCh chan []byte
 	apiAddr  string
@@ -31,7 +32,9 @@ func NewService(apiAddr string,
 		apiAddr:  apiAddr,
 		state:    state,
 		submitCh: submitCh,
-		logger:   logger}
+		logger:   logger,
+		// rcptproms: make(map[common.Hash]ReceiptPromise),
+	}
 }
 
 func (m *Service) Run() {

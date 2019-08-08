@@ -385,6 +385,15 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 
 }
 
+// CreateNewReceiptPromise crates a new receipt promise
+func (s *State) CreateNewReceiptPromise(hash common.Hash) *ReceiptPromise {
+	p := NewReceiptPromise(hash)
+
+	s.was.receiptPromises[hash] = p
+
+	return p
+}
+
 //------------------------------------------------------------------------------
 
 // getFdLimit retrieves the number of file descriptors allowed to be opened by this

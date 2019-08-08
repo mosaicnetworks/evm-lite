@@ -13,6 +13,8 @@ import (
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/sirupsen/logrus"
+
+	comm "github.com/mosaicnetworks/evm-lite/src/common"
 )
 
 /*
@@ -162,21 +164,26 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
+	// Danu
+	p := m.state.CreateNewReceiptPromise(t.Hash())
+
 	m.logger.Debug("submitting tx")
 	m.submitCh <- rawTxBytes
 	m.logger.Debug("submitted tx")
 
-	res := JsonTxRes{TxHash: t.Hash().Hex()}
-	js, err := json.Marshal(res)
-	if err != nil {
-		m.logger.WithError(err).Error("Marshalling JSON response")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Danu
+	select {
+	case receipt := <-*p.RespCh:
+		js, err := json.Marshal(receipt)
+		if err != nil {
+			m.logger.WithError(err).Error("Marshaling JSON response")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-
 }
 
 /*
@@ -217,7 +224,7 @@ func transactionReceiptHandler(w http.ResponseWriter, r *http.Request, m *Servic
 		return
 	}
 
-	jsonReceipt := JsonReceipt{
+	jsonReceipt := comm.JsonReceipt{
 		Root:              common.BytesToHash(receipt.PostState),
 		TransactionHash:   txHash,
 		From:              from,

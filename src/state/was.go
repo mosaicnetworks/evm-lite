@@ -1,6 +1,8 @@
 package state
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethState "github.com/ethereum/go-ethereum/core/state"
@@ -11,6 +13,8 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/sirupsen/logrus"
+
+	bcommon "github.com/mosaicnetworks/evm-lite/src/common"
 )
 
 // WriteAheadState is a wrapper around a DB and StateDB object that applies
@@ -35,6 +39,9 @@ type WriteAheadState struct {
 	gp           *core.GasPool
 
 	logger *logrus.Entry
+
+	// danu
+	receiptPromises map[common.Hash]*ReceiptPromise
 }
 
 func NewWriteAheadState(db ethdb.Database,
@@ -51,14 +58,15 @@ func NewWriteAheadState(db ethdb.Database,
 	}
 
 	return &WriteAheadState{
-		db:          db,
-		ethState:    ethState,
-		signer:      signer,
-		chainConfig: chainConfig,
-		vmConfig:    vmConfig,
-		gasLimit:    gasLimit,
-		gp:          new(core.GasPool).AddGas(gasLimit),
-		logger:      logger,
+		db:              db,
+		ethState:        ethState,
+		signer:          signer,
+		chainConfig:     chainConfig,
+		vmConfig:        vmConfig,
+		gasLimit:        gasLimit,
+		gp:              new(core.GasPool).AddGas(gasLimit),
+		logger:          logger,
+		receiptPromises: make(map[common.Hash]*ReceiptPromise), // Danu
 	}, nil
 }
 
@@ -81,7 +89,6 @@ func (was *WriteAheadState) Reset(root common.Hash) error {
 }
 
 func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex int, blockHash common.Hash) error {
-
 	msg, err := tx.AsMessage(was.signer)
 	if err != nil {
 		was.logger.WithError(err).Error("Converting Transaction to Message")
@@ -119,6 +126,34 @@ func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex in
 	receipt.Logs = was.ethState.GetLogs(tx.Hash())
 	//receipt.Logs = s.was.state.Logs()
 	receipt.Bloom = ethTypes.CreateBloom(ethTypes.Receipts{receipt})
+
+	// Danu
+	// create json receipt
+	// check if hash is in the map
+	p, ok := was.receiptPromises[tx.Hash()]
+	if ok {
+		signer := ethTypes.NewEIP155Signer(big.NewInt(1))
+		from, err := ethTypes.Sender(signer, &tx)
+		if err != nil {
+			was.logger.WithError(err).Error("Getting Tx Sender")
+			return err
+		}
+
+		jsonReceipt := bcommon.JsonReceipt{
+			Root:              common.BytesToHash(receipt.PostState),
+			TransactionHash:   receipt.TxHash,
+			From:              from,
+			To:                tx.To(),
+			GasUsed:           receipt.GasUsed,
+			CumulativeGasUsed: receipt.CumulativeGasUsed,
+			ContractAddress:   receipt.ContractAddress,
+			Logs:              receipt.Logs,
+			LogsBloom:         receipt.Bloom,
+			Status:            receipt.Status,
+		}
+
+		p.Respond(jsonReceipt)
+	}
 
 	was.txIndex++
 	was.transactions = append(was.transactions, &tx)
