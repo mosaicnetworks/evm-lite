@@ -165,7 +165,10 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 	}
 
 	// respond to receipts once committed with no errors
-	was.respondReceiptPromises()
+	if err := was.respondReceiptPromises(); err != nil {
+		was.logger.WithError(err).Error("Responding receipt promises")
+		return common.Hash{}, err
+	}
 
 	return root, nil
 }
@@ -235,25 +238,25 @@ func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transact
 	return &tx, nil
 }
 
-func (was *WriteAheadState) respondReceiptPromises() {
+func (was *WriteAheadState) respondReceiptPromises() error {
 	for hash, p := range was.receiptPromises {
 		tx, err := was.getTransaction(hash)
 		if err != nil {
 			was.logger.WithError(err).Error("Getting Transaction")
-			return
+			return err
 		}
 
 		receipt, err := was.getReceipt(hash)
 		if err != nil {
 			was.logger.WithError(err).Error("Getting Receipt")
-			return
+			return err
 		}
 
 		signer := ethTypes.NewEIP155Signer(big.NewInt(1))
 		from, err := ethTypes.Sender(signer, tx)
 		if err != nil {
 			was.logger.WithError(err).Error("Getting Tx Sender")
-			return
+			return err
 		}
 
 		jsonReceipt := bcommon.JsonReceipt{
@@ -275,4 +278,6 @@ func (was *WriteAheadState) respondReceiptPromises() {
 
 		p.Respond(jsonReceipt)
 	}
+
+	return nil
 }
