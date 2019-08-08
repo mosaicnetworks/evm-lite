@@ -1,15 +1,14 @@
 # EVM-LITE
 
 [![CircleCI](https://circleci.com/gh/mosaicnetworks/evm-lite.svg?style=svg)](https://circleci.com/gh/mosaicnetworks/evm-lite)
-[![Documentation Status](https://readthedocs.org/projects/evm-lite/badge/?version=latest)](https://evm-lite.readthedocs.io/en/latest/?badge=latest)
 [![Go Report](https://goreportcard.com/badge/github.com/mosaicnetworks/evm-lite)](https://goreportcard.com/report/github.com/mosaicnetworks/evm-lite)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## A lean Ethereum node with interchangeable consensus.
 
 We took the [Go-Ethereum](https://github.com/ethereum/go-ethereum)
-implementation (Geth) and extracted the EVM and Trie components to create a
-lean and modular version with interchangeable consensus.
+implementation (Geth) and extracted the EVM and Trie components to create a lean
+and modular version with interchangeable consensus.
 
 The EVM is a virtual machine specifically designed to run untrusted code on a
 network of computers. Every transaction applied to the EVM modifies the State
@@ -78,39 +77,46 @@ Example Ethereum genesis.json defining two account:
    }
 }
 ```
-
-## Database
-
-EVM-Lite will use a LevelDB database to persist state objects. The file of the  
-database can be specified with the `db` flag which defaults to
-`<datadir>/eth/chaindata`.  
-
 ## API
-The Service exposes an API at the address specified by the [XXX address config]
-for clients to interact with Ethereum.  
 
-### Get account
+The Service exposes an HTTP API.  
 
-This method retrieves the information about any account.  
+### Get Account
+
+Retrieve information about any account.  
 
 ```bash
 host:~$ curl http://[api_addr]/account/0x629007eb99ff5c3539ada8a5800847eacfc25727 -s | json_pp
 {
-    "address":"0x629007eb99ff5c3539ada8a5800847eacfc25727",
-    "balance":1337000000000000000000,
-    "nonce":0
+    "address": "0xa10aae5609643848fF1Bceb76172652261dB1d6c",
+    "balance": 1234567890000000000000,
+    "nonce": 0,
+    "bytecode": ""
 }
 ```
 
-### Send raw signed transactions
+### Call
 
-This endpoint allows sending NON-READONLY transactions ALREADY SIGNED. The
-client is left to compose a transaction, sign it and RLP encode it. The
-resulting bytes, represented as a Hex string, are to this method to be forwarded 
-to the EVM.
+Call a smart-contract READONLY function. These calls will NOT modify the EVM
+state, and the data does NOT need to be signed.
 
-This is an ASYNCHRONOUS operation and the effect on the State should be verified
-by fetching the transaction' receipt.
+```bash
+curl http://localhost:8080/call \
+    -d '{"constant":true,"to":"0xabbaabbaabbaabbaabbaabbaabbaabbaabbaabba","value":0,"data":"0x8f82b8c4","gas":1000000,"gasPrice":0,"chainId":1}' \
+    -H "Content-Type: application/json" \
+    -X POST -s | json_pp
+    {
+      "data": "0x0000000000000000000000000000000000000000000000000000000000000001"
+    }
+```
+
+### Submit Transaction
+
+Send a SIGNED, NON-READONLY transaction. The client is left to compose a
+transaction, sign it and RLP encode it. The resulting bytes, represented as a
+Hex string, are passed to this method to be forwarded to the EVM. This is an
+ASYNCHRONOUS operation and the effect on the State should be verified by
+fetching the transaction's receipt.
 
 example:
 ```bash
@@ -120,7 +126,12 @@ host:~$ curl -X POST http://[api_addr]/rawtx -d '0xf8628080830f424094564686380e2
 }
 ```
 
-### Get Transaction receipt
+### Get Transaction Receipt
+
+Get a transaction receipt. When a transaction is applied to the EVM, a receipt
+is saved to record if/how the transaction affected the state. This contains
+such information as the address of a newly created contract, how much gas was
+use, and the EVM Logs produced by the execution of the transaction.
 
 example:
 ```bash
@@ -139,7 +150,7 @@ host:~$ curl http://[api_addr]/tx/0xeeeed34877502baa305442e3a72df094cfbb0b928a7c
 
 ```
 
-## Get consensus info
+## Info
 
 The `/info` endpoint exposes a map of information provided by the consensus
 system.
