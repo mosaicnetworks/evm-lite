@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -239,6 +240,7 @@ func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transact
 
 func (was *WriteAheadState) respondReceiptPromises() error {
 	for hash, p := range was.receiptPromises {
+		fmt.Println("HASHSS: ", hash.String())
 		tx, err := was.getTransaction(hash)
 		if err != nil {
 			was.logger.WithError(err).Error("Getting Transaction")

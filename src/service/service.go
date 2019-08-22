@@ -75,7 +75,12 @@ func (m *Service) serveAPI() {
 func (m *Service) makeHandler(fn func(http.ResponseWriter, *http.Request, *Service)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		m.Lock()
+
+		// enable CORS
+		enableCors(&w)
+
 		fn(w, r, m)
+
 		m.Unlock()
 	}
 }
@@ -85,4 +90,8 @@ func (m *Service) checkErr(err error) {
 		m.logger.WithError(err).Error("ERROR")
 		os.Exit(1)
 	}
+}
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
