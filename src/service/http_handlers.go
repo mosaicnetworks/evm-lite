@@ -183,7 +183,7 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		w.Write(js)
 
 		// delete the promise
-		delete(m.state.GetReceiptPromiseMap(), receipt.TransactionHash)
+		delete(m.state.GetReceiptPromises(), receipt.TransactionHash)
 	}
 }
 

@@ -224,6 +224,8 @@ func (was *WriteAheadState) getReceipt(txHash common.Hash) (*ethTypes.Receipt, e
 
 func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transaction, error) {
 	// Retrieve the transaction itself from the database
+	fmt.Println("Fetching Hash: ", hash.String())
+
 	data, err := was.db.Get(hash.Bytes())
 	if err != nil {
 		was.logger.WithError(err).Error("GetTransaction")
@@ -240,7 +242,8 @@ func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transact
 
 func (was *WriteAheadState) respondReceiptPromises() error {
 	for hash, p := range was.receiptPromises {
-		fmt.Println("HASHSS: ", hash.String())
+		fmt.Println("Hash: ", hash.String())
+
 		tx, err := was.getTransaction(hash)
 		if err != nil {
 			was.logger.WithError(err).Error("Getting Transaction")

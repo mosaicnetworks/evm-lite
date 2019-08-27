@@ -4,7 +4,7 @@ BUILD_TAGS?=evml
 vendor:
 	glide install
 
-installcli:
+install:
 	go install ./cmd/evml/
 
 test:
