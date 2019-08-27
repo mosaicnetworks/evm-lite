@@ -15,6 +15,7 @@ type infoCallback func() (map[string]string, error)
 
 type Service struct {
 	sync.Mutex
+
 	state    *state.State
 	submitCh chan []byte
 	apiAddr  string
@@ -31,7 +32,9 @@ func NewService(apiAddr string,
 		apiAddr:  apiAddr,
 		state:    state,
 		submitCh: submitCh,
-		logger:   logger}
+		logger:   logger,
+		// rcptproms: make(map[common.Hash]ReceiptPromise),
+	}
 }
 
 func (m *Service) Run() {
@@ -72,7 +75,12 @@ func (m *Service) serveAPI() {
 func (m *Service) makeHandler(fn func(http.ResponseWriter, *http.Request, *Service)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		m.Lock()
+
+		// enable CORS
+		enableCors(&w)
+
 		fn(w, r, m)
+
 		m.Unlock()
 	}
 }
@@ -82,4 +90,8 @@ func (m *Service) checkErr(err error) {
 		m.logger.WithError(err).Error("ERROR")
 		os.Exit(1)
 	}
+}
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }

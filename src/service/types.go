@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 type JsonAccount struct {
@@ -35,19 +34,6 @@ type JsonCallRes struct {
 
 type JsonTxRes struct {
 	TxHash string `json:"txHash"`
-}
-
-type JsonReceipt struct {
-	Root              common.Hash     `json:"root"`
-	TransactionHash   common.Hash     `json:"transactionHash"`
-	From              common.Address  `json:"from"`
-	To                *common.Address `json:"to"`
-	GasUsed           uint64          `json:"gasUsed"`
-	CumulativeGasUsed uint64          `json:"cumulativeGasUsed"`
-	ContractAddress   common.Address  `json:"contractAddress"`
-	Logs              []*ethTypes.Log `json:"logs"`
-	LogsBloom         ethTypes.Bloom  `json:"logsBloom"`
-	Status            uint64          `json:"status"`
 }
 
 type JsonContract struct {

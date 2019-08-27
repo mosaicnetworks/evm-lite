@@ -1,6 +1,9 @@
 package state
 
 import (
+	"fmt"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethState "github.com/ethereum/go-ethereum/core/state"
@@ -10,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
+	bcommon "github.com/mosaicnetworks/evm-lite/src/common"
 	"github.com/sirupsen/logrus"
 )
 
@@ -35,6 +39,8 @@ type WriteAheadState struct {
 	gp           *core.GasPool
 
 	logger *logrus.Entry
+
+	receiptPromises map[common.Hash]*ReceiptPromise
 }
 
 func NewWriteAheadState(db ethdb.Database,
@@ -51,14 +57,15 @@ func NewWriteAheadState(db ethdb.Database,
 	}
 
 	return &WriteAheadState{
-		db:          db,
-		ethState:    ethState,
-		signer:      signer,
-		chainConfig: chainConfig,
-		vmConfig:    vmConfig,
-		gasLimit:    gasLimit,
-		gp:          new(core.GasPool).AddGas(gasLimit),
-		logger:      logger,
+		db:              db,
+		ethState:        ethState,
+		signer:          signer,
+		chainConfig:     chainConfig,
+		vmConfig:        vmConfig,
+		gasLimit:        gasLimit,
+		gp:              new(core.GasPool).AddGas(gasLimit),
+		logger:          logger,
+		receiptPromises: make(map[common.Hash]*ReceiptPromise),
 	}, nil
 }
 
@@ -81,7 +88,6 @@ func (was *WriteAheadState) Reset(root common.Hash) error {
 }
 
 func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex int, blockHash common.Hash) error {
-
 	msg, err := tx.AsMessage(was.signer)
 	if err != nil {
 		was.logger.WithError(err).Error("Converting Transaction to Message")
@@ -152,10 +158,18 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 		was.logger.WithError(err).Error("Writing txs")
 		return common.Hash{}, err
 	}
+
 	if err := was.writeReceipts(); err != nil {
 		was.logger.WithError(err).Error("Writing receipts")
 		return common.Hash{}, err
 	}
+
+	// respond to receipts once committed with no errors
+	if err := was.respondReceiptPromises(); err != nil {
+		was.logger.WithError(err).Error("Responding receipt promises")
+		return common.Hash{}, err
+	}
+
 	return root, nil
 }
 
@@ -191,4 +205,83 @@ func (was *WriteAheadState) writeReceipts() error {
 	}
 
 	return batch.Write()
+}
+
+func (was *WriteAheadState) getReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
+	data, err := was.db.Get(append(receiptsPrefix, txHash.Bytes()...))
+	if err != nil {
+		was.logger.WithError(err).Error("GetReceipt")
+		return nil, err
+	}
+	var receipt ethTypes.ReceiptForStorage
+	if err := rlp.DecodeBytes(data, &receipt); err != nil {
+		was.logger.WithError(err).Error("Decoding Receipt")
+		return nil, err
+	}
+
+	return (*ethTypes.Receipt)(&receipt), nil
+}
+
+func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transaction, error) {
+	// Retrieve the transaction itself from the database
+	fmt.Println("Fetching Hash: ", hash.String())
+
+	data, err := was.db.Get(hash.Bytes())
+	if err != nil {
+		was.logger.WithError(err).Error("GetTransaction")
+		return nil, err
+	}
+	var tx ethTypes.Transaction
+	if err := rlp.DecodeBytes(data, &tx); err != nil {
+		was.logger.WithError(err).Error("Decoding Transaction")
+		return nil, err
+	}
+
+	return &tx, nil
+}
+
+func (was *WriteAheadState) respondReceiptPromises() error {
+	for hash, p := range was.receiptPromises {
+		fmt.Println("Hash: ", hash.String())
+
+		tx, err := was.getTransaction(hash)
+		if err != nil {
+			was.logger.WithError(err).Error("Getting Transaction")
+			return err
+		}
+
+		receipt, err := was.getReceipt(hash)
+		if err != nil {
+			was.logger.WithError(err).Error("Getting Receipt")
+			return err
+		}
+
+		signer := ethTypes.NewEIP155Signer(big.NewInt(1))
+		from, err := ethTypes.Sender(signer, tx)
+		if err != nil {
+			was.logger.WithError(err).Error("Getting Tx Sender")
+			return err
+		}
+
+		jsonReceipt := bcommon.JsonReceipt{
+			Root:              common.BytesToHash(receipt.PostState),
+			TransactionHash:   hash,
+			From:              from,
+			To:                tx.To(),
+			GasUsed:           receipt.GasUsed,
+			CumulativeGasUsed: receipt.CumulativeGasUsed,
+			ContractAddress:   receipt.ContractAddress,
+			Logs:              receipt.Logs,
+			LogsBloom:         receipt.Bloom,
+			Status:            receipt.Status,
+		}
+
+		if receipt.Logs == nil {
+			jsonReceipt.Logs = []*ethTypes.Log{}
+		}
+
+		p.Respond(jsonReceipt)
+	}
+
+	return nil
 }

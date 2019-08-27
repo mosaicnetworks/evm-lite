@@ -296,6 +296,7 @@ func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
 		s.logger.WithError(err).Error("GetReceipt")
 		return nil, err
 	}
+
 	var receipt ethTypes.ReceiptForStorage
 	if err := rlp.DecodeBytes(data, &receipt); err != nil {
 		s.logger.WithError(err).Error("Decoding Receipt")
@@ -383,6 +384,20 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 
 	return false, nil
 
+}
+
+// CreateReceiptPromise crates a new receipt promise
+func (s *State) CreateReceiptPromise(hash common.Hash) *ReceiptPromise {
+	p := NewReceiptPromise(hash)
+
+	s.was.receiptPromises[hash] = p
+
+	return p
+}
+
+// GetReceiptPromises returns the promise mapping
+func (s *State) GetReceiptPromises() map[common.Hash]*ReceiptPromise {
+	return s.was.receiptPromises
 }
 
 //------------------------------------------------------------------------------
