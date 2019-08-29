@@ -8,6 +8,14 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## v0.3.1 (August 29, 2019)
+
+SECURITY:
+- service: enable CORS
+
+IMPROVEMENTS:
+- service: make /tx synchronous (directly return receipt)
+
 ## v0.3.0 (August 8, 2019)
 
 Refactor. EVM-Lite becomes a library
