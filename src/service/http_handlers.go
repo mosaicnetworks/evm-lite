@@ -117,8 +117,8 @@ client is left to compose a transaction, sign it and RLP encode it. The
 resulting bytes, represented as a Hex string is passed to this method to be
 forwarded to the EVM.
 
-This is an ASYNCHRONOUS operation and the effect on the State should be verified
-by fetching the transaction' receipt.
+This is a SYNCHRONOUS request. We wait for the transaction to go through
+consensus, and return the corresponding receipt directly.
 */
 func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	m.logger.WithField("request", r).Debug("POST rawtx")

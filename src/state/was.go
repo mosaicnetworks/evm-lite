@@ -1,7 +1,6 @@
 package state
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -87,14 +86,19 @@ func (was *WriteAheadState) Reset(root common.Hash) error {
 	return nil
 }
 
-func (was *WriteAheadState) ApplyTransaction(tx ethTypes.Transaction, txIndex int, blockHash common.Hash) error {
+func (was *WriteAheadState) ApplyTransaction(
+	tx ethTypes.Transaction,
+	txIndex int,
+	blockHash common.Hash,
+	coinbase common.Address) error {
+
 	msg, err := tx.AsMessage(was.signer)
 	if err != nil {
 		was.logger.WithError(err).Error("Converting Transaction to Message")
 		return err
 	}
 
-	context := NewContext(msg.From(), msg.Gas(), msg.GasPrice())
+	context := NewContext(msg.From(), coinbase, msg.Gas(), msg.GasPrice())
 
 	//Prepare the ethState with transaction Hash so that it can be used in emitted
 	//logs
@@ -223,9 +227,6 @@ func (was *WriteAheadState) getReceipt(txHash common.Hash) (*ethTypes.Receipt, e
 }
 
 func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transaction, error) {
-	// Retrieve the transaction itself from the database
-	fmt.Println("Fetching Hash: ", hash.String())
-
 	data, err := was.db.Get(hash.Bytes())
 	if err != nil {
 		was.logger.WithError(err).Error("GetTransaction")
@@ -242,8 +243,6 @@ func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transact
 
 func (was *WriteAheadState) respondReceiptPromises() error {
 	for hash, p := range was.receiptPromises {
-		fmt.Println("Hash: ", hash.String())
-
 		tx, err := was.getTransaction(hash)
 		if err != nil {
 			was.logger.WithError(err).Error("Getting Transaction")
