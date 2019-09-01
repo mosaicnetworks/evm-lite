@@ -7,3 +7,7 @@ import:
   - package: github.com/gorilla/mux
   - package: github.com/x-cray/logrus-prefixed-formatter
     version: v0.5.2
+  - package: github.com/allegro/bigcache
+    version: v2.0.0
+    subpackages:
+    - queue
