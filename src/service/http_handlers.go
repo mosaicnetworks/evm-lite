@@ -145,6 +145,7 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	var t ethTypes.Transaction
 	if err := rlp.Decode(bytes.NewReader(rawTxBytes), &t); err != nil {
 		m.logger.WithError(err).Error("Decoding Transaction")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -157,6 +158,14 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		"nonce":    t.Nonce(),
 		"value":    t.Value(),
 	}).Debug("Service decoded tx")
+
+	//XXX check gasPrice is above set limit
+	if m.minGasPrice != nil && t.GasPrice().Cmp(m.minGasPrice) < 0 {
+		err := fmt.Errorf("Gasprice too low. Got %v, MIN: %v", t.GasPrice(), m.minGasPrice)
+		m.logger.Debug(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	if err := m.state.CheckTx(&t); err != nil {
 		m.logger.WithError(err).Error("Checking Transaction")
@@ -268,6 +277,13 @@ func infoHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		m.logger.WithError(err).Error("Getting Info")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	// Add min_gas_price
+	if m.minGasPrice != nil {
+		stats["min_gas_price"] = m.minGasPrice.String()
+	} else {
+		stats["min_gas_price"] = "0"
 	}
 
 	js, err := json.Marshal(stats)
