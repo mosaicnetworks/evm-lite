@@ -3,6 +3,8 @@
 SECURITY:
 
 FEATURES:
+- state: make use of coinbase address
+- service: min gas price
 
 IMPROVEMENTS:
 
