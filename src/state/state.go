@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
-	"syscall"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -25,6 +24,7 @@ import (
 )
 
 var (
+	fdLimit        = 8192
 	gasLimit       = uint64(1000000000000000000)
 	txMetaSuffix   = []byte{0x01}
 	receiptsPrefix = []byte("receipts-")
@@ -49,12 +49,8 @@ type State struct {
 }
 
 func NewState(dbFile string, dbCache int, genesisFile string, logger *logrus.Entry) (*State, error) {
-	handles, err := getFdLimit()
-	if err != nil {
-		return nil, err
-	}
 
-	db, err := ethdb.NewLDBDatabase(dbFile, dbCache, handles)
+	db, err := ethdb.NewLDBDatabase(dbFile, dbCache, fdLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -402,16 +398,4 @@ func (s *State) CreateReceiptPromise(hash common.Hash) *ReceiptPromise {
 // GetReceiptPromises returns the promise mapping
 func (s *State) GetReceiptPromises() map[common.Hash]*ReceiptPromise {
 	return s.was.receiptPromises
-}
-
-//------------------------------------------------------------------------------
-
-// getFdLimit retrieves the number of file descriptors allowed to be opened by this
-// process.
-func getFdLimit() (int, error) {
-	var limit syscall.Rlimit
-	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &limit); err != nil {
-		return 0, err
-	}
-	return int(limit.Cur), nil
 }
