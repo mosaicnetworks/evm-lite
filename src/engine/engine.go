@@ -1,8 +1,12 @@
 package engine
 
 import (
+	"math/big"
+
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/mosaicnetworks/evm-lite/src/config"
 	"github.com/mosaicnetworks/evm-lite/src/consensus"
+	"github.com/mosaicnetworks/evm-lite/src/currency"
 	"github.com/mosaicnetworks/evm-lite/src/service"
 	"github.com/mosaicnetworks/evm-lite/src/state"
 )
@@ -32,10 +36,17 @@ func NewEngine(config config.Config, consensus consensus.Consensus) (*Engine, er
 		return nil, err
 	}
 
+	minGasPrice, ok := math.ParseBig256(currency.ExpandCurrencyString(config.MinGasPrice))
+	if !ok {
+		logger.WithField("min-gas-price", config.MinGasPrice).Debug("Could not parse min-gas-price")
+		minGasPrice = big.NewInt(0)
+	}
+
 	service := service.NewService(
 		config.EthAPIAddr,
 		state,
 		submitCh,
+		minGasPrice,
 		logger.WithField("component", "service"))
 
 	if err := consensus.Init(state, service); err != nil {

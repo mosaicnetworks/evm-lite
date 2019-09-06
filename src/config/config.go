@@ -22,6 +22,7 @@ var (
 	defaultGenesisFile  = fmt.Sprintf("%s/genesis.json", defaultEthDir)
 	defaultPwdFile      = fmt.Sprintf("%s/pwd.txt", defaultEthDir)
 	defaultDbFile       = fmt.Sprintf("%s/chaindata", defaultEthDir)
+	defaultMinGasPrice  = "0"
 )
 
 // Config contains de configuration for an EVM-Lite node
@@ -51,20 +52,24 @@ type Config struct {
 	// forced)
 	Cache int `mapstructure:"cache"`
 
+	// Minimum gasprice for transactions submitted through this node's service
+	MinGasPrice string `mapstructure:"min-gas-pice"`
+
 	logger *logrus.Logger
 }
 
 // DefaultConfig returns the default configuration for an EVM-Lite node
 func DefaultConfig() *Config {
 	return &Config{
-		DataDir:    defaultDataDir,
-		LogLevel:   defaultLogLevel,
-		Genesis:    defaultGenesisFile,
-		Keystore:   defaultKeystoreFile,
-		PwdFile:    defaultPwdFile,
-		DbFile:     defaultDbFile,
-		EthAPIAddr: defaultEthAPIAddr,
-		Cache:      defaultCache,
+		DataDir:     defaultDataDir,
+		LogLevel:    defaultLogLevel,
+		Genesis:     defaultGenesisFile,
+		Keystore:    defaultKeystoreFile,
+		PwdFile:     defaultPwdFile,
+		DbFile:      defaultDbFile,
+		EthAPIAddr:  defaultEthAPIAddr,
+		Cache:       defaultCache,
+		MinGasPrice: defaultMinGasPrice,
 	}
 }
 

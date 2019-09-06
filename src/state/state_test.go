@@ -171,7 +171,7 @@ func (test *Test) deployContract(from accounts.Account, contract *Contract, t *t
 	}
 
 	// Try to commit the transaction
-	err = test.state.ApplyTransaction(data, 0, common.Hash{})
+	err = test.state.ApplyTransaction(data, 0, common.Hash{}, common.Address{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +231,7 @@ func TestTransfer(t *testing.T) {
 	}
 
 	// Try to process the block
-	err = test.state.ApplyTransaction(data, 0, common.Hash{})
+	err = test.state.ApplyTransaction(data, 0, common.Hash{}, common.Address{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -365,7 +365,7 @@ func callDummyContractTestAsync(test *Test, from accounts.Account, contract *Con
 	}
 
 	// Try to process the block
-	err = test.state.ApplyTransaction(data, 0, common.Hash{})
+	err = test.state.ApplyTransaction(data, 0, common.Hash{}, common.Address{})
 	if err != nil {
 		t.Fatal(err)
 	}

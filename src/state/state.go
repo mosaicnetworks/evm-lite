@@ -161,7 +161,7 @@ func (s *State) Commit() (common.Hash, error) {
 func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 	s.logger.Debug("Call")
 
-	context := NewContext(callMsg.From(), 0, big.NewInt(0))
+	context := NewContext(callMsg.From(), common.Address{}, 0, big.NewInt(0))
 
 	// We use a copy of the ethState because even call transactions increment
 	// the sender's nonce
@@ -187,7 +187,11 @@ func (s *State) CheckTx(tx *ethTypes.Transaction) error {
 
 // ApplyTransaction decodes a transaction and applies it to the WAS. It is meant
 // to be called by the consensus system to apply transactions sequentially.
-func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.Hash) error {
+func (s *State) ApplyTransaction(
+	txBytes []byte,
+	txIndex int,
+	blockHash common.Hash,
+	coinbase common.Address) error {
 
 	var t ethTypes.Transaction
 	if err := rlp.Decode(bytes.NewReader(txBytes), &t); err != nil {
@@ -196,7 +200,7 @@ func (s *State) ApplyTransaction(txBytes []byte, txIndex int, blockHash common.H
 	}
 	s.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
 
-	return s.was.ApplyTransaction(t, txIndex, blockHash)
+	return s.was.ApplyTransaction(t, txIndex, blockHash, coinbase)
 }
 
 // CreateGenesisAccounts reads the genesis.json file and creates the regular

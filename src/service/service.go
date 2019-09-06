@@ -1,6 +1,7 @@
 package service
 
 import (
+	"math/big"
 	"net/http"
 	"os"
 	"sync"
@@ -9,31 +10,31 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var defaultGas = uint64(90000)
-
 type infoCallback func() (map[string]string, error)
 
 type Service struct {
 	sync.Mutex
 
-	state    *state.State
-	submitCh chan []byte
-	apiAddr  string
-	getInfo  infoCallback
-	logger   *logrus.Entry
+	state       *state.State
+	submitCh    chan []byte
+	apiAddr     string
+	minGasPrice *big.Int
+	getInfo     infoCallback
+	logger      *logrus.Entry
 }
 
 func NewService(apiAddr string,
 	state *state.State,
 	submitCh chan []byte,
+	minGasPrice *big.Int,
 	logger *logrus.Entry) *Service {
 
 	return &Service{
-		apiAddr:  apiAddr,
-		state:    state,
-		submitCh: submitCh,
-		logger:   logger,
-		// rcptproms: make(map[common.Hash]ReceiptPromise),
+		apiAddr:     apiAddr,
+		state:       state,
+		submitCh:    submitCh,
+		minGasPrice: minGasPrice,
+		logger:      logger,
 	}
 }
 
