@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/common"
+	geth_common "github.com/ethereum/go-ethereum/common"
 	"github.com/mosaicnetworks/evm-lite/src/service"
 	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
@@ -51,7 +51,8 @@ func (s *Solo) Run() error {
 
 			err := s.state.ApplyTransaction(t,
 				s.txIndex,
-				common.BytesToHash([]byte(fmt.Sprintf("block %d", s.txIndex))))
+				geth_common.BytesToHash([]byte(fmt.Sprintf("block %d", s.txIndex))),
+				geth_common.Address{})
 			if err != nil {
 				s.logger.WithField("tx", s.txIndex).WithError(err).Errorf("ApplyTransaction")
 			}

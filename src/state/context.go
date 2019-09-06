@@ -20,18 +20,24 @@ var (
 	}
 )
 
-func NewContext(origin common.Address, gasLimit uint64, gasPrice *big.Int) vm.Context {
+func NewContext(origin common.Address,
+	coinbase common.Address,
+	gasLimit uint64,
+	gasPrice *big.Int) vm.Context {
+
 	context := vm.Context{
 		CanTransfer: core.CanTransfer,
 		Transfer:    core.Transfer,
 		GetHash:     func(uint64) common.Hash { return common.Hash{} },
 		// Message information
 		Origin:   origin,
+		Coinbase: coinbase,
 		GasLimit: gasLimit,
 		GasPrice: gasPrice,
 		//The vm has a dependency on this
 		//Anything greate than ConstantinopleBlock will do here.
 		BlockNumber: CustomChainConfig.ConstantinopleBlock,
 	}
+
 	return context
 }

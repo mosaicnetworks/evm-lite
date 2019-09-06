@@ -61,7 +61,7 @@ func (p *TxPool) CheckTx(tx *ethTypes.Transaction) error {
 		return err
 	}
 
-	context := NewContext(msg.From(), msg.Gas(), msg.GasPrice())
+	context := NewContext(msg.From(), common.Address{}, msg.Gas(), msg.GasPrice())
 
 	// The EVM should never be reused and is not thread safe.
 	vmenv := vm.NewEVM(context, p.ethState, &p.chainConfig, p.vmConfig)
