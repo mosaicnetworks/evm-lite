@@ -271,6 +271,16 @@ func (s *State) GetPoolNonce(addr common.Address) uint64 {
 	return s.txPool.ethState.GetNonce(addr)
 }
 
+// GetPoolBalance returns an account's balance from the txpool's ethState
+func (s *State) GetPoolBalance(addr common.Address) *big.Int {
+	return s.txPool.ethState.GetBalance(addr)
+}
+
+// GetPoolCode returns an account's bytecode from the txpool;s ethState
+func (s *State) GetPoolCode(addr common.Address) []byte {
+	return s.txPool.ethState.GetCode(addr)
+}
+
 // GetTransaction fetches transactions by hash directly from the DB.
 func (s *State) GetTransaction(hash common.Hash) (*ethTypes.Transaction, error) {
 	// Retrieve the transaction itself from the database

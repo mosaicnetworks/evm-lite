@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"net/http"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -18,25 +19,45 @@ import (
 )
 
 /*
-GET /account/{address}
+GET /account/{address}?fromstate={true|false|t|f|T|F|1|0|TRUE|FALSE|True|False}
 example: /account/0x50bd8a037442af4cdf631495bcaa5443de19685d
 returns: JSON JsonAccount
 
-This endpoint should be used to fetch information about any account.
+This endpoint should be used to fetch information about any account on the
+txPool's state by default or on the main ethState if `state=true`.
 */
 func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	param := r.URL.Path[len("/account/"):]
 	m.logger.WithField("param", param).Debug("GET account")
+
 	address := common.HexToAddress(param)
 	m.logger.WithField("address", address.Hex()).Debug("GET account")
 
-	balance := m.state.GetBalance(address)
-	nonce := m.state.GetNonce(address)
-	code := hexutil.Encode(m.state.GetCode(address))
+	// fetch values by default from TxPool
+	nonce := m.state.GetPoolNonce(address)
+	balance := m.state.GetPoolBalance(address)
+	code := hexutil.Encode(m.state.GetPoolCode(address))
+
+	// check query param `state`
+	qs := r.URL.Query().Get("fromstate")
+	if qs != "" {
+		fromMainState, err := strconv.ParseBool(qs)
+		if err != nil {
+			m.logger.WithError(err).Error("Error converting string to bool")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// get values from main ethState
+		if fromMainState {
+			nonce = m.state.GetNonce(address)
+			balance = m.state.GetBalance(address)
+			code = hexutil.Encode(m.state.GetCode(address))
+		}
+	}
+
 	if code == "0x" {
 		code = ""
-	} else {
-		m.logger.WithField("code", code).Debug("GET account")
 	}
 
 	account := JsonAccount{
