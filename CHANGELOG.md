@@ -1,14 +1,18 @@
+
+# Changelog
+
 ## Unreleased
 
 SECURITY:
+FEATURES:
+IMPROVEMENTS:
+BUG FIXES:
+
+## v0.3.2 (September 6, 2019)
 
 FEATURES:
 - state: make use of coinbase address
 - service: min gas price
-
-IMPROVEMENTS:
-
-BUG FIXES:
 
 ## v0.3.1 (August 29, 2019)
 
