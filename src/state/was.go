@@ -243,44 +243,48 @@ func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transact
 
 func (was *WriteAheadState) respondReceiptPromises() error {
 	for hash, p := range was.receiptPromises {
-		tx, err := was.getTransaction(hash)
-		if err != nil {
-			was.logger.WithError(err).Error("Getting Transaction")
-			return err
-		}
+		receipt, err := was.getJSONReceipt(hash)
+		p.Respond(receipt, err)
+	}
+	return nil
+}
 
-		receipt, err := was.getReceipt(hash)
-		if err != nil {
-			was.logger.WithError(err).Error("Getting Receipt")
-			return err
-		}
-
-		signer := ethTypes.NewEIP155Signer(big.NewInt(1))
-		from, err := ethTypes.Sender(signer, tx)
-		if err != nil {
-			was.logger.WithError(err).Error("Getting Tx Sender")
-			return err
-		}
-
-		jsonReceipt := bcommon.JsonReceipt{
-			Root:              common.BytesToHash(receipt.PostState),
-			TransactionHash:   hash,
-			From:              from,
-			To:                tx.To(),
-			GasUsed:           receipt.GasUsed,
-			CumulativeGasUsed: receipt.CumulativeGasUsed,
-			ContractAddress:   receipt.ContractAddress,
-			Logs:              receipt.Logs,
-			LogsBloom:         receipt.Bloom,
-			Status:            receipt.Status,
-		}
-
-		if receipt.Logs == nil {
-			jsonReceipt.Logs = []*ethTypes.Log{}
-		}
-
-		p.Respond(jsonReceipt)
+func (was *WriteAheadState) getJSONReceipt(hash common.Hash) (*bcommon.JsonReceipt, error) {
+	tx, err := was.getTransaction(hash)
+	if err != nil {
+		was.logger.WithError(err).Error("Getting Transaction")
+		return nil, err
 	}
 
-	return nil
+	receipt, err := was.getReceipt(hash)
+	if err != nil {
+		was.logger.WithError(err).Error("Getting Receipt")
+		return nil, err
+	}
+
+	signer := ethTypes.NewEIP155Signer(big.NewInt(1))
+	from, err := ethTypes.Sender(signer, tx)
+	if err != nil {
+		was.logger.WithError(err).Error("Getting Tx Sender")
+		return nil, err
+	}
+
+	jsonReceipt := bcommon.JsonReceipt{
+		Root:              common.BytesToHash(receipt.PostState),
+		TransactionHash:   hash,
+		From:              from,
+		To:                tx.To(),
+		GasUsed:           receipt.GasUsed,
+		CumulativeGasUsed: receipt.CumulativeGasUsed,
+		ContractAddress:   receipt.ContractAddress,
+		Logs:              receipt.Logs,
+		LogsBloom:         receipt.Bloom,
+		Status:            receipt.Status,
+	}
+
+	if receipt.Logs == nil {
+		jsonReceipt.Logs = []*ethTypes.Log{}
+	}
+
+	return &jsonReceipt, nil
 }
