@@ -36,3 +36,26 @@ type JsonReceipt struct {
 	LogsBloom         ethTypes.Bloom     `json:"logsBloom"`
 	Status            uint64             `json:"status"`
 }
+
+func ToJSONReceipt(receipt *ethTypes.Receipt, tx *ethTypes.Transaction, signer ethTypes.Signer) *JsonReceipt {
+	from, _ := ethTypes.Sender(signer, tx)
+
+	jsonReceipt := JsonReceipt{
+		Root:              ethcommon.BytesToHash(receipt.PostState),
+		TransactionHash:   tx.Hash(),
+		From:              from,
+		To:                tx.To(),
+		GasUsed:           receipt.GasUsed,
+		CumulativeGasUsed: receipt.CumulativeGasUsed,
+		ContractAddress:   receipt.ContractAddress,
+		Logs:              receipt.Logs,
+		LogsBloom:         receipt.Bloom,
+		Status:            receipt.Status,
+	}
+
+	if receipt.Logs == nil {
+		jsonReceipt.Logs = []*ethTypes.Log{}
+	}
+
+	return &jsonReceipt
+}

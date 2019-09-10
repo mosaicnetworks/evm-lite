@@ -11,8 +11,7 @@ import (
 )
 
 type TxPool struct {
-	ethState *ethState.StateDB
-
+	ethState     *ethState.StateDB
 	signer       ethTypes.Signer
 	chainConfig  params.ChainConfig // vm.env is still tightly coupled with chainConfig
 	vmConfig     vm.Config

@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	//CustomChainConfig accounts for the fact that EVM-Lite doesn't really have
-	//a concetp of Chain, or Blocks (being consensus-agnostic). The EVM is
-	//tightly coupled with this ChainConfig object (cf interpreter.go), so this
-	//is a workaround that treats all blocks the same.
+	// CustomChainConfig accounts for the fact that EVM-Lite doesn't really have
+	// a concept of Chain, or Blocks (being consensus-agnostic). The EVM is
+	// tightly coupled with this ChainConfig object (cf interpreter.go), so this
+	// is a workaround that treats all blocks the same.
 	CustomChainConfig = params.ChainConfig{
 		ChainID:             big.NewInt(1),
 		ConstantinopleBlock: big.NewInt(0),
