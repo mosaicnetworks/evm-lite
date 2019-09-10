@@ -4,19 +4,14 @@
 //
 // Taking inspiration from the SI units, we have suitable multiples:
 //
-//  1 000 000 000 000 000 000 000 000	yotta	(Y)	10^24
-//  1 000 000 000 000 000 000 000		zetta	(Z)	10^21
-//  1 000 000 000 000 000 000			exa		(E)	10^18
-//  1 000 000 000 000 000				peta	(P)	10^15
-//  1 000 000 000 000					tera	(T)	10^12
-//  1 000 000 000						giga	(G)	10^9
-//  1 000 000							mega	(M)	10^6
-//  1 000								kilo	(K)	10^3
-//
-// NB we use a capital K for kilo, so all letters are capital.
-//
-// Capital E as the last digit is treated as an exponential, lower case e is
-// a hex number.
+// 1/ 1 000 000 000 000 000 000			atto		(a)	10^-18
+// 1/ 1 000 000 000 000 000				femto 		(f)	10^-15
+// 1/ 1 000 000 000 000					pico		(p)	10^-12
+// 1/ 1 000 000 000						nano		(n)	10^-9
+// 1/ 1 000 000							micro		(u)	10^-6
+// 1/ 1 000								milli		(m)	10^-3
+// 1									Tenom		(T)	1
+// All letters are lowercase except for T for Tenom
 //
 package currency
 
@@ -26,7 +21,7 @@ import (
 	"strings"
 )
 
-const tokenLetters = "KMGTPEZY"
+const tokenLetters = "afpnumT"
 
 var thouSeparator = ","
 var decSeparator = "."
@@ -35,7 +30,7 @@ var decSeparator = "."
 //the appropriate number of zeroes. The input string may contain a decimal
 //point, and it will expand it, standard form style. By conventtion hex
 //balances have a leading 0x, decimals are bare. THis function will work
-//correctly with either.
+//correctly with either. This function returns Attoms.
 func ExpandCurrencyString(input string) string {
 
 	// trim whitespace as it would mess with the place counting further on
@@ -60,6 +55,8 @@ func ExpandCurrencyString(input string) string {
 	if tokenPower == 0 {
 		return cleanInput
 	}
+
+	tokenPower -= 3
 
 	// Remove the token from the input string
 	last := len(cleanInput) - 1
@@ -104,6 +101,38 @@ func ExpandAndSeparateCurrencyString(input string) string {
 	return expanded
 }
 
+// FormatTenomString is a wrapper to FormatUnitString
+func FormatTenomString(input string) string {
+	return FormatUnitString(input, 18)
+}
+
+// FormatUnitString takes an atomic input and returns
+func FormatUnitString(input string, power int) string {
+
+	// clean input. Guarantees no whitespace or tokens.
+	cleanInput := ExpandCurrencyString(input)
+
+	if cleanInput == "0" {
+		return cleanInput
+	}
+
+	if len(cleanInput) == 18 { // We need some zero padding
+		return strings.TrimRight("0."+cleanInput, "0")
+	}
+
+	if len(cleanInput) < 18 { // We need some zero padding
+		format := "%0" + strconv.Itoa(power-len(cleanInput)) + "d"
+		cleanInput = "0." + fmt.Sprintf(format, 0) + cleanInput
+		return strings.TrimRight(cleanInput, "0")
+	}
+
+	cleanSuffix := strings.TrimRight(cleanInput[len(cleanInput)-power:], "0")
+	if len(cleanSuffix) != 0 {
+		cleanSuffix = "." + cleanSuffix
+	}
+	return cleanInput[:len(cleanInput)-power] + cleanSuffix
+}
+
 // FormatCurrencyString ...
 func FormatCurrencyString(input string) string {
 
@@ -116,11 +145,11 @@ func FormatCurrencyString(input string) string {
 	}
 
 	strpos := (len(cleanInput) / 3)
-	if strpos > len(tokenLetters) {
-		strpos = len(tokenLetters)
+	if strpos >= len(tokenLetters) {
+		strpos = len(tokenLetters) - 1
 	}
 
-	tokenLetter := string([]byte{tokenLetters[strpos-1]})
+	tokenLetter := string([]byte{tokenLetters[strpos]})
 
 	zeroplaces := strpos * 3
 

@@ -5,3 +5,5 @@ vendor
 *debug.test*
 deploy/terraform/local/ips.dat
 0x*
+deploy/conf
+node_modules
