@@ -194,15 +194,20 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
-	p := m.state.CreateReceiptPromise(t.Hash())
+	promise := m.state.CreateReceiptPromise(t.Hash())
 
 	m.logger.Debug("submitting tx")
 	m.submitCh <- rawTxBytes
 	m.logger.Debug("submitted tx")
 
 	select {
-	case receipt := <-*p.RespCh:
-		js, err := json.Marshal(receipt)
+	case resp := <-promise.RespCh:
+		if resp.Error != nil {
+			http.Error(w, resp.Error.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		js, err := json.Marshal(resp.Receipt)
 		if err != nil {
 			m.logger.WithError(err).Error("Marshaling JSON response")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -213,7 +218,7 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		w.Write(js)
 
 		// delete the promise
-		delete(m.state.GetReceiptPromises(), receipt.TransactionHash)
+		delete(m.state.GetReceiptPromises(), t.Hash())
 	}
 }
 

@@ -6,30 +6,29 @@ import (
 	"github.com/mosaicnetworks/evm-lite/src/common"
 )
 
-// ReceiptPromise is a struct for asyncronous response to fetching a receipt
-type ReceiptPromise struct {
-	Hash ethCommon.Hash
+// ReceiptPromiseResponse capture both a response and a potential error
+type ReceiptPromiseResponse struct {
+	Receipt *common.JsonReceipt
+	Error   error
+}
 
-	// response channel
-	RespCh *chan common.JsonReceipt
+// ReceiptPromise provides a response mechanism for transaction receipts. The
+// Hash identifies the transaction to which the ReceiptPromise corresponds, and
+// is used as the key in the map kept by the state object.
+type ReceiptPromise struct {
+	Hash   ethCommon.Hash
+	RespCh chan ReceiptPromiseResponse
 }
 
 // NewReceiptPromise is a factory method for a ReceiptPromise
 func NewReceiptPromise(hash ethCommon.Hash) *ReceiptPromise {
-	channel := make(chan common.JsonReceipt)
-
 	return &ReceiptPromise{
 		Hash:   hash,
-		RespCh: &channel,
+		RespCh: make(chan ReceiptPromiseResponse, 1),
 	}
 }
 
 // Respond handles resolving a JsonReceipt
-func (p *ReceiptPromise) Respond(receipt common.JsonReceipt) {
-	*p.RespCh <- receipt
-}
-
-// ResponseChannel return the response channel for the promise
-func (p *ReceiptPromise) ResponseChannel() *chan common.JsonReceipt {
-	return p.RespCh
+func (p *ReceiptPromise) Respond(receipt *common.JsonReceipt, err error) {
+	p.RespCh <- ReceiptPromiseResponse{receipt, err}
 }
