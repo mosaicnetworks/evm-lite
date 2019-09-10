@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -110,6 +111,13 @@ func (was *WriteAheadState) ApplyTransaction(
 	_, gas, failed, err := core.ApplyMessage(vmenv, msg, was.gp)
 	if err != nil {
 		was.logger.WithError(err).Error("Applying transaction to WAS")
+
+		// Respond to the promise immediately if we got a "consensus" error
+		if promise, ok := was.receiptPromises[tx.Hash()]; ok {
+			promise.Respond(nil, err)
+			delete(was.receiptPromises, tx.Hash())
+		}
+
 		return err
 	}
 
@@ -211,16 +219,25 @@ func (was *WriteAheadState) writeReceipts() error {
 	return batch.Write()
 }
 
+func (was *WriteAheadState) respondReceiptPromises() error {
+	for _, tx := range was.transactions {
+		if promise, ok := was.receiptPromises[tx.Hash()]; ok {
+			receipt, err := was.getJSONReceipt(tx.Hash())
+			promise.Respond(receipt, err)
+			delete(was.receiptPromises, tx.Hash())
+		}
+	}
+	return nil
+}
+
 func (was *WriteAheadState) getReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
 	data, err := was.db.Get(append(receiptsPrefix, txHash.Bytes()...))
 	if err != nil {
-		was.logger.WithError(err).Error("GetReceipt")
-		return nil, err
+		return nil, fmt.Errorf("Getting Receipt: %v", err)
 	}
 	var receipt ethTypes.ReceiptForStorage
 	if err := rlp.DecodeBytes(data, &receipt); err != nil {
-		was.logger.WithError(err).Error("Decoding Receipt")
-		return nil, err
+		return nil, fmt.Errorf("Decoding Receipt: %v", err)
 	}
 
 	return (*ethTypes.Receipt)(&receipt), nil
@@ -229,43 +246,30 @@ func (was *WriteAheadState) getReceipt(txHash common.Hash) (*ethTypes.Receipt, e
 func (was *WriteAheadState) getTransaction(hash common.Hash) (*ethTypes.Transaction, error) {
 	data, err := was.db.Get(hash.Bytes())
 	if err != nil {
-		was.logger.WithError(err).Error("GetTransaction")
-		return nil, err
+		return nil, fmt.Errorf("Getting Transaction: %v", err)
 	}
 	var tx ethTypes.Transaction
 	if err := rlp.DecodeBytes(data, &tx); err != nil {
-		was.logger.WithError(err).Error("Decoding Transaction")
-		return nil, err
+		return nil, fmt.Errorf("Decoding Transaction: %v", err)
 	}
 
 	return &tx, nil
 }
 
-func (was *WriteAheadState) respondReceiptPromises() error {
-	for hash, p := range was.receiptPromises {
-		receipt, err := was.getJSONReceipt(hash)
-		p.Respond(receipt, err)
-	}
-	return nil
-}
-
 func (was *WriteAheadState) getJSONReceipt(hash common.Hash) (*bcommon.JsonReceipt, error) {
 	tx, err := was.getTransaction(hash)
 	if err != nil {
-		was.logger.WithError(err).Error("Getting Transaction")
 		return nil, err
 	}
 
 	receipt, err := was.getReceipt(hash)
 	if err != nil {
-		was.logger.WithError(err).Error("Getting Receipt")
 		return nil, err
 	}
 
 	signer := ethTypes.NewEIP155Signer(big.NewInt(1))
 	from, err := ethTypes.Sender(signer, tx)
 	if err != nil {
-		was.logger.WithError(err).Error("Getting Tx Sender")
 		return nil, err
 	}
 

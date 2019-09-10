@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -200,26 +201,37 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	m.submitCh <- rawTxBytes
 	m.logger.Debug("submitted tx")
 
+	timeout := time.After(5 * time.Second)
+	var receipt *comm.JsonReceipt
+	var respErr error
+
 	select {
 	case resp := <-promise.RespCh:
 		if resp.Error != nil {
-			http.Error(w, resp.Error.Error(), http.StatusInternalServerError)
-			return
+			respErr = resp.Error
+			break
 		}
+		receipt = resp.Receipt
+	case <-timeout:
+		respErr = fmt.Errorf("Timeout waiting for transaction to go through consensus")
+		break
 
-		js, err := json.Marshal(resp.Receipt)
-		if err != nil {
-			m.logger.WithError(err).Error("Marshaling JSON response")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(js)
-
-		// delete the promise
-		delete(m.state.GetReceiptPromises(), t.Hash())
 	}
+
+	if respErr != nil {
+		m.logger.Errorf("RespErr:  %v", respErr)
+		http.Error(w, respErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(receipt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 /*
