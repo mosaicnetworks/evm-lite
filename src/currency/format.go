@@ -10,8 +10,8 @@
 // 1/ 1 000 000 000						nano		(n)	10^-9
 // 1/ 1 000 000							micro		(u)	10^-6
 // 1/ 1 000								milli		(m)	10^-3
-// 1									Tenom		(T)	1
-// All letters are lowercase except for T for Tenom
+// 1									Token		(T)	1
+// All letters are lowercase except for T for Token
 //
 package currency
 

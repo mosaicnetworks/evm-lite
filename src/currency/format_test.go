@@ -17,7 +17,7 @@ type testRecord struct {
 // 1/ 1 000 000 000						nano		(n)	10^-9
 // 1/ 1 000 000							micro		(u)	10^-6
 // 1/ 1 000								milli		(m)	10^-3
-// 1									Tenom		(T)	1
+// 1									Token		(T)	1
 
 func TestExpandCurrencyString(t *testing.T) {
 
