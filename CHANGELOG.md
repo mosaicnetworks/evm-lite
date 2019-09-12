@@ -3,10 +3,13 @@
 
 ## Unreleased
 
-SECURITY:
 FEATURES:
-IMPROVEMENTS:
+
+- currency: new denominations for token units
+
 BUG FIXES:
+
+- state: handling transaction promises and errors
 
 ## v0.3.2 (September 6, 2019)
 

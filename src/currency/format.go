@@ -10,8 +10,8 @@
 // 1/ 1 000 000 000						nano		(n)	10^-9
 // 1/ 1 000 000							micro		(u)	10^-6
 // 1/ 1 000								milli		(m)	10^-3
-// 1									Tenom		(T)	1
-// All letters are lowercase except for T for Tenom
+// 1									Token		(T)	1
+// All letters are lowercase except for T for Token
 //
 package currency
 
@@ -101,8 +101,8 @@ func ExpandAndSeparateCurrencyString(input string) string {
 	return expanded
 }
 
-// FormatTenomString is a wrapper to FormatUnitString
-func FormatTenomString(input string) string {
+// FormatTokenString is a wrapper to FormatUnitString
+func FormatTokenString(input string) string {
 	return FormatUnitString(input, 18)
 }
 
