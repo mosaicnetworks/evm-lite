@@ -76,13 +76,9 @@ func (m *Service) serveAPI() {
 func (m *Service) makeHandler(fn func(http.ResponseWriter, *http.Request, *Service)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		m.Lock()
-
-		// enable CORS
+		defer m.Unlock()
 		enableCors(&w)
-
 		fn(w, r, m)
-
-		m.Unlock()
 	}
 }
 

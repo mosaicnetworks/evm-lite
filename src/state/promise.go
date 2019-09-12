@@ -14,7 +14,7 @@ type ReceiptPromiseResponse struct {
 
 // ReceiptPromise provides a response mechanism for transaction receipts. The
 // Hash identifies the transaction to which the ReceiptPromise corresponds, and
-// is used as the key in the map kept by the state object.
+// is used as the key in the map kept by the WAS.
 type ReceiptPromise struct {
 	Hash   ethCommon.Hash
 	RespCh chan ReceiptPromiseResponse
@@ -28,7 +28,7 @@ func NewReceiptPromise(hash ethCommon.Hash) *ReceiptPromise {
 	}
 }
 
-// Respond handles resolving a JsonReceipt
+// Respond resolves a ReceiptPromiseResponse and passes it to the RespCh
 func (p *ReceiptPromise) Respond(receipt *common.JsonReceipt, err error) {
 	p.RespCh <- ReceiptPromiseResponse{receipt, err}
 }

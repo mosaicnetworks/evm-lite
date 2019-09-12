@@ -181,7 +181,7 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		"value":    t.Value(),
 	}).Debug("Service decoded tx")
 
-	//XXX check gasPrice is above set limit
+	// Check if gasPrice is above set limit
 	if m.minGasPrice != nil && t.GasPrice().Cmp(m.minGasPrice) < 0 {
 		err := fmt.Errorf("Gasprice too low. Got %v, MIN: %v", t.GasPrice(), m.minGasPrice)
 		m.logger.Debug(err)
@@ -215,7 +215,6 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	case <-timeout:
 		respErr = fmt.Errorf("Timeout waiting for transaction to go through consensus")
 		break
-
 	}
 
 	if respErr != nil {
@@ -226,6 +225,7 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 
 	js, err := json.Marshal(receipt)
 	if err != nil {
+		m.logger.WithError(err).Error("Marshalling JSON Response")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -264,30 +264,7 @@ func transactionReceiptHandler(w http.ResponseWriter, r *http.Request, m *Servic
 		return
 	}
 
-	signer := ethTypes.NewEIP155Signer(big.NewInt(1))
-	from, err := ethTypes.Sender(signer, tx)
-	if err != nil {
-		m.logger.WithError(err).Error("Getting Tx Sender")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	jsonReceipt := comm.JsonReceipt{
-		Root:              common.BytesToHash(receipt.PostState),
-		TransactionHash:   txHash,
-		From:              from,
-		To:                tx.To(),
-		GasUsed:           receipt.GasUsed,
-		CumulativeGasUsed: receipt.CumulativeGasUsed,
-		ContractAddress:   receipt.ContractAddress,
-		Logs:              receipt.Logs,
-		LogsBloom:         receipt.Bloom,
-		Status:            receipt.Status,
-	}
-
-	if receipt.Logs == nil {
-		jsonReceipt.Logs = []*ethTypes.Log{}
-	}
+	jsonReceipt := comm.ToJSONReceipt(receipt, tx, m.state.GetSigner())
 
 	js, err := json.Marshal(jsonReceipt)
 	if err != nil {
@@ -347,7 +324,7 @@ func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 
 	al = JsonContract{
 		Address: common.HexToAddress(m.state.GetAuthorisingAccount()),
-		ABI:     m.state.GetAuthorisingAbi(),
+		ABI:     m.state.GetAuthorisingABI(),
 	}
 
 	js, err := json.Marshal(al)
