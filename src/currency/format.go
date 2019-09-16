@@ -101,8 +101,8 @@ func ExpandAndSeparateCurrencyString(input string) string {
 	return expanded
 }
 
-// FormatTenomString is a wrapper to FormatUnitString
-func FormatTenomString(input string) string {
+// FormatTokenString is a wrapper to FormatUnitString
+func FormatTokenString(input string) string {
 	return FormatUnitString(input, 18)
 }
 

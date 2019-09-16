@@ -7,6 +7,16 @@ SECURITY:
 FEATURES:
 IMPROVEMENTS:
 BUG FIXES:
+ 
+## v0.3.3 (September 13, 2019)
+
+FEATURES:
+
+- currency: new denominations for token units
+
+BUG FIXES:
+
+- state: handling transaction promises and errors
 
 ## v0.3.2 (September 6, 2019)
 

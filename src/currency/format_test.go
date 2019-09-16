@@ -88,7 +88,7 @@ func TestFormatCurrencyString(t *testing.T) {
 	}
 }
 
-func TestFormatTenomString(t *testing.T) {
+func TestFormatTokenString(t *testing.T) {
 
 	var tests = []testRecord{
 		testRecord{input: "1m", output: "0.001"},
@@ -100,7 +100,7 @@ func TestFormatTenomString(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		ret := currency.FormatTenomString(test.input)
+		ret := currency.FormatTokenString(test.input)
 		if ret != test.output {
 			t.Errorf("\nWrong Answer: %s\nGot: %s\nExpected: %s\n", test.input, ret, test.output)
 		} else {
