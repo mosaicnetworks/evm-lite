@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"net/http"
 	"os"
-	"sync"
 
 	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
@@ -13,8 +12,6 @@ import (
 type infoCallback func() (map[string]string, error)
 
 type Service struct {
-	sync.Mutex
-
 	state       *state.State
 	submitCh    chan []byte
 	apiAddr     string
@@ -75,8 +72,6 @@ func (m *Service) serveAPI() {
 
 func (m *Service) makeHandler(fn func(http.ResponseWriter, *http.Request, *Service)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		m.Lock()
-		defer m.Unlock()
 		enableCors(&w)
 		fn(w, r, m)
 	}

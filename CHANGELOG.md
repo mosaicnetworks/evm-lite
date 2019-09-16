@@ -6,6 +6,10 @@
 SECURITY:
 FEATURES:
 IMPROVEMENTS:
+
+- state: more granular use of mutexes.
+- service: higher throughput thanks to above improvement.
+
 BUG FIXES:
  
 ## v0.3.3 (September 13, 2019)
