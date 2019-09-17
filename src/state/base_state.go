@@ -54,7 +54,7 @@ func NewBaseState(db ethdb.Database,
 	}
 }
 
-// Copy returns a copy of the BaseState with it's own mutex, gp, and stateDB
+// Copy returns a copy of the BaseState with its own mutex, gp, and stateDB
 func (bs *BaseState) Copy() BaseState {
 	return BaseState{
 		db:          bs.db,
