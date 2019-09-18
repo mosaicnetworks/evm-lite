@@ -1,17 +1,13 @@
 
 # Changelog
 
-## Unreleased
+## v0.3.4 (September 18, 2019)
 
-SECURITY:
-FEATURES:
 IMPROVEMENTS:
 
 - state: more granular use of mutexes.
 - service: higher throughput thanks to above improvement.
 
-BUG FIXES:
- 
 ## v0.3.3 (September 13, 2019)
 
 FEATURES:
