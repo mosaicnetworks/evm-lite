@@ -20,6 +20,7 @@ var (
 	}
 )
 
+// NewContext returns a custom Context suitable from evm-lite
 func NewContext(origin common.Address,
 	coinbase common.Address,
 	gasLimit uint64,

@@ -9,48 +9,35 @@ import (
 	"os"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/core"
-	ethState "github.com/ethereum/go-ethereum/core/state"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/sirupsen/logrus"
 
 	bcommon "github.com/mosaicnetworks/evm-lite/src/common"
-	"github.com/mosaicnetworks/evm-lite/src/currency"
 )
 
 var (
-	fdLimit        = 8192
-	gasLimit       = uint64(1000000000000000000)
-	receiptsPrefix = []byte("receipts-")
+	_fdLimit  = 8192
+	_gasLimit = uint64(1000000000000000000)
 )
 
 /*
-State is the main object that manages the application-state of evm-lite. It is
-used by the Service for read-only operations, and by the Consensus system to
-apply new transactions. It manages 3 copies of the underlying datastore:
+State is the main THREAD SAFE object that manages the application-state of
+evm-lite. It is used by the Service for read-only operations, and by the
+Consensus system to apply new transactions. It manages 3 copies of the
+underlying datastore:
 
-1) it's own ethState, which is the "official" state, that cannot be arbitrarily
+1) it's own state, which is the "official" state, that cannot be arbitrarily
    reverted.
 2) the write-ahead-state (was), where the consensus system applies transactions
    before committing them to the main state.
 3) the transaction-pool's state, where the Service verifies transactions before
    submitting them to the consensus system.
-
 */
 type State struct {
-	db ethdb.Database
-
-	ethState    *ethState.StateDB
-	signer      ethTypes.Signer
-	chainConfig params.ChainConfig //vm.env is still tightly coupled with chainConfig
-	vmConfig    vm.Config
-	gasLimit    uint64
-
+	main   BaseState
 	was    *WriteAheadState
 	txPool *TxPool
 
@@ -63,21 +50,31 @@ type State struct {
 // file to create the initial accounts, including the POA smart-contract.
 func NewState(dbFile string, dbCache int, genesisFile string, logger *logrus.Entry) (*State, error) {
 
-	db, err := ethdb.NewLDBDatabase(dbFile, dbCache, fdLimit)
+	// db is THREAD SAFE and reused by base, was, and txpool
+	db, err := ethdb.NewLDBDatabase(dbFile, dbCache, _fdLimit)
 	if err != nil {
 		return nil, err
 	}
 
+	main := NewBaseState(db,
+		common.Hash{},
+		ethTypes.NewEIP155Signer(CustomChainConfig.ChainID),
+		CustomChainConfig,
+		vm.Config{Tracer: vm.NewStructLogger(nil)},
+		_gasLimit,
+	)
+
 	s := &State{
-		db:          db,
-		signer:      ethTypes.NewEIP155Signer(CustomChainConfig.ChainID),
-		chainConfig: CustomChainConfig,
-		vmConfig:    vm.Config{Tracer: vm.NewStructLogger(nil)},
+		main:        main,
+		was:         NewWriteAheadState(main.Copy(), logger),
+		txPool:      NewTxPool(main.Copy(), logger),
 		genesisFile: genesisFile,
 		logger:      logger,
 	}
 
-	if err := s.InitState(); err != nil {
+	// Initialize genesis accounts with balance, code, and state
+	err = s.CreateGenesisAccounts()
+	if err != nil {
 		return nil, err
 	}
 
@@ -85,49 +82,6 @@ func NewState(dbFile string, dbCache int, genesisFile string, logger *logrus.Ent
 }
 
 /******************************************************************************/
-
-// InitState initializes the statedb object, the write-ahead state, the
-// transaction-pool, and creates genesis accounts.
-func (s *State) InitState() error {
-
-	s.gasLimit = gasLimit
-
-	initState := common.Hash{}
-
-	var err error
-
-	s.ethState, err = ethState.New(initState, ethState.NewDatabase(s.db))
-	if err != nil {
-		return err
-	}
-
-	s.was, err = NewWriteAheadState(s.db,
-		initState,
-		s.signer,
-		s.chainConfig,
-		s.vmConfig,
-		gasLimit,
-		s.logger)
-
-	if err != nil {
-		return err
-	}
-
-	s.txPool = NewTxPool(s.ethState.Copy(),
-		s.signer,
-		s.chainConfig,
-		s.vmConfig,
-		s.gasLimit,
-		s.logger)
-
-	// Initialize genesis accounts with balance, code, and state
-	err = s.CreateGenesisAccounts()
-	if err != nil {
-		return err
-	}
-
-	return err
-}
 
 // CreateGenesisAccounts reads the genesis.json file and creates the regular
 // pre-funded accounts, as well as the POA smart-contract account.
@@ -144,26 +98,29 @@ func (s *State) CreateGenesisAccounts() error {
 	// Regular pre-funded accounts
 	for addr, account := range genesis.Alloc {
 		address := common.HexToAddress(addr)
-		if s.empty(address) {
-			s.was.ethState.AddBalance(address, math.MustParseBig256(currency.ExpandCurrencyString(account.Balance)))
-			s.was.ethState.SetCode(address, common.Hex2Bytes(account.Code))
-			for key, value := range account.Storage {
-				s.was.ethState.SetState(address, common.HexToHash(key), common.HexToHash(value))
-			}
-			s.logger.WithField("address", addr).Debug("Adding account")
-		}
+
+		s.was.CreateAccount(address,
+			account.Code,
+			account.Storage,
+			account.Balance)
+
+		s.logger.WithField("address", addr).Debug("Adding account")
 	}
 
 	// POA smart-contract account
 	if string(genesis.Poa.Address) != "" {
 		address := common.HexToAddress(genesis.Poa.Address)
-		if s.empty(address) {
-			s.was.ethState.AddBalance(address, math.MustParseBig256(currency.ExpandCurrencyString(genesis.Poa.Balance)))
-			s.was.ethState.SetCode(address, common.Hex2Bytes(genesis.Poa.Code))
-			setPOAADDR(genesis.Poa.Address)
-			setPOAABI(genesis.Poa.Abi)
-			s.logger.WithField("address", genesis.Poa.Address).Debug("Adding POA smart-contract account")
-		}
+
+		s.was.CreateAccount(address,
+			genesis.Poa.Code,
+			map[string]string{},
+			genesis.Poa.Balance)
+
+		setPOAADDR(genesis.Poa.Address)
+		setPOAABI(genesis.Poa.Abi)
+
+		s.logger.WithField("address", genesis.Poa.Address).Debug("Adding POA smart-contract account")
+
 	}
 
 	if _, err = s.Commit(); err != nil {
@@ -172,13 +129,6 @@ func (s *State) CreateGenesisAccounts() error {
 
 	return nil
 
-}
-
-// empty reports whether the account is non-existant or empty
-func (s *State) empty(addr common.Address) bool {
-	res := s.ethState.Empty(addr)
-	s.logger.Debugf("%s Empty? %v", addr.Hex(), res)
-	return res
 }
 
 /*******************************************************************************
@@ -206,6 +156,7 @@ func (s *State) ApplyTransaction(
 // Commit persists all pending state changes (in the WAS) to the DB, and resets
 // the WAS and TxPool
 func (s *State) Commit() (common.Hash, error) {
+
 	// commit all state changes to the database
 	root, err := s.was.Commit()
 	if err != nil {
@@ -213,8 +164,8 @@ func (s *State) Commit() (common.Hash, error) {
 		return root, err
 	}
 
-	// Reset main ethState
-	if err := s.ethState.Reset(root); err != nil {
+	// Reset Main
+	if err := s.main.Reset(root); err != nil {
 		s.logger.WithError(err).Error("Resetting main StateDB")
 		return root, err
 	}
@@ -238,62 +189,12 @@ func (s *State) Commit() (common.Hash, error) {
 }
 
 /*******************************************************************************
-Service on Main
+Config
 *******************************************************************************/
-
-// GetBalance returns an account's balance from the main ethState
-func (s *State) GetBalance(addr common.Address) *big.Int {
-	return s.ethState.GetBalance(addr)
-}
-
-// GetNonce returns an account's nonce from the main ethState
-func (s *State) GetNonce(addr common.Address) uint64 {
-	return s.ethState.GetNonce(addr)
-}
-
-// GetCode returns an account's bytecode from the main ethState
-func (s *State) GetCode(addr common.Address) []byte {
-	return s.ethState.GetCode(addr)
-}
-
-// GetTransaction fetches transactions by hash directly from the DB.
-func (s *State) GetTransaction(hash common.Hash) (*ethTypes.Transaction, error) {
-	// Retrieve the transaction itself from the database
-	data, err := s.db.Get(hash.Bytes())
-	if err != nil {
-		s.logger.WithError(err).Error("GetTransaction")
-		return nil, err
-	}
-	var tx ethTypes.Transaction
-	if err := rlp.DecodeBytes(data, &tx); err != nil {
-		s.logger.WithError(err).Error("Decoding Transaction")
-		return nil, err
-	}
-
-	return &tx, nil
-}
-
-// GetReceipt fetches transaction receipts by transaction hash directly from the
-// DB
-func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
-	data, err := s.db.Get(append(receiptsPrefix, txHash.Bytes()...))
-	if err != nil {
-		s.logger.WithError(err).Error("GetReceipt")
-		return nil, err
-	}
-
-	var receipt ethTypes.ReceiptForStorage
-	if err := rlp.DecodeBytes(data, &receipt); err != nil {
-		s.logger.WithError(err).Error("Decoding Receipt")
-		return nil, err
-	}
-
-	return (*ethTypes.Receipt)(&receipt), nil
-}
 
 // GetGasLimit returns the gas limit set between commit calls
 func (s *State) GetGasLimit() uint64 {
-	return s.gasLimit
+	return s.main.gasLimit
 }
 
 // GetGenesis reads and unmarshals the genesis.json file
@@ -330,25 +231,17 @@ func (s *State) GetAuthorisingABI() string {
 
 // GetSigner returns the state's signer
 func (s *State) GetSigner() ethTypes.Signer {
-	return s.signer
+	return s.main.signer
 }
 
 /*******************************************************************************
-Service on WAS
+WAS & TxPool
 *******************************************************************************/
 
-// Call executes a readonly transaction on a copy of the WAS. It is called
-// by the service handlers
+// Call executes a readonly transaction on a copy of the WAS. It is called by
+// the service handlers
 func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
-	s.logger.Debug("Call")
-
-	context := NewContext(callMsg.From(), common.Address{}, 0, big.NewInt(0))
-
-	// We use a copy of the ethState because even call transactions increment
-	// the sender's nonce
-	vmenv := vm.NewEVM(context, s.was.ethState.Copy(), &s.chainConfig, s.vmConfig)
-
-	res, _, _, err := core.ApplyMessage(vmenv, callMsg, new(core.GasPool).AddGas(gasLimit))
+	res, err := s.was.Call(callMsg)
 	if err != nil {
 		s.logger.WithError(err).Error("Executing Call on WAS")
 		return nil, err
@@ -359,18 +252,10 @@ func (s *State) Call(callMsg ethTypes.Message) ([]byte, error) {
 
 // CreateReceiptPromise crates a new receipt promise
 func (s *State) CreateReceiptPromise(hash common.Hash) *ReceiptPromise {
-	p := NewReceiptPromise(hash)
-
-	s.was.receiptPromises[hash] = p
-
-	return p
+	return s.was.CreateReceiptPromise(hash)
 }
 
-/*******************************************************************************
-Service on TxPool
-*******************************************************************************/
-
-// CheckTx attempts to apply a transaction to the TxPool's statedb. It is called
+// CheckTx attempts to apply a transaction to the TxPool's stateDB. It is called
 // by the Service handlers to check if a transaction is valid before submitting
 // it to the consensus system. This also updates the sender's Nonce in the
 // TxPool's statedb.
@@ -378,19 +263,38 @@ func (s *State) CheckTx(tx *ethTypes.Transaction) error {
 	return s.txPool.CheckTx(tx)
 }
 
-// GetPoolBalance returns an account's balance from the txpool's ethState
-func (s *State) GetPoolBalance(addr common.Address) *big.Int {
-	return s.txPool.ethState.GetBalance(addr)
+// GetBalance returns an account's balance
+func (s *State) GetBalance(addr common.Address, fromPool bool) *big.Int {
+	if fromPool {
+		return s.txPool.GetBalance(addr)
+	}
+	return s.main.GetBalance(addr)
 }
 
-// GetPoolNonce returns an account's nonce from the txpool's ethState
-func (s *State) GetPoolNonce(addr common.Address) uint64 {
-	return s.txPool.ethState.GetNonce(addr)
+// GetNonce returns an account's nonce
+func (s *State) GetNonce(addr common.Address, fromPool bool) uint64 {
+	if fromPool {
+		return s.txPool.GetNonce(addr)
+	}
+	return s.main.GetNonce(addr)
 }
 
-// GetPoolCode returns an account's bytecode from the txpool;s ethState
-func (s *State) GetPoolCode(addr common.Address) []byte {
-	return s.txPool.ethState.GetCode(addr)
+// GetCode returns an account's bytecode
+func (s *State) GetCode(addr common.Address, fromPool bool) []byte {
+	if fromPool {
+		return s.txPool.GetCode(addr)
+	}
+	return s.main.GetCode(addr)
+}
+
+// GetTransaction fetches a transaction from the WAS
+func (s *State) GetTransaction(txHash common.Hash) (*ethTypes.Transaction, error) {
+	return s.was.GetTransaction(txHash)
+}
+
+// GetReceipt fetches a transaction's receipt from the WAS
+func (s *State) GetReceipt(txHash common.Hash) (*ethTypes.Receipt, error) {
+	return s.was.GetReceipt(txHash)
 }
 
 /*******************************************************************************
@@ -438,5 +342,4 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 	}
 
 	return false, nil
-
 }

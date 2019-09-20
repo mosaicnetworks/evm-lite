@@ -24,8 +24,8 @@ GET /account/{address}?frompool={true|false|t|f|T|F|1|0|TRUE|FALSE|True|False}
 example: /account/0x50bd8a037442af4cdf631495bcaa5443de19685d
 returns: JSON JsonAccount
 
-This endpoint should be used to fetch information about any account on the
-main state by default or on the TxPool's ethState if `frompool=true`.
+This endpoint returns information about any account, taken by default from the
+main state, or on the TxPool's ethState if `frompool=true`.
 */
 func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	param := r.URL.Path[len("/account/"):]
@@ -34,28 +34,23 @@ func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	address := common.HexToAddress(param)
 	m.logger.WithField("address", address.Hex()).Debug("GET account")
 
-	// fetch values by default from TxPool
-	nonce := m.state.GetNonce(address)
-	balance := m.state.GetBalance(address)
-	code := hexutil.Encode(m.state.GetCode(address))
+	var fromPool bool
 
 	// check query param `state`
 	qs := r.URL.Query().Get("frompool")
 	if qs != "" {
-		fromPool, err := strconv.ParseBool(qs)
+		fp, err := strconv.ParseBool(qs)
 		if err != nil {
 			m.logger.WithError(err).Error("Error converting string to bool")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		// get values from main ethState
-		if fromPool {
-			nonce = m.state.GetPoolNonce(address)
-			balance = m.state.GetPoolBalance(address)
-			code = hexutil.Encode(m.state.GetCode(address))
-		}
+		fromPool = fp
 	}
+
+	nonce := m.state.GetNonce(address, fromPool)
+	balance := m.state.GetBalance(address, fromPool)
+	code := hexutil.Encode(m.state.GetCode(address, fromPool))
 
 	if code == "0x" {
 		code = ""
@@ -201,7 +196,7 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	m.submitCh <- rawTxBytes
 	m.logger.Debug("submitted tx")
 
-	timeout := time.After(5 * time.Second)
+	timeout := time.After(15 * time.Second)
 	var receipt *comm.JsonReceipt
 	var respErr error
 

@@ -118,7 +118,7 @@ func (test *Test) prepareTransaction(from, to *accounts.Account,
 	gasPrice *big.Int,
 	data []byte) (*ethTypes.Transaction, error) {
 
-	nonce := test.state.GetPoolNonce(from.Address)
+	nonce := test.state.GetNonce(from.Address, true)
 
 	var tx *ethTypes.Transaction
 	if to == nil {
@@ -195,7 +195,7 @@ func TestTransfer(t *testing.T) {
 	defer os.RemoveAll("test_data/eth/chaindata")
 
 	test := NewTest("test_data/eth", bcommon.NewTestEntry(t), t)
-	defer test.state.db.Close()
+	defer test.state.main.db.Close()
 
 	err := test.Init()
 
@@ -204,9 +204,9 @@ func TestTransfer(t *testing.T) {
 	}
 
 	from := test.keyStore.Accounts()[0]
-	fromBalanceBefore := test.state.GetBalance(from.Address)
+	fromBalanceBefore := test.state.GetBalance(from.Address, false)
 	to := test.keyStore.Accounts()[1]
-	toBalanceBefore := test.state.GetBalance(to.Address)
+	toBalanceBefore := test.state.GetBalance(to.Address, false)
 
 	// Create transfer transaction
 	value := big.NewInt(1000000)
@@ -240,10 +240,10 @@ func TestTransfer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fromBalanceAfter := test.state.GetBalance(from.Address)
+	fromBalanceAfter := test.state.GetBalance(from.Address, false)
 	expectedFromBalanceAfter := big.NewInt(0)
 	expectedFromBalanceAfter.Sub(fromBalanceBefore, value)
-	toBalanceAfter := test.state.GetBalance(to.Address)
+	toBalanceAfter := test.state.GetBalance(to.Address, false)
 	expectedToBalanceAfter := big.NewInt(0)
 	expectedToBalanceAfter.Add(toBalanceBefore, value)
 
@@ -388,7 +388,7 @@ func TestCreateContract(t *testing.T) {
 	defer os.RemoveAll("test_data/eth/chaindata")
 
 	test := NewTest("test_data/eth", bcommon.NewTestEntry(t), t)
-	defer test.state.db.Close()
+	defer test.state.main.db.Close()
 
 	err := test.Init()
 

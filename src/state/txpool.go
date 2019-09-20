@@ -2,81 +2,32 @@ package state
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	ethState "github.com/ethereum/go-ethereum/core/state"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/params"
 	"github.com/sirupsen/logrus"
 )
 
+// TxPool is a BaseState extension with a CheckTx function. The service requires
+// a stateful object to check transactions, because txs might be coming it
+// faster than the consensus system can process them.
 type TxPool struct {
-	ethState     *ethState.StateDB
-	signer       ethTypes.Signer
-	chainConfig  params.ChainConfig // vm.env is still tightly coupled with chainConfig
-	vmConfig     vm.Config
-	gasLimit     uint64
-	totalUsedGas uint64
-	gp           *core.GasPool
-
+	BaseState
 	logger *logrus.Entry
 }
 
-func NewTxPool(ethState *ethState.StateDB,
-	signer ethTypes.Signer,
-	chainConfig params.ChainConfig,
-	vmConfig vm.Config,
-	gasLimit uint64,
-	logger *logrus.Entry) *TxPool {
+// NewTxPool creates a new TxPool object
+func NewTxPool(base BaseState, logger *logrus.Entry) *TxPool {
 
 	return &TxPool{
-		ethState:    ethState,
-		signer:      signer,
-		chainConfig: chainConfig,
-		vmConfig:    vmConfig,
-		gasLimit:    gasLimit,
-		logger:      logger,
+		BaseState: base,
+		logger:    logger,
 	}
 }
 
-func (p *TxPool) Reset(root common.Hash) error {
-
-	err := p.ethState.Reset(root)
-	if err != nil {
-		return err
-	}
-
-	p.totalUsedGas = 0
-	p.gp = new(core.GasPool).AddGas(p.gasLimit)
-
-	return nil
-}
-
+// CheckTx applies the transaction to the base's stateDB. It doesn't care about
+// the transaction index, block hash, or coinbase. It is used by the service to
+// quickly check if a transaction is valid before submitting it to the consensus
+// system.
 func (p *TxPool) CheckTx(tx *ethTypes.Transaction) error {
-
-	msg, err := tx.AsMessage(p.signer)
-	if err != nil {
-		p.logger.WithError(err).Error("Converting Transaction to Message")
-		return err
-	}
-
-	context := NewContext(msg.From(), common.Address{}, msg.Gas(), msg.GasPrice())
-
-	// The EVM should never be reused and is not thread safe.
-	vmenv := vm.NewEVM(context, p.ethState, &p.chainConfig, p.vmConfig)
-
-	// Apply the transaction to the current state (included in the env)
-	_, gas, _, err := core.ApplyMessage(vmenv, msg, p.gp)
-	if err != nil {
-		p.logger.WithError(err).Error("Applying transaction to TxPool")
-		return err
-	}
-
-	p.totalUsedGas += gas
-
-	return nil
-}
-
-func (p *TxPool) GetNonce(addr common.Address) uint64 {
-	return p.ethState.GetNonce(addr)
+	_, err := p.ApplyTransaction(*tx, 0, common.Hash{}, common.Address{})
+	return err
 }

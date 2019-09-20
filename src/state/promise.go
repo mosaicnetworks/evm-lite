@@ -6,7 +6,7 @@ import (
 	"github.com/mosaicnetworks/evm-lite/src/common"
 )
 
-// ReceiptPromiseResponse capture both a response and a potential error
+// ReceiptPromiseResponse captures a receipt and a potential error
 type ReceiptPromiseResponse struct {
 	Receipt *common.JsonReceipt
 	Error   error
