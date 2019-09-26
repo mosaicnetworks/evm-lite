@@ -91,10 +91,8 @@ func (bs *BaseState) ApplyTransaction(
 	tx ethTypes.Transaction,
 	txIndex int,
 	blockHash common.Hash,
-	coinbase common.Address) (*ethTypes.Receipt, error) {
-
-	bs.Lock()
-	defer bs.Unlock()
+	coinbase common.Address,
+	noReceipt bool) (*ethTypes.Receipt, error) {
 
 	msg, err := tx.AsMessage(bs.signer)
 	if err != nil {
@@ -102,6 +100,9 @@ func (bs *BaseState) ApplyTransaction(
 	}
 
 	context := NewContext(msg.From(), coinbase, msg.Gas(), msg.GasPrice())
+
+	bs.Lock()
+	defer bs.Unlock()
 
 	// Prepare the stateDB with transaction Hash so that it can be used in
 	// emitted logs
@@ -111,7 +112,7 @@ func (bs *BaseState) ApplyTransaction(
 
 	// Apply the transaction to the stateDB (included in the env)
 	_, gas, failed, err := core.ApplyMessage(vmenv, msg, bs.gp)
-	if err != nil {
+	if (err != nil) || (noReceipt) {
 		// These are called "consensus" errors. Return immediately.
 		return nil, err
 	}
