@@ -28,6 +28,6 @@ func NewTxPool(base BaseState, logger *logrus.Entry) *TxPool {
 // quickly check if a transaction is valid before submitting it to the consensus
 // system.
 func (p *TxPool) CheckTx(tx *ethTypes.Transaction) error {
-	_, err := p.ApplyTransaction(*tx, 0, common.Hash{}, common.Address{})
+	_, err := p.ApplyTransaction(*tx, 0, common.Hash{}, common.Address{}, true)
 	return err
 }

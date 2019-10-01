@@ -82,7 +82,7 @@ func (was *WriteAheadState) ApplyTransaction(
 	coinbase common.Address) error {
 
 	// Apply the transaction to the current state (included in the env)
-	receipt, err := was.BaseState.ApplyTransaction(tx, txIndex, blockHash, coinbase)
+	receipt, err := was.BaseState.ApplyTransaction(tx, txIndex, blockHash, coinbase, false)
 	if err != nil {
 		was.logger.WithError(err).Error("Applying transaction to WAS")
 
