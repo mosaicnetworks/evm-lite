@@ -73,9 +73,14 @@ func (s *Solo) Run() error {
 // Info returns the current transaction index
 func (s *Solo) Info() (map[string]string, error) {
 	info := map[string]string{
-		"type":     "solo",
-		"tx_index": strconv.Itoa(s.txIndex),
-		"time":     strconv.FormatInt(time.Now().UnixNano(), 10),
+		"type":                   "solo",
+		"tx_index":               strconv.Itoa(s.txIndex),
+		"consensus_transactions": strconv.Itoa(s.txIndex),
+		"consensus_events":       "0",
+		"last_block_index":       "0",
+		"last_consensus_round":   "0",
+		"num_peers":              "1",
+		"time":                   strconv.FormatInt(time.Now().UnixNano(), 10),
 	}
 	return info, nil
 }
