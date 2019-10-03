@@ -27,7 +27,7 @@ var genesisAddress string
 
 //AddSoloFlags adds flags to the Solo command
 func AddSoloFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVar(&genesisAddress, "genesis", "", "create genesis file specifying pre-funded account with given address")
+	cmd.Flags().StringVar(&genesisAddress, "genesisaddress", "", "create genesis file specifying pre-funded account with given address")
 	viper.BindPFlags(cmd.Flags())
 }
 
@@ -41,11 +41,11 @@ func NewSoloCmd() *cobra.Command {
 			config.SetDataDir(config.DataDir)
 
 			logger.WithFields(logrus.Fields{
-				"Eth":     config,
-				"genesis": genesisAddress,
+				"Eth":            config,
+				"genesisAddress": genesisAddress,
 			}).Debug("Config")
 
-			if cmd.Flags().Changed("genesis") {
+			if cmd.Flags().Changed("genesisaddress") {
 				logger.Debug("Writing genesis file")
 				if err := createGenesis(config.Genesis, genesisAddress); err != nil {
 					return err
