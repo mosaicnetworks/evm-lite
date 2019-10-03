@@ -148,7 +148,10 @@ func (s *State) ApplyTransaction(
 		s.logger.WithError(err).Error("Decoding Transaction")
 		return err
 	}
-	s.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
+
+	if s.logger.Level > logrus.InfoLevel {
+		s.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
+	}
 
 	return s.was.ApplyTransaction(t, txIndex, blockHash, coinbase)
 }
@@ -169,7 +172,9 @@ func (s *State) Commit() (common.Hash, error) {
 		s.logger.WithError(err).Error("Resetting main StateDB")
 		return root, err
 	}
-	s.logger.WithField("root", root.Hex()).Debug("Committed")
+	if s.logger.Level > logrus.InfoLevel {
+		s.logger.WithField("root", root.Hex()).Debug("Committed")
+	}
 
 	// Reset WAS
 	if err := s.was.Reset(root); err != nil {
@@ -323,11 +328,13 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 		callData,
 		false)
 
-	s.logger.WithFields(logrus.Fields{
-		"addr":     addr.Hex(),
-		"callData": hex.EncodeToString(callData),
-		"contract": POAADDR.String(),
-	}).Debug("checkAuthorised")
+	if s.logger.Level > logrus.InfoLevel {
+		s.logger.WithFields(logrus.Fields{
+			"addr":     addr.Hex(),
+			"callData": hex.EncodeToString(callData),
+			"contract": POAADDR.String(),
+		}).Debug("checkAuthorised")
+	}
 
 	res, err := s.Call(ethMsg)
 	if err != nil {

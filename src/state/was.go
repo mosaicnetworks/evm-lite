@@ -100,7 +100,9 @@ func (was *WriteAheadState) ApplyTransaction(
 	was.receipts[tx.Hash()] = receipt
 	was.allLogs = append(was.allLogs, receipt.Logs...)
 
-	was.logger.WithField("hash", tx.Hash().Hex()).Debug("Applied tx to WAS")
+	if was.logger.Level > logrus.InfoLevel {
+		was.logger.WithField("hash", tx.Hash().Hex()).Debug("Applied tx to WAS")
+	}
 
 	return nil
 }
