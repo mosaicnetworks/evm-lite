@@ -3,6 +3,7 @@ package solo
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	geth_common "github.com/ethereum/go-ethereum/common"
 	"github.com/mosaicnetworks/evm-lite/src/service"
@@ -74,6 +75,7 @@ func (s *Solo) Info() (map[string]string, error) {
 	info := map[string]string{
 		"type":     "solo",
 		"tx_index": strconv.Itoa(s.txIndex),
+		"time":     strconv.FormatInt(time.Now().UnixNano(), 10),
 	}
 	return info, nil
 }
