@@ -37,8 +37,12 @@ type JsonReceipt struct {
 	Status            uint64             `json:"status"`
 }
 
-func ToJSONReceipt(receipt *ethTypes.Receipt, tx *ethTypes.Transaction, signer ethTypes.Signer) *JsonReceipt {
+func ToJSONReceiptNoFrom(receipt *ethTypes.Receipt, tx *ethTypes.Transaction, signer ethTypes.Signer) *JsonReceipt {
 	from, _ := ethTypes.Sender(signer, tx)
+	return ToJSONReceipt(receipt, tx, signer, from)
+}
+
+func ToJSONReceipt(receipt *ethTypes.Receipt, tx *ethTypes.Transaction, signer ethTypes.Signer, from ethcommon.Address) *JsonReceipt {
 
 	jsonReceipt := JsonReceipt{
 		Root:              ethcommon.BytesToHash(receipt.PostState),

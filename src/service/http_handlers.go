@@ -259,7 +259,7 @@ func transactionReceiptHandler(w http.ResponseWriter, r *http.Request, m *Servic
 		return
 	}
 
-	jsonReceipt := comm.ToJSONReceipt(receipt, tx, m.state.GetSigner())
+	jsonReceipt := comm.ToJSONReceiptNoFrom(receipt, tx, m.state.GetSigner())
 
 	js, err := json.Marshal(jsonReceipt)
 	if err != nil {

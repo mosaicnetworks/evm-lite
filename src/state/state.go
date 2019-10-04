@@ -153,7 +153,7 @@ func (s *State) ApplyTransaction(
 		s.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
 	}
 
-	return s.was.ApplyTransaction(t, txIndex, blockHash, coinbase)
+	return s.was.ApplyTransaction(t, txIndex, blockHash, coinbase, txBytes)
 }
 
 // Commit persists all pending state changes (in the WAS) to the DB, and resets
