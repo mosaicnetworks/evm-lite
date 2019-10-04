@@ -2,6 +2,7 @@ package run
 
 import (
 	_config "github.com/mosaicnetworks/evm-lite/src/config"
+	"github.com/mosaicnetworks/monetd/src/version"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,6 +30,8 @@ var RunCmd = &cobra.Command{
 
 		logger = logrus.New()
 		logger.Level = logLevel(config.LogLevel)
+
+		logger.WithField("Version", version.Version).Info("Run")
 
 		config.SetDataDir(config.DataDir)
 
