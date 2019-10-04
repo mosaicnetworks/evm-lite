@@ -85,19 +85,16 @@ func (bs *BaseState) CreateAccount(address common.Address,
 	}
 }
 
-// ApplyTransaction executes the transaction on the stateDB and returns a
-// receipt if there was no error. An error indicates a consensus issue.
+// ApplyTransaction executes the transaction on the stateDB and sets its receipt
+// unless noReceipt is set to true. An error indicates a consensus issue.
 func (bs *BaseState) ApplyTransaction(
-	tx ethTypes.Transaction,
+	tx *EVMLTransaction,
 	txIndex int,
 	blockHash common.Hash,
 	coinbase common.Address,
-	noReceipt bool) (*ethTypes.Receipt, common.Address, error) {
+	noReceipt bool) error {
 
-	msg, err := tx.AsMessage(bs.signer)
-	if err != nil {
-		return nil, msg.From(), err
-	}
+	msg := tx.Msg()
 
 	context := NewContext(msg.From(), coinbase, msg.Gas(), msg.GasPrice())
 
@@ -116,7 +113,7 @@ func (bs *BaseState) ApplyTransaction(
 	_, gas, failed, err := core.ApplyMessage(vmenv, msg, bs.gp)
 	if (err != nil) || (noReceipt) {
 		// These are called "consensus" errors. Return immediately.
-		return nil, msg.From(), err
+		return err
 	}
 
 	bs.totalUsedGas += gas
@@ -139,7 +136,10 @@ func (bs *BaseState) ApplyTransaction(
 	// Set the receipt logs
 	receipt.Logs = bs.stateDB.GetLogs(tx.Hash())
 
-	return receipt, msg.From(), err
+	// set the EVMLTransaction's receipt
+	tx.receipt = receipt
+
+	return nil
 }
 
 // Call executes a readonly transaction on a copy of the stateDB. This is used
@@ -213,15 +213,11 @@ func (bs *BaseState) GetCode(addr common.Address) []byte {
 }
 
 // WriteTransactions writes a set of transactions directly into the DB
-func (bs *BaseState) WriteTransactions(txs map[common.Hash]*evmlTransactions) error {
+func (bs *BaseState) WriteTransactions(txs map[common.Hash]*EVMLTransaction) error {
 	batch := bs.db.NewBatch()
 
 	for hash, tx := range txs {
-		//		data, err := rlp.EncodeToBytes(tx.transaction)
-		//		if err != nil {
-		//			return err
-		//		}
-		if err := batch.Put(hash.Bytes(), tx.txBytes); err != nil {
+		if err := batch.Put(hash.Bytes(), tx.rlpBytes); err != nil {
 			return err
 		}
 	}
@@ -231,11 +227,11 @@ func (bs *BaseState) WriteTransactions(txs map[common.Hash]*evmlTransactions) er
 }
 
 // WriteReceipts writes a set of receipts directly into the DB
-func (bs *BaseState) WriteReceipts(receipts map[common.Hash]*evmlTransactions) error {
+func (bs *BaseState) WriteReceipts(txs map[common.Hash]*EVMLTransaction) error {
 	batch := bs.db.NewBatch()
 
-	for txHash, receipt := range receipts {
-		storageReceipt := (*ethTypes.ReceiptForStorage)(receipt.receipt)
+	for txHash, tx := range txs {
+		storageReceipt := (*ethTypes.ReceiptForStorage)(tx.receipt)
 		data, err := rlp.EncodeToBytes(storageReceipt)
 		if err != nil {
 			return err

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
 
 	comm "github.com/mosaicnetworks/evm-lite/src/common"
@@ -159,38 +158,39 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	}
 	m.logger.WithField("raw tx bytes", rawTxBytes).Debug()
 
-	var t ethTypes.Transaction
-	if err := rlp.Decode(bytes.NewReader(rawTxBytes), &t); err != nil {
+	tx, err := state.NewEVMLTransaction(rawTxBytes, m.state.GetSigner())
+	if err != nil {
 		m.logger.WithError(err).Error("Decoding Transaction")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	m.logger.WithFields(logrus.Fields{
-		"hash":     t.Hash().Hex(),
-		"to":       t.To(),
-		"payload":  fmt.Sprintf("%x", t.Data()),
-		"gas":      t.Gas(),
-		"gasPrice": t.GasPrice(),
-		"nonce":    t.Nonce(),
-		"value":    t.Value(),
+		"hash":     tx.Hash().Hex(),
+		"from":     tx.From(),
+		"to":       tx.To(),
+		"payload":  fmt.Sprintf("%x", tx.Data()),
+		"gas":      tx.Gas(),
+		"gasPrice": tx.GasPrice(),
+		"nonce":    tx.Nonce(),
+		"value":    tx.Value(),
 	}).Debug("Service decoded tx")
 
 	// Check if gasPrice is above set limit
-	if m.minGasPrice != nil && t.GasPrice().Cmp(m.minGasPrice) < 0 {
-		err := fmt.Errorf("Gasprice too low. Got %v, MIN: %v", t.GasPrice(), m.minGasPrice)
+	if m.minGasPrice != nil && tx.GasPrice().Cmp(m.minGasPrice) < 0 {
+		err := fmt.Errorf("Gasprice too low. Got %v, MIN: %v", tx.GasPrice(), m.minGasPrice)
 		m.logger.Debug(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := m.state.CheckTx(&t); err != nil {
+	if err := m.state.CheckTx(tx); err != nil {
 		m.logger.WithError(err).Error("Checking Transaction")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	promise := m.state.CreateReceiptPromise(t.Hash())
+	promise := m.state.CreateReceiptPromise(tx.Hash())
 
 	m.logger.Debug("submitting tx")
 	m.submitCh <- rawTxBytes
@@ -259,7 +259,7 @@ func transactionReceiptHandler(w http.ResponseWriter, r *http.Request, m *Servic
 		return
 	}
 
-	jsonReceipt := comm.ToJSONReceiptNoFrom(receipt, tx, m.state.GetSigner())
+	jsonReceipt := comm.ToJSONReceipt(receipt, tx, m.state.GetSigner())
 
 	js, err := json.Marshal(jsonReceipt)
 	if err != nil {

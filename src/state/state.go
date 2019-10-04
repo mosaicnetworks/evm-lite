@@ -1,7 +1,6 @@
 package state
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
@@ -12,7 +11,6 @@ import (
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/sirupsen/logrus"
 
 	bcommon "github.com/mosaicnetworks/evm-lite/src/common"
@@ -143,8 +141,8 @@ func (s *State) ApplyTransaction(
 	blockHash common.Hash,
 	coinbase common.Address) error {
 
-	var t ethTypes.Transaction
-	if err := rlp.Decode(bytes.NewReader(txBytes), &t); err != nil {
+	t, err := NewEVMLTransaction(txBytes, s.GetSigner())
+	if err != nil {
 		s.logger.WithError(err).Error("Decoding Transaction")
 		return err
 	}
@@ -153,7 +151,7 @@ func (s *State) ApplyTransaction(
 		s.logger.WithField("hash", t.Hash().Hex()).Debug("Decoded tx")
 	}
 
-	return s.was.ApplyTransaction(t, txIndex, blockHash, coinbase, txBytes)
+	return s.was.ApplyTransaction(t, txIndex, blockHash, coinbase)
 }
 
 // Commit persists all pending state changes (in the WAS) to the DB, and resets
@@ -264,7 +262,7 @@ func (s *State) CreateReceiptPromise(hash common.Hash) *ReceiptPromise {
 // by the Service handlers to check if a transaction is valid before submitting
 // it to the consensus system. This also updates the sender's Nonce in the
 // TxPool's statedb.
-func (s *State) CheckTx(tx *ethTypes.Transaction) error {
+func (s *State) CheckTx(tx *EVMLTransaction) error {
 	return s.txPool.CheckTx(tx)
 }
 
