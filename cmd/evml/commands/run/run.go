@@ -53,8 +53,6 @@ func init() {
 
 	//Eth config
 	RunCmd.PersistentFlags().String("eth.genesis", config.Genesis, "Location of genesis file")
-	RunCmd.PersistentFlags().String("eth.keystore", config.Keystore, "Location of Ethereum account keys")
-	RunCmd.PersistentFlags().String("eth.pwd", config.PwdFile, "Password file to unlock accounts")
 	RunCmd.PersistentFlags().String("eth.db", config.DbFile, "Eth database file")
 	RunCmd.PersistentFlags().String("eth.listen", config.EthAPIAddr, "Address of HTTP API service")
 	RunCmd.PersistentFlags().Int("eth.cache", config.Cache, "Megabytes of memory allocated to internal caching (min 16MB / database forced)")

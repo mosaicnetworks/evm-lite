@@ -13,16 +13,14 @@ import (
 
 var (
 	// Base
-	defaultLogLevel     = "debug"
-	defaultDataDir      = defaultHomeDir()
-	defaultEthAPIAddr   = ":8080"
-	defaultCache        = 128
-	defaultEthDir       = fmt.Sprintf("%s/eth", defaultDataDir)
-	defaultKeystoreFile = fmt.Sprintf("%s/keystore", defaultEthDir)
-	defaultGenesisFile  = fmt.Sprintf("%s/genesis.json", defaultEthDir)
-	defaultPwdFile      = fmt.Sprintf("%s/pwd.txt", defaultEthDir)
-	defaultDbFile       = fmt.Sprintf("%s/chaindata", defaultEthDir)
-	defaultMinGasPrice  = "0"
+	defaultLogLevel    = "debug"
+	defaultDataDir     = defaultHomeDir()
+	defaultEthAPIAddr  = ":8080"
+	defaultCache       = 128
+	defaultEthDir      = fmt.Sprintf("%s/eth", defaultDataDir)
+	defaultGenesisFile = fmt.Sprintf("%s/genesis.json", defaultEthDir)
+	defaultDbFile      = fmt.Sprintf("%s/chaindata", defaultEthDir)
+	defaultMinGasPrice = "0"
 )
 
 // Config contains de configuration for an EVM-Lite node
@@ -53,7 +51,7 @@ type Config struct {
 	Cache int `mapstructure:"cache"`
 
 	// Minimum gasprice for transactions submitted through this node's service
-	MinGasPrice string `mapstructure:"min-gas-pice"`
+	MinGasPrice string `mapstructure:"min-gas-price"`
 
 	logger *logrus.Logger
 }
@@ -64,8 +62,6 @@ func DefaultConfig() *Config {
 		DataDir:     defaultDataDir,
 		LogLevel:    defaultLogLevel,
 		Genesis:     defaultGenesisFile,
-		Keystore:    defaultKeystoreFile,
-		PwdFile:     defaultPwdFile,
 		DbFile:      defaultDbFile,
 		EthAPIAddr:  defaultEthAPIAddr,
 		Cache:       defaultCache,
@@ -80,12 +76,6 @@ func (c *Config) SetDataDir(datadir string) {
 
 	if c.Genesis == defaultGenesisFile {
 		c.Genesis = fmt.Sprintf("%s/eth/genesis.json", datadir)
-	}
-	if c.Keystore == defaultKeystoreFile {
-		c.Keystore = fmt.Sprintf("%s/eth/keystore", datadir)
-	}
-	if c.PwdFile == defaultPwdFile {
-		c.PwdFile = fmt.Sprintf("%s/eth/pwd.txt", datadir)
 	}
 	if c.DbFile == defaultDbFile {
 		c.DbFile = fmt.Sprintf("%s/eth/chaindata", datadir)
