@@ -37,6 +37,9 @@ type JsonReceipt struct {
 	Status            uint64             `json:"status"`
 }
 
+// ToJSONReceipt uses a transaction, its from address, and a receipt to create
+// a JSONReceipt. The "from" addressed is derived from the transaction's
+// signature.
 func ToJSONReceipt(receipt *ethTypes.Receipt, tx *ethTypes.Transaction, signer ethTypes.Signer) *JsonReceipt {
 	from, _ := ethTypes.Sender(signer, tx)
 

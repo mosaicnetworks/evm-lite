@@ -2,7 +2,7 @@ package run
 
 import (
 	_config "github.com/mosaicnetworks/evm-lite/src/config"
-	"github.com/mosaicnetworks/monetd/src/version"
+	"github.com/mosaicnetworks/evm-lite/src/version"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

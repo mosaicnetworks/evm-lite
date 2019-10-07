@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	evmlCommon "github.com/mosaicnetworks/evm-lite/src/common"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,10 +16,11 @@ import (
 type WriteAheadState struct {
 	BaseState
 
-	txIndex      int
-	transactions map[common.Hash]*ethTypes.Transaction
-	receipts     map[common.Hash]*ethTypes.Receipt
-	allLogs      []*ethTypes.Log
+	txIndex int
+
+	// a local cache of transactions
+	txs     map[common.Hash]*EVMLTransaction
+	allLogs []*ethTypes.Log
 
 	receiptPromises map[common.Hash]*ReceiptPromise
 	promiseLock     sync.Mutex
@@ -32,8 +32,7 @@ type WriteAheadState struct {
 func NewWriteAheadState(base BaseState, logger *logrus.Entry) *WriteAheadState {
 	return &WriteAheadState{
 		BaseState:       base,
-		transactions:    make(map[common.Hash]*ethTypes.Transaction),
-		receipts:        make(map[common.Hash]*ethTypes.Receipt),
+		txs:             make(map[common.Hash]*EVMLTransaction),
 		receiptPromises: make(map[common.Hash]*ReceiptPromise),
 		logger:          logger,
 	}
@@ -49,8 +48,7 @@ func (was *WriteAheadState) Reset(root common.Hash) error {
 	}
 
 	was.txIndex = 0
-	was.transactions = make(map[common.Hash]*ethTypes.Transaction)
-	was.receipts = make(map[common.Hash]*ethTypes.Receipt)
+	was.txs = make(map[common.Hash]*EVMLTransaction)
 	was.allLogs = []*ethTypes.Log{}
 
 	return nil
@@ -76,32 +74,36 @@ func (was *WriteAheadState) CreateReceiptPromise(hash common.Hash) *ReceiptPromi
 // transaction did not return a "consensus" error, we record it and its receipt,
 // even if its status is "failed".
 func (was *WriteAheadState) ApplyTransaction(
-	tx ethTypes.Transaction,
+	tx *EVMLTransaction,
 	txIndex int,
 	blockHash common.Hash,
 	coinbase common.Address) error {
 
-	// Apply the transaction to the current state (included in the env)
-	receipt, err := was.BaseState.ApplyTransaction(tx, txIndex, blockHash, coinbase, false)
-	if err != nil {
+	txHash := tx.Hash()
+
+	// Apply the transaction to the current state (included in the env). This
+	// populates tx.Receipt
+	err := was.BaseState.ApplyTransaction(tx, txIndex, blockHash, coinbase, false)
+	if err != nil || tx.receipt == nil {
 		was.logger.WithError(err).Error("Applying transaction to WAS")
 
 		// Respond to the promise immediately if we got a "consensus" error
-		if promise, ok := was.receiptPromises[tx.Hash()]; ok {
+		if promise, ok := was.receiptPromises[txHash]; ok {
 			promise.Respond(nil, err)
-			delete(was.receiptPromises, tx.Hash())
+			delete(was.receiptPromises, txHash)
 		}
 
 		return err
 	}
 
 	was.txIndex++
-	was.transactions[tx.Hash()] = &tx
-	was.receipts[tx.Hash()] = receipt
-	was.allLogs = append(was.allLogs, receipt.Logs...)
+
+	was.txs[txHash] = tx
+
+	was.allLogs = append(was.allLogs, tx.receipt.Logs...)
 
 	if was.logger.Level > logrus.InfoLevel {
-		was.logger.WithField("hash", tx.Hash().Hex()).Debug("Applied tx to WAS")
+		was.logger.WithField("hash", txHash.Hex()).Debug("Applied tx to WAS")
 	}
 
 	return nil
@@ -110,9 +112,8 @@ func (was *WriteAheadState) ApplyTransaction(
 // Commit commits everything to the underlying database.
 func (was *WriteAheadState) Commit() (common.Hash, error) {
 	was.logger.WithFields(logrus.Fields{
-		"txs":      was.txIndex,
-		"receipts": len(was.receipts),
-		"logs":     len(was.allLogs),
+		"txs":  was.txIndex,
+		"logs": len(was.allLogs),
 	}).Info("Commit")
 
 	// Commit all state changes to the database
@@ -122,12 +123,12 @@ func (was *WriteAheadState) Commit() (common.Hash, error) {
 		return common.Hash{}, err
 	}
 
-	if err := was.BaseState.WriteTransactions(was.transactions); err != nil {
+	if err := was.BaseState.WriteTransactions(was.txs); err != nil {
 		was.logger.WithError(err).Error("Writing txs")
 		return common.Hash{}, err
 	}
 
-	if err := was.BaseState.WriteReceipts(was.receipts); err != nil {
+	if err := was.BaseState.WriteReceipts(was.txs); err != nil {
 		was.logger.WithError(err).Error("Writing receipts")
 		return common.Hash{}, err
 	}
@@ -145,13 +146,12 @@ func (was *WriteAheadState) respondReceiptPromises() error {
 	was.promiseLock.Lock()
 	defer was.promiseLock.Unlock()
 
-	for _, tx := range was.transactions {
+	for _, tx := range was.txs {
 		if promise, ok := was.receiptPromises[tx.Hash()]; ok {
-			receipt, ok := was.receipts[tx.Hash()]
-			if !ok {
+			if tx.receipt == nil {
 				promise.Respond(nil, fmt.Errorf("No Transaction Receipt"))
 			} else {
-				promise.Respond(evmlCommon.ToJSONReceipt(receipt, tx, was.BaseState.signer), nil)
+				promise.Respond(tx.JSONReceipt(), nil)
 			}
 			delete(was.receiptPromises, tx.Hash())
 		}

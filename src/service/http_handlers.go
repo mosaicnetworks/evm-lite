@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/mosaicnetworks/evm-lite/src/state"
 	"github.com/sirupsen/logrus"
 
 	comm "github.com/mosaicnetworks/evm-lite/src/common"
@@ -29,10 +28,12 @@ main state, or on the TxPool's ethState if `frompool=true`.
 */
 func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	param := r.URL.Path[len("/account/"):]
-	m.logger.WithField("param", param).Debug("GET account")
-
 	address := common.HexToAddress(param)
-	m.logger.WithField("address", address.Hex()).Debug("GET account")
+
+	if m.logger.Level > logrus.InfoLevel {
+		m.logger.WithField("param", param).Debug("GET account")
+		m.logger.WithField("address", address.Hex()).Debug("GET account")
+	}
 
 	var fromPool bool
 
@@ -85,7 +86,9 @@ calls will NOT modify the EVM state.
 The data does NOT need to be signed.
 */
 func callHandler(w http.ResponseWriter, r *http.Request, m *Service) {
-	m.logger.WithField("request", r).Debug("POST call")
+	if m.logger.Level > logrus.InfoLevel {
+		m.logger.WithField("request", r).Debug("POST call")
+	}
 
 	decoder := json.NewDecoder(r.Body)
 	var txArgs SendTxArgs
@@ -138,7 +141,9 @@ This is a SYNCHRONOUS request. We wait for the transaction to go through
 consensus, and return the corresponding receipt directly.
 */
 func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
-	m.logger.WithField("request", r).Debug("POST rawtx")
+	if m.logger.Level > logrus.InfoLevel {
+		m.logger.WithField("request", r).Debug("POST rawtx")
+	}
 
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
@@ -147,50 +152,59 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	m.logger.WithField("body", body)
 
 	sBody := string(body)
-	m.logger.WithField("body (string)", sBody).Debug()
+
+	if m.logger.Level > logrus.InfoLevel {
+		m.logger.WithField("body", body)
+		m.logger.WithField("body (string)", sBody).Debug()
+	}
+
 	rawTxBytes, err := hexutil.Decode(sBody)
 	if err != nil {
 		m.logger.WithError(err).Error("Reading raw tx from request body")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	m.logger.WithField("raw tx bytes", rawTxBytes).Debug()
+	if m.logger.Level > logrus.InfoLevel {
+		m.logger.WithField("raw tx bytes", rawTxBytes).Debug()
+	}
 
-	var t ethTypes.Transaction
-	if err := rlp.Decode(bytes.NewReader(rawTxBytes), &t); err != nil {
+	tx, err := state.NewEVMLTransaction(rawTxBytes, m.state.GetSigner())
+	if err != nil {
 		m.logger.WithError(err).Error("Decoding Transaction")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	m.logger.WithFields(logrus.Fields{
-		"hash":     t.Hash().Hex(),
-		"to":       t.To(),
-		"payload":  fmt.Sprintf("%x", t.Data()),
-		"gas":      t.Gas(),
-		"gasPrice": t.GasPrice(),
-		"nonce":    t.Nonce(),
-		"value":    t.Value(),
-	}).Debug("Service decoded tx")
+	if m.logger.Level > logrus.InfoLevel {
+		m.logger.WithFields(logrus.Fields{
+			"hash":     tx.Hash().Hex(),
+			"from":     tx.From(),
+			"to":       tx.To(),
+			"payload":  fmt.Sprintf("%x", tx.Data()),
+			"gas":      tx.Gas(),
+			"gasPrice": tx.GasPrice(),
+			"nonce":    tx.Nonce(),
+			"value":    tx.Value(),
+		}).Debug("Service decoded tx")
+	}
 
 	// Check if gasPrice is above set limit
-	if m.minGasPrice != nil && t.GasPrice().Cmp(m.minGasPrice) < 0 {
-		err := fmt.Errorf("Gasprice too low. Got %v, MIN: %v", t.GasPrice(), m.minGasPrice)
+	if m.minGasPrice != nil && tx.GasPrice().Cmp(m.minGasPrice) < 0 {
+		err := fmt.Errorf("Gasprice too low. Got %v, MIN: %v", tx.GasPrice(), m.minGasPrice)
 		m.logger.Debug(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := m.state.CheckTx(&t); err != nil {
+	if err := m.state.CheckTx(tx); err != nil {
 		m.logger.WithError(err).Error("Checking Transaction")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	promise := m.state.CreateReceiptPromise(t.Hash())
+	promise := m.state.CreateReceiptPromise(tx.Hash())
 
 	m.logger.Debug("submitting tx")
 	m.submitCh <- rawTxBytes

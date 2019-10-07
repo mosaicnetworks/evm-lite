@@ -2,7 +2,6 @@ package state
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,7 +26,6 @@ func NewTxPool(base BaseState, logger *logrus.Entry) *TxPool {
 // the transaction index, block hash, or coinbase. It is used by the service to
 // quickly check if a transaction is valid before submitting it to the consensus
 // system.
-func (p *TxPool) CheckTx(tx *ethTypes.Transaction) error {
-	_, err := p.ApplyTransaction(*tx, 0, common.Hash{}, common.Address{}, true)
-	return err
+func (p *TxPool) CheckTx(tx *EVMLTransaction) error {
+	return p.ApplyTransaction(tx, 0, common.Hash{}, common.Address{}, true)
 }
