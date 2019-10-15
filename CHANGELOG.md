@@ -1,12 +1,11 @@
 
 # Changelog
 
-## Unreleased
+## v0.3.5 (Octover 15, 2019)
 
-SECURITY:
-FEATURES:
 IMPROVEMENTS:
-BUG FIXES:
+
+- state: optimisations and performance tuning
 
 ## v0.3.4 (September 18, 2019)
 
