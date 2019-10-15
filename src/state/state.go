@@ -386,9 +386,9 @@ Controller
 // address of the POA smart contract.
 func (s *State) GetPOAContractAddress() error {
 
-	callData, err := ControllerABI.Pack("POAContractAddress", nil)
+	callData, err := ControllerABI.Pack("POAContractAddress")
 	if err != nil {
-		s.logger.Warningf("couldn't pack arguments: %v", err)
+		s.logger.Warningf("couldn't pack POA arguments: %v", err)
 	}
 
 	// Apply an ethereum call message (no state update) to query the
