@@ -1,7 +1,7 @@
 
 # Changelog
 
-## v0.3.5 (Octover 15, 2019)
+## v0.3.5 (October 15, 2019)
 
 IMPROVEMENTS:
 

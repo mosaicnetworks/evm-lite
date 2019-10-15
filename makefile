@@ -2,7 +2,7 @@ BUILD_TAGS?=evml
 
 # vendor uses Glide to install all the Go dependencies in vendor/
 vendor:
-	glide install
+	(rm glide.lock || rm -rf vendor ) && glide install
 
 install:
 	go install ./cmd/evml/
