@@ -358,8 +358,8 @@ func controllerHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	var al JsonContract
 
 	al = JsonContract{
-		Address: common.HexToAddress(m.state.GetAuthorisingAccount()),
-		ABI:     m.state.GetAuthorisingABI(),
+		Address: common.HexToAddress(m.state.GetControllingAccount()),
+		ABI:     m.state.GetControllingABI(),
 	}
 
 	js, err := json.Marshal(al)
