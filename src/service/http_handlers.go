@@ -329,6 +329,10 @@ Returns details of the poa smart contract . Replaces /contract
 func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	m.logger.Debug("GET poa")
 
+	//TODO This is temporary code.
+	//It checks the correct POA contract address before returning.
+	m.state.GetPOAContractAddress()
+
 	var al JsonContract
 
 	al = JsonContract{
