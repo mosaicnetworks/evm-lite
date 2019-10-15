@@ -45,7 +45,7 @@ type State struct {
 }
 
 // NewState creates and initializes a new State object. It reads the genesis
-// file to create the initial accounts, including the POA smart-contract.
+// file to create the initial accounts, including the Controller and POA smart-contracts.
 func NewState(dbFile string, dbCache int, genesisFile string, logger *logrus.Entry) (*State, error) {
 
 	// db is THREAD SAFE and reused by base, was, and txpool
@@ -82,7 +82,8 @@ func NewState(dbFile string, dbCache int, genesisFile string, logger *logrus.Ent
 /******************************************************************************/
 
 // CreateGenesisAccounts reads the genesis.json file and creates the regular
-// pre-funded accounts, as well as the POA smart-contract account.
+// pre-funded accounts, as well as the Controller and POA smart-contract
+// accounts.
 func (s *State) CreateGenesisAccounts() error {
 
 	genesis, err := s.GetGenesis()
@@ -118,7 +119,21 @@ func (s *State) CreateGenesisAccounts() error {
 		setPOAABI(genesis.Poa.Abi)
 
 		s.logger.WithField("address", genesis.Poa.Address).Debug("Adding POA smart-contract account")
+	}
 
+	// Controller smart-contract account
+	if string(genesis.Controller.Address) != "" {
+		address := common.HexToAddress(genesis.Controller.Address)
+
+		s.was.CreateAccount(address,
+			genesis.Controller.Code,
+			map[string]string{},
+			"0")
+
+		setControllerADDR(genesis.Controller.Address)
+		setControllerABI(genesis.Controller.Abi)
+
+		s.logger.WithField("address", genesis.Controller.Address).Debug("Adding Controller smart-contract account")
 	}
 
 	if _, err = s.Commit(); err != nil {
@@ -232,6 +247,18 @@ func (s *State) GetAuthorisingABI() string {
 	return POAABISTRING
 }
 
+// GetControllingAccount returns the address of the smart contract which handles
+// the location of the POA contract
+func (s *State) GetControllingAccount() string {
+	return ControllerADDR.String()
+}
+
+// GetControllingABI returns the abi of the smart contract which handles the
+// location of the POA contract
+func (s *State) GetControllingABI() string {
+	return ControllerABISTRING
+}
+
 // GetSigner returns the state's signer
 func (s *State) GetSigner() ethTypes.Signer {
 	return s.main.signer
@@ -309,6 +336,8 @@ POA
 // remove a peer.
 func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 
+	s.GetPOAContractAddress()
+
 	callData, err := POAABI.Pack("checkAuthorised", addr)
 	if err != nil {
 		s.logger.Warningf("couldn't pack arguments: %v", err)
@@ -347,4 +376,55 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 	}
 
 	return false, nil
+}
+
+/*******************************************************************************
+Controller
+*******************************************************************************/
+
+// GetPOAContractAddress queries the controller smart-contract to retrieve the
+// address of the POA smart contract.
+func (s *State) GetPOAContractAddress() error {
+
+	callData, err := ControllerABI.Pack("POAContractAddress", nil)
+	if err != nil {
+		s.logger.Warningf("couldn't pack arguments: %v", err)
+	}
+
+	// Apply an ethereum call message (no state update) to query the
+	// smart-contract. Since there's no nonce check and the gas price is set to
+	// zero, an arbitrary address can be used as the source of the tx.
+	ethMsg := ethTypes.NewMessage(ControllerADDR,
+		&ControllerADDR,
+		uint64(1),
+		big.NewInt(0),
+		s.GetGasLimit(),
+		big.NewInt(0),
+		callData,
+		false)
+
+	if s.logger.Level > logrus.InfoLevel {
+		s.logger.WithFields(logrus.Fields{
+			"callData": hex.EncodeToString(callData),
+			"contract": ControllerADDR.String(),
+		}).Debug("POAContractAddress")
+	}
+
+	res, err := s.Call(ethMsg)
+	if err != nil {
+		return err
+	}
+
+	unpackRes := new(common.Address)
+	err = ControllerABI.Unpack(&unpackRes, "POAContractAddress", res)
+
+	if err != nil {
+		return err
+	}
+
+	//TODO should use the setter method, but setter method currently takes a
+	//string
+	POAADDR = *unpackRes
+
+	return nil
 }

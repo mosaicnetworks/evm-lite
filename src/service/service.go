@@ -61,6 +61,7 @@ func (m *Service) serveAPI() {
 	http.HandleFunc("/tx/", m.makeHandler(transactionReceiptHandler))
 	http.HandleFunc("/info", m.makeHandler(infoHandler))
 	http.HandleFunc("/poa", m.makeHandler(poaHandler))
+	http.HandleFunc("/controller", m.makeHandler(controllerHandler))
 	http.HandleFunc("/genesis", m.makeHandler(genesisHandler))
 
 	// The call to ListenAndServe is a blocking operation

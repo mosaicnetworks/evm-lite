@@ -6,8 +6,9 @@ import (
 )
 
 type Genesis struct {
-	Alloc AccountMap
-	Poa   PoaMap
+	Alloc      AccountMap
+	Poa        PoaMap
+	Controller ControllerMap
 }
 
 type AccountMap map[string]struct {
@@ -22,6 +23,13 @@ type PoaMap struct {
 	Balance string
 	Abi     string
 	Code    string
+}
+
+type ControllerMap struct {
+	Address string
+	//	Balance string
+	Abi  string
+	Code string
 }
 
 type JsonReceipt struct {

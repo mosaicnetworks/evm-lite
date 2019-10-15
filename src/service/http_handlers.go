@@ -348,6 +348,32 @@ func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 }
 
 /*
+GET /controller
+returns: JsonContract
+Returns details of the controller smart contract . Replaces /contract
+*/
+func controllerHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET controller")
+
+	var al JsonContract
+
+	al = JsonContract{
+		Address: common.HexToAddress(m.state.GetAuthorisingAccount()),
+		ABI:     m.state.GetAuthorisingABI(),
+	}
+
+	js, err := json.Marshal(al)
+	if err != nil {
+		m.logger.WithError(err).Error("Marshaling JSON response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+/*
 GET /genesis
 returns: JSON Genesis
 
