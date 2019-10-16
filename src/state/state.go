@@ -385,7 +385,7 @@ Controller
 // GetPOAContractAddress queries the controller smart-contract to retrieve the
 // address of the POA smart contract.
 func (s *State) GetPOAContractAddress() error {
-
+	s.logger.Debug("GetPOAContractAddress")
 	callData, err := ControllerABI.Pack("POAContractAddress")
 	if err != nil {
 		s.logger.Warningf("couldn't pack POA arguments: %v", err)
@@ -422,9 +422,16 @@ func (s *State) GetPOAContractAddress() error {
 		return err
 	}
 
-	//TODO should use the setter method, but setter method currently takes a
-	//string
-	POAADDR = *unpackRes
+	hexaddr := unpackRes.Hex()
+	s.logger.WithFields(logrus.Fields{
+		"address": POAADDR,
+	}).Info("POAContractAddress")
+
+	if hexaddr != "0x0000000000000000000000000000000000000000" {
+		//TODO should use the setter method, but setter method currently takes a
+		//string
+		POAADDR = *unpackRes
+	}
 
 	return nil
 }
