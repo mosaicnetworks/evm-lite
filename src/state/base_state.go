@@ -71,7 +71,8 @@ func (bs *BaseState) Copy() BaseState {
 func (bs *BaseState) CreateAccount(address common.Address,
 	code string,
 	storage map[string]string,
-	balance string) {
+	balance string,
+	nonce uint64) {
 
 	bs.Lock()
 	defer bs.Unlock()
@@ -82,6 +83,7 @@ func (bs *BaseState) CreateAccount(address common.Address,
 		for key, value := range storage {
 			bs.stateDB.SetState(address, common.HexToHash(key), common.HexToHash(value))
 		}
+		bs.stateDB.SetNonce(address, nonce)
 	}
 }
 

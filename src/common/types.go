@@ -5,23 +5,28 @@ import (
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )
 
+//Genesis File Structure
 type Genesis struct {
 	Alloc AccountMap
 	Poa   PoaMap
 }
 
+//AccountMap holds the alloc section of the genesis file
 type AccountMap map[string]struct {
-	Code        string
-	Storage     map[string]string
-	Balance     string
-	Authorising bool
+	Code        string            `json:"code"`
+	Storage     map[string]string `json:"storage"`
+	Balance     string            `json:"balance"`
+	Authorising bool              `json:"authorising"`
+	Nonce       uint64            `json:"nonce,omitempty"`
 }
 
+//PoaMap holds the poa section of the genesis file
 type PoaMap struct {
 	Address string
 	Balance string
 	Abi     string
 	Code    string
+	Nonce   uint64 `json:"nonce,omitempty"`
 }
 
 type JsonReceipt struct {

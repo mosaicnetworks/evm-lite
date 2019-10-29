@@ -102,7 +102,8 @@ func (s *State) CreateGenesisAccounts() error {
 		s.was.CreateAccount(address,
 			account.Code,
 			account.Storage,
-			account.Balance)
+			account.Balance,
+			account.Nonce)
 
 		s.logger.WithField("address", addr).Debug("Adding account")
 	}
@@ -114,7 +115,8 @@ func (s *State) CreateGenesisAccounts() error {
 		s.was.CreateAccount(address,
 			genesis.Poa.Code,
 			map[string]string{},
-			genesis.Poa.Balance)
+			genesis.Poa.Balance,
+			genesis.Poa.Nonce)
 
 		setPOAADDR(genesis.Poa.Address)
 		setPOAABI(genesis.Poa.Abi)
@@ -379,6 +381,7 @@ func (s *State) DumpAllAccounts() []byte {
 			Balance: s.GetBalance(POAADDR, false).Text(10),
 			Abi:     POAABISTRING,
 			Code:    string(s.GetCode(POAADDR, false)),
+			Nonce:   s.GetNonce(POAADDR, false),
 		},
 	}
 
