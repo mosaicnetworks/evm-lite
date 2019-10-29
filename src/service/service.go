@@ -63,6 +63,9 @@ func (m *Service) serveAPI() {
 	http.HandleFunc("/poa", m.makeHandler(poaHandler))
 	http.HandleFunc("/genesis", m.makeHandler(genesisHandler))
 
+	//TODO - this is experimental and placed on an endpoint for convenience.
+	http.HandleFunc("/export", m.makeHandler(exportHandler))
+
 	// The call to ListenAndServe is a blocking operation
 	err := http.ListenAndServe(m.apiAddr, nil)
 	if err != nil {

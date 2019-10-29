@@ -375,6 +375,40 @@ func genesisHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 }
 
 //------------------------------------------------------------------------------
+
+/*
+GET /export
+returns: JSON Export of current state
+
+This endpoint returns the content of the genesis.json file.
+*/
+func exportHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET export")
+
+	// var genesis []comm.AccountMap
+
+	genesis, err := m.state.ExportAllAccounts()
+
+	//	genesis, err := m.state.GetGenesis()
+	//	if err != nil {
+	//		m.logger.WithError(err).Error("Getting Genesis")
+	//		http.Error(w, err.Error(), http.StatusInternalServerError)
+	//		return
+	//	}
+
+	js, err := json.Marshal(genesis)
+	if err != nil {
+		m.logger.WithError(err).Error("Marshaling JSON response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+//------------------------------------------------------------------------------
+
 func prepareCallMessage(args SendTxArgs) (*ethTypes.Message, error) {
 
 	// Create Call Message
