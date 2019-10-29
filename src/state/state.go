@@ -354,14 +354,14 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 /*******************************************************************************
 Snapshots
 *******************************************************************************/
-//CurrentGenesis is a datastructure for the export endpoint
+//CurrentGenesis is a datastructure for the export
 type CurrentGenesis struct {
 	Alloc map[string]ethState.DumpAccount
 	Poa   bcommon.PoaMap
 }
 
 //DumpAllAccounts outputs JSON of all accounts
-func (s *State) DumpAllAccounts() string {
+func (s *State) DumpAllAccounts() []byte {
 	//	dump := s.main.stateDB.RawDump()
 
 	/*
@@ -389,5 +389,5 @@ func (s *State) DumpAllAccounts() string {
 		s.logger.WithError(err).Error("Marshaling JSON response")
 	}
 
-	return string(js)
+	return js
 }
