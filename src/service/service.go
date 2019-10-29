@@ -62,6 +62,7 @@ func (m *Service) serveAPI() {
 	http.HandleFunc("/info", m.makeHandler(infoHandler))
 	http.HandleFunc("/poa", m.makeHandler(poaHandler))
 	http.HandleFunc("/genesis", m.makeHandler(genesisHandler))
+	http.HandleFunc("/version", m.makeHandler(versionHandler))
 
 	//TODO - this is experimental and placed on an endpoint for convenience.
 	http.HandleFunc("/export", m.makeHandler(exportHandler))

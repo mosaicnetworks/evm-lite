@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mosaicnetworks/evm-lite/src/version"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
@@ -346,6 +348,28 @@ func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
+
+/*
+GET /version
+returns: JSON Version
+
+This endpoint returns the versions of key components
+*/
+func versionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET version")
+
+	js, err := json.Marshal(version.JSONVersion)
+	if err != nil {
+		m.logger.WithError(err).Error("Marshaling Version response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+//------------------------------------------------------------------------------
 
 /*
 GET /genesis
