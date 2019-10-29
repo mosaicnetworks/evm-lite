@@ -348,3 +348,12 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 
 	return false, nil
 }
+
+/*******************************************************************************
+Snapshots
+*******************************************************************************/
+
+//DumpAllAccounts outputs all accounts
+func (s *State) DumpAllAccounts() []byte {
+	return s.main.stateDB.Dump()
+}

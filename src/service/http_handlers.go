@@ -387,21 +387,7 @@ func exportHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 
 	// var genesis []comm.AccountMap
 
-	genesis, err := m.state.ExportAllAccounts()
-
-	//	genesis, err := m.state.GetGenesis()
-	//	if err != nil {
-	//		m.logger.WithError(err).Error("Getting Genesis")
-	//		http.Error(w, err.Error(), http.StatusInternalServerError)
-	//		return
-	//	}
-
-	js, err := json.Marshal(genesis)
-	if err != nil {
-		m.logger.WithError(err).Error("Marshaling JSON response")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	js := m.state.DumpAllAccounts()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
