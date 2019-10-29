@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
@@ -380,12 +381,13 @@ func (s *State) DumpAllAccounts() []byte {
 			Address: POAADDR.Hex(),
 			Balance: s.GetBalance(POAADDR, false).Text(10),
 			Abi:     POAABISTRING,
-			Code:    string(s.GetCode(POAADDR, false)),
+			Code:    hex.EncodeToString(s.GetCode(POAADDR, false)),
 			Nonce:   s.GetNonce(POAADDR, false),
 		},
 	}
 
-	delete(dump.Alloc, POAADDR.Hex())
+	//Lowercase and trim prefix on the Hex() of the key to match dump format
+	delete(dump.Alloc, strings.TrimPrefix(strings.ToLower(POAADDR.Hex()), "0x"))
 
 	js, err := json.Marshal(dump)
 	if err != nil {
