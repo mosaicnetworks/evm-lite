@@ -106,7 +106,8 @@ func (s *State) CreateGenesisAccounts() error {
 			account.Balance,
 			account.Nonce)
 
-		s.logger.WithField("address", addr).Debug("Adding account")
+		s.logger.WithFields(logrus.Fields{"address": addr,
+			"nonce": account.Nonce}).Debug("Adding account")
 	}
 
 	// POA smart-contract account
@@ -115,7 +116,7 @@ func (s *State) CreateGenesisAccounts() error {
 
 		s.was.CreateAccount(address,
 			genesis.Poa.Code,
-			map[string]string{},
+			genesis.Poa.Storage,
 			genesis.Poa.Balance,
 			genesis.Poa.Nonce)
 
@@ -386,8 +387,13 @@ func (s *State) DumpAllAccounts() []byte {
 		},
 	}
 
+	cleanPOAAddr := strings.TrimPrefix(strings.ToLower(POAADDR.Hex()), "0x")
+
+	//Set POA Storage from Alloc section before we remove it
+	dump.Poa.Storage = dump.Alloc[cleanPOAAddr].Storage
+
 	//Lowercase and trim prefix on the Hex() of the key to match dump format
-	delete(dump.Alloc, strings.TrimPrefix(strings.ToLower(POAADDR.Hex()), "0x"))
+	delete(dump.Alloc, cleanPOAAddr)
 
 	js, err := json.Marshal(dump)
 	if err != nil {

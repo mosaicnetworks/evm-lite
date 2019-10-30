@@ -24,6 +24,7 @@ type AccountMap map[string]struct {
 type PoaMap struct {
 	Address string
 	Balance string
+	Storage map[string]string
 	Abi     string
 	Code    string
 	Nonce   uint64 `json:"nonce,omitempty"`
