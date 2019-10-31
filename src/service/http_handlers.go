@@ -23,12 +23,20 @@ import (
 /*
 GET /account/{address}?frompool={true|false|t|f|T|F|1|0|TRUE|FALSE|True|False}
 example: /account/0x50bd8a037442af4cdf631495bcaa5443de19685d
-returns: JSON JsonAccount
+returns: JSON JSONAccount
 
 This endpoint returns information about any account, taken by default from the
 main state, or on the TxPool's ethState if `frompool=true`.
 */
 func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+
+	// ShowStorage is a boolean flag which controls whether the account
+	// endpoint outputs storage.
+	// It is currently used for debugging but it may be a desirable future
+	// feature.
+	// This should be set to false in all commits and live releases.
+	ShowStorage := false
+
 	param := r.URL.Path[len("/account/"):]
 	address := common.HexToAddress(param)
 
@@ -59,11 +67,16 @@ func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		code = ""
 	}
 
-	account := JsonAccount{
+	account := JSONAccount{
 		Address: address.Hex(),
 		Balance: balance,
 		Nonce:   nonce,
 		Code:    code,
+	}
+
+	if ShowStorage {
+		// if false, account.Storage is not set and omitempty removes it
+		account.Storage = m.state.GetStorage(address, fromPool)
 	}
 
 	js, err := json.Marshal(account)

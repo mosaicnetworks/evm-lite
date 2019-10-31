@@ -6,15 +6,17 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type JsonAccount struct {
-	Address string   `json:"address"`
-	Balance *big.Int `json:"balance"`
-	Nonce   uint64   `json:"nonce"`
-	Code    string   `json:"bytecode,omitempty"`
+//JSONAccount
+type JSONAccount struct {
+	Address string            `json:"address"`
+	Balance *big.Int          `json:"balance"`
+	Nonce   uint64            `json:"nonce"`
+	Storage map[string]string `json:"storage,omitempty"`
+	Code    string            `json:"bytecode,omitempty"`
 }
 
-type JsonAccountList struct {
-	Accounts []JsonAccount `json:"accounts"`
+type JSONAccountList struct {
+	Accounts []JSONAccount `json:"accounts"`
 }
 
 // SendTxArgs represents the arguments to sumbit a new transaction into the transaction pool.

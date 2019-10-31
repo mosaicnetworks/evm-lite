@@ -2,6 +2,7 @@ package state
 
 import (
 	"math/big"
+	"strings"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -212,6 +213,22 @@ func (bs *BaseState) GetCode(addr common.Address) []byte {
 	bs.Lock()
 	defer bs.Unlock()
 	return bs.stateDB.GetCode(addr)
+}
+
+// GetStorage returns an account's storage  from the stateDB
+func (bs *BaseState) GetStorage(addr common.Address) map[string]string {
+	bs.Lock()
+	defer bs.Unlock()
+
+	//	func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.Hash) bool) {
+	storage := make(map[string]string)
+
+	bs.stateDB.ForEachStorage(addr, func(key, value common.Hash) bool {
+		storage[strings.TrimPrefix(key.Hex(), "0x")] = strings.TrimPrefix(value.Hex(), "0x")
+		return true
+	})
+
+	return storage
 }
 
 // WriteTransactions writes a set of transactions directly into the DB

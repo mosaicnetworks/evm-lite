@@ -296,6 +296,14 @@ func (s *State) GetCode(addr common.Address, fromPool bool) []byte {
 	return s.main.GetCode(addr)
 }
 
+// GetStorage returns an account's storage
+func (s *State) GetStorage(addr common.Address, fromPool bool) map[string]string {
+	if fromPool {
+		return s.txPool.GetStorage(addr)
+	}
+	return s.main.GetStorage(addr)
+}
+
 // GetTransaction fetches a transaction from the WAS
 func (s *State) GetTransaction(txHash common.Hash) (*ethTypes.Transaction, error) {
 	return s.was.GetTransaction(txHash)
