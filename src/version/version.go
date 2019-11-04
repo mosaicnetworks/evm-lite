@@ -12,6 +12,11 @@ var (
 	GitCommit string
 	// GitBranch is set with --ldflags "-X main.gitBranch=$(git symbolic-ref --short HEAD)"
 	GitBranch string
+
+	//JSONVersion is set from the run command explicitly.
+	//This allows it to be set differently within
+	//monetd
+	JSONVersion map[string]string
 )
 
 func init() {
@@ -24,4 +29,7 @@ func init() {
 	if GitCommit != "" {
 		Version += "-" + GitCommit[:8]
 	}
+
+	JSONVersion = make(map[string]string)
+	JSONVersion["evm-lite"] = Version
 }
