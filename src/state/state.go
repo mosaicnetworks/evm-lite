@@ -366,6 +366,7 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 /*******************************************************************************
 Snapshots
 *******************************************************************************/
+
 //CurrentGenesis is a datastructure for the export
 type CurrentGenesis struct {
 	Alloc map[string]ethState.DumpAccount
