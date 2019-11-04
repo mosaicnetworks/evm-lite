@@ -8,7 +8,7 @@ import (
 
 // ReceiptPromiseResponse captures a receipt and a potential error
 type ReceiptPromiseResponse struct {
-	Receipt *common.JsonReceipt
+	Receipt *common.JSONReceipt
 	Error   error
 }
 
@@ -29,6 +29,6 @@ func NewReceiptPromise(hash ethCommon.Hash) *ReceiptPromise {
 }
 
 // Respond resolves a ReceiptPromiseResponse and passes it to the RespCh
-func (p *ReceiptPromise) Respond(receipt *common.JsonReceipt, err error) {
+func (p *ReceiptPromise) Respond(receipt *common.JSONReceipt, err error) {
 	p.RespCh <- ReceiptPromiseResponse{receipt, err}
 }

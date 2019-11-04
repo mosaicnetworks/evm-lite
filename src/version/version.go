@@ -3,7 +3,7 @@ package version
 // Flag contains extra info about the version. It is helpul for tracking
 // versions while developing. It should always be empty on the master branch.
 // This will be enforced in a continuous integration test.
-const Flag = ""
+const Flag = "export"
 
 var (
 	//Version contains the full version string
@@ -12,6 +12,11 @@ var (
 	GitCommit string
 	// GitBranch is set with --ldflags "-X main.gitBranch=$(git symbolic-ref --short HEAD)"
 	GitBranch string
+
+	//JSONVersion is set from the run command explicitly.
+	//This allows it to be set differently within
+	//monetd
+	JSONVersion map[string]string
 )
 
 func init() {
@@ -24,4 +29,8 @@ func init() {
 	if GitCommit != "" {
 		Version += "-" + GitCommit[:8]
 	}
+
+	JSONVersion = make(map[string]string)
+	JSONVersion["evm-lite"] = Version
+
 }

@@ -6,9 +6,12 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+
+	ethState "github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/sirupsen/logrus"
@@ -100,9 +103,11 @@ func (s *State) CreateGenesisAccounts() error {
 		s.was.CreateAccount(address,
 			account.Code,
 			account.Storage,
-			account.Balance)
+			account.Balance,
+			account.Nonce)
 
-		s.logger.WithField("address", addr).Debug("Adding account")
+		s.logger.WithFields(logrus.Fields{"address": addr,
+			"nonce": account.Nonce}).Debug("Adding account")
 	}
 
 	// POA smart-contract account
@@ -111,8 +116,9 @@ func (s *State) CreateGenesisAccounts() error {
 
 		s.was.CreateAccount(address,
 			genesis.Poa.Code,
-			map[string]string{},
-			genesis.Poa.Balance)
+			genesis.Poa.Storage,
+			genesis.Poa.Balance,
+			genesis.Poa.Nonce)
 
 		setPOAADDR(genesis.Poa.Address)
 		setPOAABI(genesis.Poa.Abi)
@@ -290,6 +296,14 @@ func (s *State) GetCode(addr common.Address, fromPool bool) []byte {
 	return s.main.GetCode(addr)
 }
 
+// GetStorage returns an account's storage
+func (s *State) GetStorage(addr common.Address, fromPool bool) map[string]string {
+	if fromPool {
+		return s.txPool.GetStorage(addr)
+	}
+	return s.main.GetStorage(addr)
+}
+
 // GetTransaction fetches a transaction from the WAS
 func (s *State) GetTransaction(txHash common.Hash) (*ethTypes.Transaction, error) {
 	return s.was.GetTransaction(txHash)
@@ -347,4 +361,53 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 	}
 
 	return false, nil
+}
+
+/*******************************************************************************
+Snapshots
+*******************************************************************************/
+
+//CurrentGenesis is a datastructure for the export
+type CurrentGenesis struct {
+	Alloc map[string]ethState.DumpAccount
+	Poa   bcommon.PoaMap
+}
+
+//DumpAllAccounts outputs JSON of all accounts
+func (s *State) DumpAllAccounts() []byte {
+	//	dump := s.main.stateDB.RawDump()
+
+	/*
+		type PoaMap struct {
+			Address string
+			Balance string
+			Abi     string
+			Code    string
+		}
+	*/
+
+	dump := CurrentGenesis{Alloc: s.main.stateDB.RawDump().Accounts,
+		Poa: bcommon.PoaMap{
+			Address: POAADDR.Hex(),
+			Balance: s.GetBalance(POAADDR, false).Text(10),
+			Abi:     POAABISTRING,
+			Code:    hex.EncodeToString(s.GetCode(POAADDR, false)),
+			Nonce:   s.GetNonce(POAADDR, false),
+		},
+	}
+
+	cleanPOAAddr := strings.TrimPrefix(strings.ToLower(POAADDR.Hex()), "0x")
+
+	//Set POA Storage from Alloc section before we remove it
+	dump.Poa.Storage = dump.Alloc[cleanPOAAddr].Storage
+
+	//Lowercase and trim prefix on the Hex() of the key to match dump format
+	delete(dump.Alloc, cleanPOAAddr)
+
+	js, err := json.Marshal(dump)
+	if err != nil {
+		s.logger.WithError(err).Error("Marshaling JSON response")
+	}
+
+	return js
 }
