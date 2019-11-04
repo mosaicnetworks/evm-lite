@@ -145,7 +145,7 @@ func callHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 POST /rawtx
 data: STRING Hex representation of the raw transaction bytes
 	  ex: 0xf8620180830f4240946266b0dd0116416b1dacf36...
-returns: JSON JSONTxReceipt
+returns: JSON JsonReceipt
 
 This endpoint allows sending NON-READONLY transactions ALREADY SIGNED. The
 client is left to compose a transaction, sign it and RLP encode it. The

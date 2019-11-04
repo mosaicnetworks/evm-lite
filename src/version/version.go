@@ -32,5 +32,4 @@ func init() {
 
 	JSONVersion = make(map[string]string)
 	JSONVersion["evm-lite"] = Version
-
 }
