@@ -367,13 +367,13 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 Snapshots
 *******************************************************************************/
 
-//CurrentGenesis is a datastructure for the export
+// CurrentGenesis is a datastructure for the export
 type CurrentGenesis struct {
 	Alloc map[string]ethState.DumpAccount
 	Poa   bcommon.PoaMap
 }
 
-//DumpAllAccounts outputs JSON of all accounts
+// DumpAllAccounts outputs JSON of all accounts
 func (s *State) DumpAllAccounts() []byte {
 	//	dump := s.main.stateDB.RawDump()
 
@@ -396,12 +396,13 @@ func (s *State) DumpAllAccounts() []byte {
 		},
 	}
 
+	// Lowercase and trim prefix on the Hex() of the key to match dump format
 	cleanPOAAddr := strings.TrimPrefix(strings.ToLower(POAADDR.Hex()), "0x")
 
-	//Set POA Storage from Alloc section before we remove it
+	// Set POA Storage from Alloc section before we remove it
 	dump.Poa.Storage = dump.Alloc[cleanPOAAddr].Storage
 
-	//Lowercase and trim prefix on the Hex() of the key to match dump format
+	// Remove POA contract from Alloc section
 	delete(dump.Alloc, cleanPOAAddr)
 
 	js, err := json.Marshal(dump)

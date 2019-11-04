@@ -417,12 +417,11 @@ func genesisHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 GET /export
 returns: JSON Export of current state
 
-This endpoint returns the content of the genesis.json file.
+This endpoint returns a JSON snapshot of the state, containing all the accounts,
+including smart-contracts with their storage.
 */
 func exportHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	m.logger.Debug("GET export")
-
-	// var genesis []comm.AccountMap
 
 	js := m.state.DumpAllAccounts()
 
