@@ -26,7 +26,6 @@ func (a *testLoggerAdapter) Write(d []byte) (int, error) {
 	return len(d), nil
 }
 
-//NewTestEntry creates a logrus entry for testing.T
 func NewTestEntry(t *testing.T) *logrus.Entry {
 	logger := logrus.New()
 	logger.Out = &testLoggerAdapter{t: t}

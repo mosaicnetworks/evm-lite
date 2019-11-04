@@ -54,13 +54,13 @@ func (t *EVMLTransaction) From() ethCommon.Address {
 	return ethCommon.Address{}
 }
 
-// JSONReceipt returns the JSONReceipt corresponding to an EVMLTransaction
-func (t *EVMLTransaction) JSONReceipt() *common.JSONReceipt {
+// JSONReceipt returns the JsonReceipt corresponding to an EVMLTransaction
+func (t *EVMLTransaction) JSONReceipt() *common.JsonReceipt {
 	if t.receipt == nil {
 		return nil
 	}
 
-	jsonReceipt := common.JSONReceipt{
+	jsonReceipt := common.JsonReceipt{
 		Root:              ethCommon.BytesToHash(t.receipt.PostState),
 		TransactionHash:   t.Hash(),
 		From:              t.From(),
