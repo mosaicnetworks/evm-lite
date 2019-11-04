@@ -2,7 +2,6 @@ package state
 
 import (
 	"math/big"
-	"strings"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -224,7 +223,8 @@ func (bs *BaseState) GetStorage(addr common.Address) map[string]string {
 	storage := make(map[string]string)
 
 	bs.stateDB.ForEachStorage(addr, func(key, value common.Hash) bool {
-		storage[strings.TrimPrefix(key.Hex(), "0x")] = strings.TrimPrefix(value.Hex(), "0x")
+		storage[common.Bytes2Hex(key.Bytes())] = common.Bytes2Hex(value.Bytes())
+		//		storage[strings.TrimPrefix(key.Hex(), "0x")] = strings.TrimLeft(strings.TrimPrefix(value.Hex(), "0x"), "0")
 		return true
 	})
 
