@@ -4,8 +4,14 @@
 ## Unreleased
 
 SECURITY:
+
 FEATURES:
+
 IMPROVEMENTS:
+
+- service: new export function and endpoint that returns a full snapshot of the
+           state, which can be reused as a genesis file. 
+
 BUG FIXES:
 
 ## v0.3.5 (October 15, 2019)
