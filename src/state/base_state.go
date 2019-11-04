@@ -71,7 +71,8 @@ func (bs *BaseState) Copy() BaseState {
 func (bs *BaseState) CreateAccount(address common.Address,
 	code string,
 	storage map[string]string,
-	balance string) {
+	balance string,
+	nonce uint64) {
 
 	bs.Lock()
 	defer bs.Unlock()
@@ -82,6 +83,7 @@ func (bs *BaseState) CreateAccount(address common.Address,
 		for key, value := range storage {
 			bs.stateDB.SetState(address, common.HexToHash(key), common.HexToHash(value))
 		}
+		bs.stateDB.SetNonce(address, nonce)
 	}
 }
 
@@ -210,6 +212,23 @@ func (bs *BaseState) GetCode(addr common.Address) []byte {
 	bs.Lock()
 	defer bs.Unlock()
 	return bs.stateDB.GetCode(addr)
+}
+
+// GetStorage returns an account's storage  from the stateDB
+func (bs *BaseState) GetStorage(addr common.Address) map[string]string {
+	bs.Lock()
+	defer bs.Unlock()
+
+	//	func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.Hash) bool) {
+	storage := make(map[string]string)
+
+	bs.stateDB.ForEachStorage(addr, func(key, value common.Hash) bool {
+		storage[common.Bytes2Hex(key.Bytes())] = common.Bytes2Hex(value.Bytes())
+		//		storage[strings.TrimPrefix(key.Hex(), "0x")] = strings.TrimLeft(strings.TrimPrefix(value.Hex(), "0x"), "0")
+		return true
+	})
+
+	return storage
 }
 
 // WriteTransactions writes a set of transactions directly into the DB
