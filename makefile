@@ -13,4 +13,8 @@ test:
 flagtest:
 	glide novendor | xargs go test -count=1 -run TestFlagEmpty
 
-.PHONY: vendor test flagtest
+ 
+lint:
+	glide novendor | xargs golint
+
+.PHONY: vendor test flagtest lint

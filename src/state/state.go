@@ -9,8 +9,9 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
-	ethState "github.com/ethereum/go-ethereum/core/state"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+
+	ethState "github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/sirupsen/logrus"
@@ -102,9 +103,11 @@ func (s *State) CreateGenesisAccounts() error {
 		s.was.CreateAccount(address,
 			account.Code,
 			account.Storage,
-			account.Balance)
+			account.Balance,
+			account.Nonce)
 
-		s.logger.WithField("address", addr).Debug("Adding account")
+		s.logger.WithFields(logrus.Fields{"address": addr,
+			"nonce": account.Nonce}).Debug("Adding account")
 	}
 
 	// POA smart-contract account
@@ -113,8 +116,9 @@ func (s *State) CreateGenesisAccounts() error {
 
 		s.was.CreateAccount(address,
 			genesis.Poa.Code,
-			map[string]string{},
-			genesis.Poa.Balance)
+			genesis.Poa.Storage,
+			genesis.Poa.Balance,
+			genesis.Poa.Nonce)
 
 		setPOAADDR(genesis.Poa.Address)
 		setPOAABI(genesis.Poa.Abi)
@@ -290,6 +294,14 @@ func (s *State) GetCode(addr common.Address, fromPool bool) []byte {
 		return s.txPool.GetCode(addr)
 	}
 	return s.main.GetCode(addr)
+}
+
+// GetStorage returns an account's storage
+func (s *State) GetStorage(addr common.Address, fromPool bool) map[string]string {
+	if fromPool {
+		return s.txPool.GetStorage(addr)
+	}
+	return s.main.GetStorage(addr)
 }
 
 // GetTransaction fetches a transaction from the WAS

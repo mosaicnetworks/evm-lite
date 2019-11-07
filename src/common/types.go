@@ -5,12 +5,13 @@ import (
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )
 
+//Genesis File Structure
 type Genesis struct {
 	Alloc AccountMap
 	Poa   PoaMap
 }
 
-// AccountMap holds the alloc section of the genesis file
+//AccountMap holds the alloc section of the genesis file
 type AccountMap map[string]struct {
 	Code        string            `json:"code"`
 	Storage     map[string]string `json:"storage"`
@@ -19,7 +20,7 @@ type AccountMap map[string]struct {
 	Nonce       uint64            `json:"nonce,omitempty"`
 }
 
-// PoaMap holds the poa section of the genesis file
+//PoaMap holds the poa section of the genesis file
 type PoaMap struct {
 	Address string
 	Balance string
@@ -29,7 +30,9 @@ type PoaMap struct {
 	Nonce   uint64 `json:"nonce,omitempty"`
 }
 
-type JsonReceipt struct {
+//JSONReceipt is the JSON structure for the return receipt from the tx end
+//point
+type JSONReceipt struct {
 	Root              ethcommon.Hash     `json:"root"`
 	TransactionHash   ethcommon.Hash     `json:"transactionHash"`
 	From              ethcommon.Address  `json:"from"`
@@ -45,10 +48,10 @@ type JsonReceipt struct {
 // ToJSONReceipt uses a transaction, its from address, and a receipt to create
 // a JSONReceipt. The "from" addressed is derived from the transaction's
 // signature.
-func ToJSONReceipt(receipt *ethTypes.Receipt, tx *ethTypes.Transaction, signer ethTypes.Signer) *JsonReceipt {
+func ToJSONReceipt(receipt *ethTypes.Receipt, tx *ethTypes.Transaction, signer ethTypes.Signer) *JSONReceipt {
 	from, _ := ethTypes.Sender(signer, tx)
 
-	jsonReceipt := JsonReceipt{
+	jsonReceipt := JSONReceipt{
 		Root:              ethcommon.BytesToHash(receipt.PostState),
 		TransactionHash:   tx.Hash(),
 		From:              from,

@@ -6,16 +6,20 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type JsonAccount struct {
-	Address string   `json:"address"`
-	Balance *big.Int `json:"balance"`
-	Nonce   uint64   `json:"nonce"`
-	Code    string   `json:"bytecode"`
+//JSONAccount is the JSON structure used for the account endpoint
+type JSONAccount struct {
+	Address string            `json:"address"`
+	Balance *big.Int          `json:"balance"`
+	Nonce   uint64            `json:"nonce"`
+	Storage map[string]string `json:"storage,omitempty"`
+	Code    string            `json:"bytecode,omitempty"`
 }
 
-type JsonAccountList struct {
-	Accounts []JsonAccount `json:"accounts"`
+/* // This is unused. Commented out pending deletion
+type JSONAccountList struct {
+	Accounts []JSONAccount `json:"accounts"`
 }
+*/
 
 // SendTxArgs represents the arguments to sumbit a new transaction into the transaction pool.
 type SendTxArgs struct {
@@ -28,19 +32,24 @@ type SendTxArgs struct {
 	Nonce    *uint64         `json:"nonce"`
 }
 
-type JsonCallRes struct {
+//JSONCallRes is the JSON structure for the return from the call endpoint
+type JSONCallRes struct {
 	Data string `json:"data"`
 }
 
-type JsonTxRes struct {
+//JSONTxRes has been replaced by JSONReceipt
+type JSONTxRes struct {
 	TxHash string `json:"txHash"`
 }
 
-type JsonContract struct {
+//JSONContract is the JSON structure returned by the poa endpoint
+type JSONContract struct {
 	Address common.Address `json:"address"`
 	ABI     string         `json:"abi"`
 }
 
-type JsonContractList struct {
-	Contracts []JsonContract `json:"contracts"`
+/* //Not used. Commented out, pending deletion.
+type JSONContractList struct {
+	Contracts []JSONContract `json:"contracts"`
 }
+*/

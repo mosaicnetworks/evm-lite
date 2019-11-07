@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/mosaicnetworks/evm-lite/src/state"
+	"github.com/mosaicnetworks/evm-lite/src/version"
 	"github.com/sirupsen/logrus"
 
 	comm "github.com/mosaicnetworks/evm-lite/src/common"
@@ -21,12 +22,19 @@ import (
 /*
 GET /account/{address}?frompool={true|false|t|f|T|F|1|0|TRUE|FALSE|True|False}
 example: /account/0x50bd8a037442af4cdf631495bcaa5443de19685d
-returns: JSON JsonAccount
+returns: JSON JSONAccount
 
 This endpoint returns information about any account, taken by default from the
 main state, or on the TxPool's ethState if `frompool=true`.
 */
 func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	// ShowStorage is a boolean flag which controls whether the account
+	// endpoint outputs storage.
+	// It is currently used for debugging but it may be a desirable future
+	// feature.
+	// This should be set to false in all commits and live releases.
+	ShowStorage := false
+
 	param := r.URL.Path[len("/account/"):]
 	address := common.HexToAddress(param)
 
@@ -57,11 +65,16 @@ func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		code = ""
 	}
 
-	account := JsonAccount{
+	account := JSONAccount{
 		Address: address.Hex(),
 		Balance: balance,
 		Nonce:   nonce,
 		Code:    code,
+	}
+
+	if ShowStorage {
+		// if false, account.Storage is not set and omitempty removes it
+		account.Storage = m.state.GetStorage(address, fromPool)
 	}
 
 	js, err := json.Marshal(account)
@@ -78,7 +91,7 @@ func accountHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 /*
 POST /call
 data: JSON SendTxArgs
-returns: JSON JsonCallRes
+returns: JSON JSONCallRes
 
 This endpoint allows calling SmartContract code for READONLY operations. These
 calls will NOT modify the EVM state.
@@ -114,7 +127,7 @@ func callHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 		return
 	}
 
-	res := JsonCallRes{Data: hexutil.Encode(data)}
+	res := JSONCallRes{Data: hexutil.Encode(data)}
 	js, err := json.Marshal(res)
 	if err != nil {
 		m.logger.WithError(err).Error("Marshaling JSON response")
@@ -130,7 +143,7 @@ func callHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 POST /rawtx
 data: STRING Hex representation of the raw transaction bytes
 	  ex: 0xf8620180830f4240946266b0dd0116416b1dacf36...
-returns: JSON JsonReceipt
+returns: JSON JSONReceipt
 
 This endpoint allows sending NON-READONLY transactions ALREADY SIGNED. The
 client is left to compose a transaction, sign it and RLP encode it. The
@@ -211,7 +224,7 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	m.logger.Debug("submitted tx")
 
 	timeout := time.After(15 * time.Second)
-	var receipt *comm.JsonReceipt
+	var receipt *comm.JSONReceipt
 	var respErr error
 
 	select {
@@ -246,7 +259,7 @@ func rawTransactionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 /*
 GET /tx/{tx_hash}
 ex: /tx/0xbfe1aa80eb704d6342c553ac9f423024f448f7c74b3e38559429d4b7c98ffb99
-returns: JSON JsonReceipt
+returns: JSON JSONReceipt
 
 This endpoint allows to retrieve the EVM receipt of a specific transactions if it
 exists. When a transaction is applied to the EVM , a receipt is saved to allow
@@ -323,15 +336,15 @@ func infoHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 
 /*
 GET /poa
-returns: JsonContract
+returns: JSONContract
 Returns details of the poa smart contract . Replaces /contract
 */
 func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	m.logger.Debug("GET poa")
 
-	var al JsonContract
+	var al JSONContract
 
-	al = JsonContract{
+	al = JSONContract{
 		Address: common.HexToAddress(m.state.GetAuthorisingAccount()),
 		ABI:     m.state.GetAuthorisingABI(),
 	}
@@ -346,6 +359,28 @@ func poaHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
+
+/*
+GET /version
+returns: JSON Version
+
+This endpoint returns the versions of key components
+*/
+func versionHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET version")
+
+	js, err := json.Marshal(version.JSONVersion)
+	if err != nil {
+		m.logger.WithError(err).Error("Marshaling Version response")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+//------------------------------------------------------------------------------
 
 /*
 GET /genesis
