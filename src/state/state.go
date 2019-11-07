@@ -363,16 +363,6 @@ type CurrentGenesis struct {
 
 // DumpAllAccounts outputs JSON of all accounts
 func (s *State) DumpAllAccounts() []byte {
-	//	dump := s.main.stateDB.RawDump()
-
-	/*
-		type PoaMap struct {
-			Address string
-			Balance string
-			Abi     string
-			Code    string
-		}
-	*/
 
 	dump := CurrentGenesis{Alloc: s.main.stateDB.RawDump().Accounts,
 		Poa: bcommon.PoaMap{
