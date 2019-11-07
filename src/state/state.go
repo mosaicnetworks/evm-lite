@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	ethState "github.com/ethereum/go-ethereum/core/state"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -347,4 +349,54 @@ func (s *State) CheckAuthorised(addr common.Address) (bool, error) {
 	}
 
 	return false, nil
+}
+
+/*******************************************************************************
+Snapshots
+*******************************************************************************/
+
+// CurrentGenesis is a datastructure for the export
+type CurrentGenesis struct {
+	Alloc map[string]ethState.DumpAccount
+	Poa   bcommon.PoaMap
+}
+
+// DumpAllAccounts outputs JSON of all accounts
+func (s *State) DumpAllAccounts() []byte {
+	//	dump := s.main.stateDB.RawDump()
+
+	/*
+		type PoaMap struct {
+			Address string
+			Balance string
+			Abi     string
+			Code    string
+		}
+	*/
+
+	dump := CurrentGenesis{Alloc: s.main.stateDB.RawDump().Accounts,
+		Poa: bcommon.PoaMap{
+			Address: POAADDR.Hex(),
+			Balance: s.GetBalance(POAADDR, false).Text(10),
+			Abi:     POAABISTRING,
+			Code:    hex.EncodeToString(s.GetCode(POAADDR, false)),
+			Nonce:   s.GetNonce(POAADDR, false),
+		},
+	}
+
+	// Lowercase and trim prefix on the Hex() of the key to match dump format
+	cleanPOAAddr := strings.TrimPrefix(strings.ToLower(POAADDR.Hex()), "0x")
+
+	// Set POA Storage from Alloc section before we remove it
+	dump.Poa.Storage = dump.Alloc[cleanPOAAddr].Storage
+
+	// Remove POA contract from Alloc section
+	delete(dump.Alloc, cleanPOAAddr)
+
+	js, err := json.Marshal(dump)
+	if err != nil {
+		s.logger.WithError(err).Error("Marshaling JSON response")
+	}
+
+	return js
 }

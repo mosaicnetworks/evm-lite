@@ -130,7 +130,7 @@ func callHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 POST /rawtx
 data: STRING Hex representation of the raw transaction bytes
 	  ex: 0xf8620180830f4240946266b0dd0116416b1dacf36...
-returns: JSON JsonTxRes
+returns: JSON JsonReceipt
 
 This endpoint allows sending NON-READONLY transactions ALREADY SIGNED. The
 client is left to compose a transaction, sign it and RLP encode it. The
@@ -375,6 +375,26 @@ func genesisHandler(w http.ResponseWriter, r *http.Request, m *Service) {
 }
 
 //------------------------------------------------------------------------------
+
+/*
+GET /export
+returns: JSON Export of current state
+
+This endpoint returns a JSON snapshot of the state, containing all the accounts,
+including smart-contracts with their storage. The result can be reused as a
+genesis file.
+*/
+func exportHandler(w http.ResponseWriter, r *http.Request, m *Service) {
+	m.logger.Debug("GET export")
+
+	js := m.state.DumpAllAccounts()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+//------------------------------------------------------------------------------
+
 func prepareCallMessage(args SendTxArgs) (*ethTypes.Message, error) {
 
 	// Create Call Message
