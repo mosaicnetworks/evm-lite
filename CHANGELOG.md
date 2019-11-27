@@ -3,10 +3,9 @@
 
 ## Unreleased
 
-SECURITY:
-FEATURES:
-IMPROVEMENTS:
 BUG FIXES:
+
+- state: set account storage and nonce when creating accounts
 
 ## v0.3.6 (November 7, 2019)
 
