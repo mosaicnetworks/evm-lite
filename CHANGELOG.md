@@ -1,6 +1,13 @@
 
 # Changelog
 
+## Unreleased
+
+SECURITY:
+FEATURES:
+IMPROVEMENTS:
+BUG FIXES:
+
 ## v0.3.7 (November 27, 2019)
 
 BUG FIXES:
