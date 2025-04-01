@@ -1,7 +1,5 @@
-# EVM-LITE
+# BVM
 
-[![CircleCI](https://circleci.com/gh/mosaicnetworks/evm-lite.svg?style=svg)](https://circleci.com/gh/mosaicnetworks/evm-lite)
-[![Go Report](https://goreportcard.com/badge/github.com/mosaicnetworks/evm-lite)](https://goreportcard.com/report/github.com/mosaicnetworks/evm-lite)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## A lean Ethereum node with interchangeable consensus.
@@ -20,8 +18,8 @@ fingerprint.
 The EVM is meant to be used in conjunction with a system that broadcasts
 transactions across network participants and ensures that everyone executes the
 same transactions in the same order. Ethereum uses a Blockchain and a Proof of
-Work consensus algorithm. EVM-Lite makes it easy to use any consensus system,
-including [Babble](https://github.com/mosaicnetworks/babble) .
+Work consensus algorithm. BVM makes it easy to use any consensus system,
+including [Babble](https://github.com/BOTCoinNetwork/babble) .
 
 ## ARCHITECTURE
 
@@ -30,7 +28,7 @@ including [Babble](https://github.com/mosaicnetworks/babble) .
 +----------+    |  +-------------+         +-------------+  |       
 |          |    |  | Service     |         | State       |  |
 |  Client  <-----> |             | <------ |             |  |
-|          |    |  | -API        |         | -EVM        |  |
+|          |    |  | -API        |         | -BVM        |  |
 +----------+    |  |             |         | -Trie       |  |
                 |  |             |         | -Database   |  |
                 |  +-------------+         +-------------+  |
@@ -51,7 +49,7 @@ including [Babble](https://github.com/mosaicnetworks/babble) .
 
 ## Usage
 
-EVM-Lite is a Go library, which is meant to be used in conjunction with a 
+BVM is a Go library, which is meant to be used in conjunction with a 
 consensus system like Babble, Tendermint, Raft, etc.
 
 This repo contains **Solo**, a bare-bones implementation of the consensus 
@@ -65,6 +63,7 @@ Ethereum POW stuff. This file is useful to predefine a set of accounts that own
 all the initial Ether at the inception of the network.
 
 Example Ethereum genesis.json defining two account:
+
 ```json
 {
    "alloc": {
@@ -77,6 +76,7 @@ Example Ethereum genesis.json defining two account:
    }
 }
 ```
+
 ## API
 
 The Service exposes an HTTP API.  
@@ -119,6 +119,7 @@ SYNCHRONOUS operation; it waits for the transaction to go through consensus and
 returns the transaction receipt.
 
 example:
+
 ```bash
 host:~$ curl -X POST http://[api_addr]/rawtx -d '0xf86904808398968094f7cd2ba6892341e568e9d825c4bdc2bd53b7524189031b9d1340ad2500008026a04eb7420aa52a1955d26ffb16d3a8cb8d969ae0eb6d75bb5076599c42a788e08da0178b3ddb264cdcc624121f55a95ae45de119bc44a0a85b721d8958b7ebe0553a' -s | json_pp
 {
@@ -143,6 +144,7 @@ such information as the address of a newly created contract, how much gas was
 use, and the EVM Logs produced by the execution of the transaction.
 
 example:
+
 ```bash
 host:~$ curl http://[api_addr]/tx/0xeeeed34877502baa305442e3a72df094cfbb0b928a7c53447745ff35d50020bf -s | json_pp
 {
@@ -165,6 +167,7 @@ The `/info` endpoint exposes a map of information provided by the consensus
 system.
 
 example (with Babble consensus):
+
 ```bash
 host:-$ curl http://[api_addr]/info | json_pp
 {
@@ -188,7 +191,7 @@ host:-$ curl http://[api_addr]/info | json_pp
 
 ## CLIENT
 
-Please refer to [EVM-Lite CLI](https://github.com/mosaicnetworks/evm-lite-cli)
+Please refer to [BVM CLI](https://github.com/mosaicnetworks/evm-lite-cli)
 for Javascript utilities and a CLI to interact with the API.
 
 ## DEV
@@ -198,8 +201,9 @@ DEPENDENCIES
 We use glide to manage dependencies:
 
 ```bash
-[...]/evm-lite$ curl https://glide.sh/get | sh
-[...]/evm-lite$ glide install
+[...]/bvm$ curl https://glide.sh/get | sh
+[...]/bvm$ glide install
 ```
+
 This will download all dependencies and put them in the **vendor** folder; it
 could take a few minutes.
